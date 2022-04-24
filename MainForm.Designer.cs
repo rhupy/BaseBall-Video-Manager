@@ -40,6 +40,7 @@
             this.desc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fullpath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.textBox1 = new System.Windows.Forms.TextBox();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.button_refresh = new System.Windows.Forms.Button();
             this.button_del = new System.Windows.Forms.Button();
@@ -49,7 +50,6 @@
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel_totalcount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.textBox1 = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
@@ -109,8 +109,10 @@
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellClick);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
+            this.dataGridView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
             // 
             // filename
             // 
@@ -156,7 +158,7 @@
             this.eval.HeaderText = "평가 (1~5)";
             this.eval.MaxInputLength = 5;
             this.eval.Name = "eval";
-            this.eval.Width = 110;
+            this.eval.Width = 90;
             // 
             // desc
             // 
@@ -189,14 +191,22 @@
             this.panel1.Size = new System.Drawing.Size(650, 33);
             this.panel1.TabIndex = 3;
             // 
+            // textBox1
+            // 
+            this.textBox1.Location = new System.Drawing.Point(3, 4);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(156, 23);
+            this.textBox1.TabIndex = 9;
+            this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
+            // 
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
             this.checkBox1.Checked = true;
             this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(550, 8);
+            this.checkBox1.Location = new System.Drawing.Point(455, 8);
             this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(91, 24);
+            this.checkBox1.Size = new System.Drawing.Size(74, 19);
             this.checkBox1.TabIndex = 8;
             this.checkBox1.Text = "삭제잠금";
             this.checkBox1.UseVisualStyleBackColor = true;
@@ -216,10 +226,10 @@
             // button_del
             // 
             this.button_del.Enabled = false;
-            this.button_del.Location = new System.Drawing.Point(401, 2);
+            this.button_del.Location = new System.Drawing.Point(535, 2);
             this.button_del.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button_del.Name = "button_del";
-            this.button_del.Size = new System.Drawing.Size(142, 29);
+            this.button_del.Size = new System.Drawing.Size(112, 29);
             this.button_del.TabIndex = 3;
             this.button_del.Text = "선택한 파일 삭제";
             this.button_del.UseVisualStyleBackColor = true;
@@ -231,7 +241,7 @@
             this.label_status.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.label_status.Location = new System.Drawing.Point(565, 10);
             this.label_status.Name = "label_status";
-            this.label_status.Size = new System.Drawing.Size(96, 28);
+            this.label_status.Size = new System.Drawing.Size(82, 21);
             this.label_status.TabIndex = 6;
             this.label_status.Text = "            ";
             // 
@@ -250,9 +260,9 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.label1.Location = new System.Drawing.Point(676, 0);
+            this.label1.Location = new System.Drawing.Point(664, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(121, 41);
+            this.label1.Size = new System.Drawing.Size(133, 41);
             this.label1.TabIndex = 2;
             this.label1.Text = "문의 : fmsj@naver.com";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -263,35 +273,27 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1,
             this.toolStripStatusLabel_totalcount});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 755);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 758);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(800, 25);
+            this.statusStrip1.Size = new System.Drawing.Size(800, 22);
             this.statusStrip1.TabIndex = 1;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(46, 20);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(36, 17);
             this.toolStripStatusLabel1.Text = "Total:";
             // 
             // toolStripStatusLabel_totalcount
             // 
             this.toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
-            this.toolStripStatusLabel_totalcount.Size = new System.Drawing.Size(17, 20);
+            this.toolStripStatusLabel_totalcount.Size = new System.Drawing.Size(14, 17);
             this.toolStripStatusLabel_totalcount.Text = "0";
-            // 
-            // textBox1
-            // 
-            this.textBox1.Location = new System.Drawing.Point(3, 3);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(156, 27);
-            this.textBox1.TabIndex = 9;
-            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 780);
             this.Controls.Add(this.statusStrip1);

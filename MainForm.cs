@@ -16,6 +16,7 @@ namespace BaseBall_Video_Manager
     {
         DataTable dt_file = new DataTable();
         DataTable dt_lib = new DataTable();
+        DataTable dt_clear = new DataTable();
 
         XmlDocument doc = new XmlDocument();
         string[] exts = new[] { ".avi" , ".mp4" , ".mov" , ".wmv" , ".avchd" , ".flv" , ".f4v" , ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
@@ -23,11 +24,17 @@ namespace BaseBall_Video_Manager
         public MainForm()
         {
             InitializeComponent();
-
-            getLibrary();//라이브러리 항목 가져오기
-            getFiles();//파일 정보 가져오기
-            Refresh_Data();
-            Total = this.dataGridView1.Rows.Count;
+            try
+            {
+                getLibrary();//라이브러리 항목 가져오기
+                getFiles();//파일 정보 가져오기
+                Refresh_Data();
+                Total = this.dataGridView1.Rows.Count;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
         int Total
         {
@@ -37,6 +44,10 @@ namespace BaseBall_Video_Manager
         {
             set { this.label_status.Text = value; }
             get { return this.label_status.Text; }
+        }
+        string SearchTextBox
+        {
+            get { return this.textBox1.Text; }
         }
         private void SetField(DataTable dt)
         {
@@ -90,7 +101,12 @@ namespace BaseBall_Video_Manager
                 {
                     dt_file.ReadXmlSchema(Application.StartupPath + @"\files.xml");
                 }
-                catch { Status = ""; return; }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                    Status = ""; 
+                    return; 
+                }
                 dt_file.ReadXml(Application.StartupPath + @"\files.xml");
                 this.dataGridView1.DataSource = dt_file;
             }
@@ -116,8 +132,10 @@ namespace BaseBall_Video_Manager
             for(int col=0; col< dataGridView1.Columns.Count; col++)
             {
                 dt_file.Columns.Add();
+                dt_clear.Columns.Add();
             }
             SetField(dt_file);
+            SetField(dt_clear);
             string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             //2. datatable 채워넣기
             for (int i=0; i<dt_lib.Rows.Count; i++)
@@ -248,8 +266,13 @@ namespace BaseBall_Video_Manager
                     Total = this.dataGridView1.Rows.Count;
                 }
             }
-            //기본 소트는 추가된 시각 DESC
-            this.dataGridView1.Sort(this.dataGridView1.Columns["addtime"], ListSortDirection.Descending);
+            if(dataGridView1.Rows.Count > 0)
+            {
+                //기본 소트는 추가된 시각 DESC
+                this.dataGridView1.Sort(this.dataGridView1.Columns["addtime"], ListSortDirection.Descending);
+                //첫줄로 스크롤 이동
+                dataGridView1.FirstDisplayedScrollingRowIndex = 0;
+            }
         }
 
         private void button_refresh_Click(object sender, EventArgs e)
@@ -291,22 +314,22 @@ namespace BaseBall_Video_Manager
             Total = this.dataGridView1.Rows.Count;
         }
 
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        private void ExcuteFile(int ColumnIndex, int RowIndex)
         {
             int index_exe = dataGridView1.Columns["exe"].Index;
-            if (e.ColumnIndex == index_exe && e.RowIndex > -1)
+            if (ColumnIndex == index_exe && RowIndex > -1)
             {
                 dataGridView1.MultiSelect = false;
                 dataGridView1.CurrentCell = null;
-                
-                string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
+
+                string fullpath = dataGridView1.Rows[RowIndex].Cells["fullpath"].Value.ToString();
 
                 dataGridView1.CurrentCell = null;
                 System.Diagnostics.Process.Start(fullpath);
 
                 string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 //Update 그리드
-                dataGridView1.Rows[e.RowIndex].Cells["lasttime"].Value = now;
+                dataGridView1.Rows[RowIndex].Cells["lasttime"].Value = now;
                 //Update XML
                 doc.Load(Application.StartupPath + @"\files.xml");
                 XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
@@ -316,46 +339,68 @@ namespace BaseBall_Video_Manager
             }
             dataGridView1.MultiSelect = true;
         }
-
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if(e.ColumnIndex != -1 && e.RowIndex != -1)
+            {
+                ExcuteFile(e.ColumnIndex, e.RowIndex);
+                dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
+            }
+        }
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != -1 && e.RowIndex != -1)
+            {
+                ExcuteFile(1, e.RowIndex);
+                dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
+            }
+        }
 
         private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.ColumnIndex == dataGridView1.Columns["eval"].Index
-              && e.Value != null)
+              && e.Value != null )
             {
-                bool flag = false;
-                switch (e.Value.ToString())
+                if(e.Value.ToString().Length > 0)
                 {
-                    case "1":
-                        e.Value = "★";
-                        flag = true;
-                        break;
-                    case "2":
-                        e.Value = "★★";
-                        flag = true;
-                        break;
-                    case "3":
-                        e.Value = "★★★";
-                        flag = true;
-                        break;
-                    case "4":
-                        e.Value = "★★★★";
-                        flag = true;
-                        break;
-                    case "5":
-                        e.Value = "★★★★★";
-                        flag = true;
-                        break;
-                }
-                if(flag)
-                {
-                    string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
-                    //Update XML
-                    doc.Load(Application.StartupPath + @"\files.xml");
-                    XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                    if (node != null)
-                        node.ParentNode.ChildNodes[4].InnerText = e.Value.ToString();
-                    doc.Save(Application.StartupPath + @"\files.xml");
+                    bool flag = false;
+                    switch (e.Value.ToString().Trim())
+                    {
+                        case "0":
+                            e.Value = "";
+                            flag = true;
+                            break;
+                        case "1":
+                            e.Value = "★";
+                            flag = true;
+                            break;
+                        case "2":
+                            e.Value = "★★";
+                            flag = true;
+                            break;
+                        case "3":
+                            e.Value = "★★★";
+                            flag = true;
+                            break;
+                        case "4":
+                            e.Value = "★★★★";
+                            flag = true;
+                            break;
+                        case "5":
+                            e.Value = "★★★★★";
+                            flag = true;
+                            break;
+                    }
+                    if (flag)
+                    {
+                        string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
+                        //Update XML
+                        doc.Load(Application.StartupPath + @"\files.xml");
+                        XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
+                        if (node != null)
+                            node.ParentNode.ChildNodes[4].InnerText = e.Value.ToString();
+                        doc.Save(Application.StartupPath + @"\files.xml");
+                    }
                 }
             }
         }
@@ -372,6 +417,11 @@ namespace BaseBall_Video_Manager
                     node.ParentNode.ChildNodes[5].InnerText = dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString();
                 doc.Save(Application.StartupPath + @"\files.xml");
             }
+            if (e.ColumnIndex == dataGridView1.Columns["eval"].Index)
+            {
+                string j = dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString();
+                //if(dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString().Substring(0, 1) != )
+            }
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -382,6 +432,7 @@ namespace BaseBall_Video_Manager
                 this.button_del.Enabled = true;
         }
 
+        // 파일 실행 이벤트
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if(e.ColumnIndex > 3 && e.RowIndex > -1)
@@ -389,7 +440,8 @@ namespace BaseBall_Video_Manager
                 dataGridView1.BeginEdit(false);
             }
         }
-
+        
+        /*
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
             dataGridView1.CurrentCell = null;
@@ -404,6 +456,63 @@ namespace BaseBall_Video_Manager
                 {
                      r.Visible = false;
                     //dataGridView1.Rows[r.Index].Visible = false;
+                }
+            }
+        }
+        */
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.Enter)
+            {
+                Search();
+            }
+        }
+
+        //검색
+        private void Search()
+        {
+            dataGridView1.Visible = true;
+            if (SearchTextBox.Trim() != String.Empty)
+            {
+                try
+                {
+                    DataTable dt = dt_file.AsEnumerable()
+                .Where(r => r.Field<string>("filename").ToUpper().Contains(SearchTextBox.ToUpper()) == true)
+                .CopyToDataTable();
+                    dataGridView1.DataSource = dt;
+                    Total = this.dataGridView1.Rows.Count;
+                }
+                catch
+                {
+                    dataGridView1.Visible = false;
+                }
+            }
+            else
+            {
+                dataGridView1.DataSource = dt_file;
+                Total = dt_file.Rows.Count;
+            }
+        }
+
+        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        {
+            int col = dataGridView1.CurrentCellAddress.X;
+            int row = dataGridView1.CurrentCellAddress.Y;
+
+            if(col > -1 && col < 5 && row > -1)
+            {
+                if(e.KeyCode == Keys.D0
+                    || e.KeyCode == Keys.Delete)
+                {
+                    dataGridView1[4, row].Value = string.Empty;
+                }
+                else if (e.KeyCode == Keys.D1
+                    || e.KeyCode == Keys.D2
+                    || e.KeyCode == Keys.D3
+                    || e.KeyCode == Keys.D4
+                    || e.KeyCode == Keys.D5)
+                {
+                    dataGridView1[4, row].Value = e.KeyData;
                 }
             }
         }
