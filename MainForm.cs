@@ -435,9 +435,60 @@ namespace BaseBall_Video_Manager
         // 파일 실행 이벤트
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if(e.ColumnIndex > 3 && e.RowIndex > -1)
+            // 파일 실행
+            if(dataGridView1.Columns[e.ColumnIndex].Name == "exe")
             {
                 dataGridView1.BeginEdit(false);
+            }
+            // 점수
+            else if ((dataGridView1.Columns[e.ColumnIndex].Name).ToLower().Contains("score") )
+            {
+                string val = dataGridView1.Columns[e.ColumnIndex].Name;
+                val = val.Substring(val.Length - 1, 1);
+                bool flag = false;
+                switch (val)
+                {
+                    case "0":
+                        val = "";
+                        flag = true;
+                        break;
+                    case "1":
+                        val = "★";
+                        flag = true;
+                        break;
+                    case "2":
+                        val = "★★";
+                        flag = true;
+                        break;
+                    case "3":
+                        val = "★★★";
+                        flag = true;
+                        break;
+                    case "4":
+                        val = "★★★★";
+                        flag = true;
+                        break;
+                    case "5":
+                        val = "★★★★★";
+                        flag = true;
+                        break;
+                }
+                if (flag)
+                {
+                    string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
+                    //Update XML
+                    doc.Load(Application.StartupPath + @"\files.xml");
+                    XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
+                    if (node != null)
+                        node.ParentNode.ChildNodes[4].InnerText = val.ToString();
+                    doc.Save(Application.StartupPath + @"\files.xml");
+                    dataGridView1.Rows[e.RowIndex].Cells["eval"].Value = val.ToString();
+                }
+            }
+            // 경로 오픈
+            else if (dataGridView1.Columns[e.ColumnIndex].Name == "OpenPath")
+            {
+                System.Diagnostics.Process.Start(Path.GetDirectoryName(dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString()));
             }
         }
         
