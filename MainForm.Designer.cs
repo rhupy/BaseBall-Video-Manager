@@ -28,403 +28,503 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
-            this.button_refresh = new System.Windows.Forms.Button();
-            this.button_del = new System.Windows.Forms.Button();
-            this.label_status = new System.Windows.Forms.Label();
-            this.button_lib = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.toolStripStatusLabel_totalcount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.filename = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.exe = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.lasttime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.addtime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.eval = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Score1 = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.Score2 = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.Score3 = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.Score4 = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.Score5 = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.desc = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.OpenPath = new System.Windows.Forms.DataGridViewButtonColumn();
-            this.fullpath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.tableLayoutPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
-            this.panel1.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
-            this.SuspendLayout();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            tableLayoutPanel1 = new TableLayoutPanel();
+            tableLayoutPanel2 = new TableLayoutPanel();
+            textBox1 = new TextBox();
+            button_lib = new Button();
+            label1 = new Label();
+            button_del = new Button();
+            checkBox1 = new CheckBox();
+            button2 = new Button();
+            button3 = new Button();
+            progressBar1 = new ProgressBar();
+            tableLayoutPanel3 = new TableLayoutPanel();
+            button1 = new Button();
+            button_refresh = new Button();
+            dataGridView1 = new DataGridView();
+            idx = new DataGridViewTextBoxColumn();
+            filename = new DataGridViewTextBoxColumn();
+            exe = new DataGridViewButtonColumn();
+            lasttime = new DataGridViewTextBoxColumn();
+            addtime = new DataGridViewTextBoxColumn();
+            eval = new DataGridViewTextBoxColumn();
+            score0 = new DataGridViewButtonColumn();
+            score1 = new DataGridViewButtonColumn();
+            score2 = new DataGridViewButtonColumn();
+            score3 = new DataGridViewButtonColumn();
+            score4 = new DataGridViewButtonColumn();
+            score5 = new DataGridViewButtonColumn();
+            desc = new DataGridViewTextBoxColumn();
+            openpath = new DataGridViewButtonColumn();
+            fullpath = new DataGridViewTextBoxColumn();
+            label_status = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
+            tableLayoutPanel1.SuspendLayout();
+            tableLayoutPanel2.SuspendLayout();
+            tableLayoutPanel3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            label_status.SuspendLayout();
+            SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 144F));
-            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.panel1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 1, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 3;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 41F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(889, 766);
-            this.tableLayoutPanel1.TabIndex = 0;
+            tableLayoutPanel1.ColumnCount = 1;
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 29F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 29F));
+            tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 0, 0);
+            tableLayoutPanel1.Controls.Add(dataGridView1, 0, 1);
+            tableLayoutPanel1.Dock = DockStyle.Fill;
+            tableLayoutPanel1.Location = new Point(0, 0);
+            tableLayoutPanel1.Margin = new Padding(4, 7, 4, 7);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
+            tableLayoutPanel1.RowCount = 3;
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 43F));
+            tableLayoutPanel1.Size = new Size(1549, 1422);
+            tableLayoutPanel1.TabIndex = 0;
             // 
-            // dataGridView1
+            // tableLayoutPanel2
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToResizeRows = false;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.filename,
-            this.exe,
-            this.lasttime,
-            this.addtime,
-            this.eval,
-            this.Score1,
-            this.Score2,
-            this.Score3,
-            this.Score4,
-            this.Score5,
-            this.desc,
-            this.OpenPath,
-            this.fullpath});
-            this.tableLayoutPanel1.SetColumnSpan(this.dataGridView1, 2);
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 45);
-            this.dataGridView1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.RowHeadersVisible = false;
-            this.dataGridView1.RowHeadersWidth = 62;
-            this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridView1.Size = new System.Drawing.Size(883, 691);
-            this.dataGridView1.TabIndex = 1;
-            this.dataGridView1.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellClick);
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
-            this.dataGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellDoubleClick);
-            this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
-            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.dataGridView1_CellFormatting);
-            this.dataGridView1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.dataGridView1_KeyDown);
-            // 
-            // panel1
-            // 
-            this.panel1.Controls.Add(this.textBox1);
-            this.panel1.Controls.Add(this.checkBox1);
-            this.panel1.Controls.Add(this.button_refresh);
-            this.panel1.Controls.Add(this.button_del);
-            this.panel1.Controls.Add(this.label_status);
-            this.panel1.Controls.Add(this.button_lib);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(3, 4);
-            this.panel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(739, 33);
-            this.panel1.TabIndex = 3;
+            tableLayoutPanel2.ColumnCount = 12;
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 286F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 166F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.Controls.Add(textBox1, 0, 0);
+            tableLayoutPanel2.Controls.Add(button_lib, 1, 0);
+            tableLayoutPanel2.Controls.Add(label1, 8, 0);
+            tableLayoutPanel2.Controls.Add(button_del, 4, 0);
+            tableLayoutPanel2.Controls.Add(checkBox1, 3, 0);
+            tableLayoutPanel2.Controls.Add(button2, 7, 0);
+            tableLayoutPanel2.Controls.Add(button3, 6, 0);
+            tableLayoutPanel2.Controls.Add(progressBar1, 5, 0);
+            tableLayoutPanel2.Controls.Add(tableLayoutPanel3, 2, 0);
+            tableLayoutPanel2.Dock = DockStyle.Fill;
+            tableLayoutPanel2.Location = new Point(4, 5);
+            tableLayoutPanel2.Margin = new Padding(4, 5, 4, 5);
+            tableLayoutPanel2.Name = "tableLayoutPanel2";
+            tableLayoutPanel2.RowCount = 1;
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel2.Size = new Size(1541, 53);
+            tableLayoutPanel2.TabIndex = 4;
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(3, 4);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(156, 31);
-            this.textBox1.TabIndex = 9;
-            this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
-            // 
-            // checkBox1
-            // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Checked = true;
-            this.checkBox1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBox1.Location = new System.Drawing.Point(455, 8);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(110, 29);
-            this.checkBox1.TabIndex = 8;
-            this.checkBox1.Text = "삭제잠금";
-            this.checkBox1.UseVisualStyleBackColor = true;
-            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
-            // 
-            // button_refresh
-            // 
-            this.button_refresh.Location = new System.Drawing.Point(273, 2);
-            this.button_refresh.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.button_refresh.Name = "button_refresh";
-            this.button_refresh.Size = new System.Drawing.Size(105, 29);
-            this.button_refresh.TabIndex = 7;
-            this.button_refresh.Text = "리프레시";
-            this.button_refresh.UseVisualStyleBackColor = true;
-            this.button_refresh.Click += new System.EventHandler(this.button_refresh_Click);
-            // 
-            // button_del
-            // 
-            this.button_del.Enabled = false;
-            this.button_del.Location = new System.Drawing.Point(535, 2);
-            this.button_del.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.button_del.Name = "button_del";
-            this.button_del.Size = new System.Drawing.Size(112, 29);
-            this.button_del.TabIndex = 3;
-            this.button_del.Text = "선택한 파일 삭제";
-            this.button_del.UseVisualStyleBackColor = true;
-            this.button_del.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // label_status
-            // 
-            this.label_status.AutoSize = true;
-            this.label_status.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label_status.Location = new System.Drawing.Point(565, 10);
-            this.label_status.Name = "label_status";
-            this.label_status.Size = new System.Drawing.Size(110, 32);
-            this.label_status.TabIndex = 6;
-            this.label_status.Text = "            ";
+            textBox1.Dock = DockStyle.Fill;
+            textBox1.Location = new Point(4, 12);
+            textBox1.Margin = new Padding(4, 12, 4, 5);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(278, 31);
+            textBox1.TabIndex = 9;
+            textBox1.KeyDown += textBox1_KeyDown;
             // 
             // button_lib
             // 
-            this.button_lib.Location = new System.Drawing.Point(166, 2);
-            this.button_lib.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.button_lib.Name = "button_lib";
-            this.button_lib.Size = new System.Drawing.Size(101, 29);
-            this.button_lib.TabIndex = 0;
-            this.button_lib.Text = "라이브러리";
-            this.button_lib.UseVisualStyleBackColor = true;
-            this.button_lib.Click += new System.EventHandler(this.button_lib_Click);
+            button_lib.Dock = DockStyle.Fill;
+            button_lib.Location = new Point(290, 7);
+            button_lib.Margin = new Padding(4, 7, 4, 7);
+            button_lib.Name = "button_lib";
+            button_lib.Size = new Size(135, 39);
+            button_lib.TabIndex = 0;
+            button_lib.Text = "라이브러리";
+            button_lib.UseVisualStyleBackColor = true;
+            button_lib.Click += button_lib_Click;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.label1.Location = new System.Drawing.Point(754, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(132, 41);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "문의 : fmsj@naver.com";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            label1.AutoSize = true;
+            label1.Dock = DockStyle.Fill;
+            label1.Location = new Point(1291, 0);
+            label1.Margin = new Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(186, 53);
+            label1.TabIndex = 2;
+            label1.Text = "문의 : fmsj@naver.com";
+            label1.TextAlign = ContentAlignment.MiddleCenter;
             // 
-            // statusStrip1
+            // button_del
             // 
-            this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1,
-            this.toolStripStatusLabel_totalcount});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 734);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(889, 32);
-            this.statusStrip1.TabIndex = 1;
-            this.statusStrip1.Text = "statusStrip1";
+            button_del.Dock = DockStyle.Fill;
+            button_del.Enabled = false;
+            button_del.Location = new Point(696, 7);
+            button_del.Margin = new Padding(4, 7, 4, 7);
+            button_del.Name = "button_del";
+            button_del.Size = new Size(158, 39);
+            button_del.TabIndex = 3;
+            button_del.Text = "선택한 파일 삭제";
+            button_del.UseVisualStyleBackColor = true;
+            button_del.Click += button1_Click;
             // 
-            // toolStripStatusLabel1
+            // checkBox1
             // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(56, 25);
-            this.toolStripStatusLabel1.Text = "Total:";
+            checkBox1.AutoSize = true;
+            checkBox1.Checked = true;
+            checkBox1.CheckState = CheckState.Checked;
+            checkBox1.Dock = DockStyle.Fill;
+            checkBox1.Location = new Point(576, 5);
+            checkBox1.Margin = new Padding(4, 5, 4, 5);
+            checkBox1.Name = "checkBox1";
+            checkBox1.Size = new Size(112, 43);
+            checkBox1.TabIndex = 8;
+            checkBox1.Text = "삭제잠금";
+            checkBox1.UseVisualStyleBackColor = true;
+            checkBox1.CheckedChanged += checkBox1_CheckedChanged;
             // 
-            // toolStripStatusLabel_totalcount
+            // button2
             // 
-            this.toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
-            this.toolStripStatusLabel_totalcount.Size = new System.Drawing.Size(22, 25);
-            this.toolStripStatusLabel_totalcount.Text = "0";
+            button2.Location = new Point(1148, 7);
+            button2.Margin = new Padding(4, 7, 4, 7);
+            button2.Name = "button2";
+            button2.Size = new Size(134, 38);
+            button2.TabIndex = 11;
+            button2.Text = "files 이전";
+            button2.UseVisualStyleBackColor = true;
+            button2.Visible = false;
+            // 
+            // button3
+            // 
+            button3.Location = new Point(1005, 7);
+            button3.Margin = new Padding(4, 7, 4, 7);
+            button3.Name = "button3";
+            button3.Size = new Size(134, 38);
+            button3.TabIndex = 12;
+            button3.Text = "lib 이전";
+            button3.UseVisualStyleBackColor = true;
+            button3.Visible = false;
+            // 
+            // progressBar1
+            // 
+            progressBar1.Dock = DockStyle.Fill;
+            progressBar1.Location = new Point(861, 3);
+            progressBar1.Name = "progressBar1";
+            progressBar1.Size = new Size(137, 47);
+            progressBar1.TabIndex = 13;
+            // 
+            // tableLayoutPanel3
+            // 
+            tableLayoutPanel3.ColumnCount = 2;
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel3.Controls.Add(button1, 1, 0);
+            tableLayoutPanel3.Controls.Add(button_refresh, 0, 0);
+            tableLayoutPanel3.Location = new Point(429, 0);
+            tableLayoutPanel3.Margin = new Padding(0);
+            tableLayoutPanel3.Name = "tableLayoutPanel3";
+            tableLayoutPanel3.RowCount = 1;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel3.Size = new Size(143, 53);
+            tableLayoutPanel3.TabIndex = 14;
+            // 
+            // button1
+            // 
+            button1.Dock = DockStyle.Fill;
+            button1.Location = new Point(75, 7);
+            button1.Margin = new Padding(4, 7, 4, 7);
+            button1.Name = "button1";
+            button1.Size = new Size(64, 39);
+            button1.TabIndex = 8;
+            button1.Text = "DEL";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click_1;
+            // 
+            // button_refresh
+            // 
+            button_refresh.Dock = DockStyle.Fill;
+            button_refresh.Location = new Point(4, 7);
+            button_refresh.Margin = new Padding(4, 7, 4, 7);
+            button_refresh.Name = "button_refresh";
+            button_refresh.Size = new Size(63, 39);
+            button_refresh.TabIndex = 7;
+            button_refresh.Text = "ADD";
+            button_refresh.UseVisualStyleBackColor = true;
+            button_refresh.Click += button_refresh_Click;
+            // 
+            // dataGridView1
+            // 
+            dataGridView1.AllowUserToAddRows = false;
+            dataGridView1.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Control;
+            dataGridViewCellStyle1.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridView1.ColumnHeadersHeight = 34;
+            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dataGridView1.Columns.AddRange(new DataGridViewColumn[] { idx, filename, exe, lasttime, addtime, eval, score0, score1, score2, score3, score4, score5, desc, openpath, fullpath });
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridView1.Dock = DockStyle.Fill;
+            dataGridView1.Location = new Point(4, 68);
+            dataGridView1.Margin = new Padding(4, 5, 4, 5);
+            dataGridView1.MultiSelect = false;
+            dataGridView1.Name = "dataGridView1";
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = SystemColors.Control;
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle3.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridView1.RowHeadersVisible = false;
+            dataGridView1.RowHeadersWidth = 62;
+            dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            dataGridView1.RowTemplate.Height = 25;
+            dataGridView1.RowTemplate.Resizable = DataGridViewTriState.False;
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridView1.Size = new Size(1541, 1306);
+            dataGridView1.TabIndex = 5;
+            dataGridView1.CellContentClick += dataGridView1_CellContentClick;
+            dataGridView1.CellContentDoubleClick += dataGridView1_CellDoubleClick;
+            dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
+            // 
+            // idx
+            // 
+            idx.DataPropertyName = "idx";
+            idx.Frozen = true;
+            idx.HeaderText = "Column1";
+            idx.MinimumWidth = 8;
+            idx.Name = "idx";
+            idx.ReadOnly = true;
+            idx.Visible = false;
+            idx.Width = 150;
             // 
             // filename
             // 
-            this.filename.DataPropertyName = "filename";
-            this.filename.HeaderText = "파일명";
-            this.filename.MinimumWidth = 250;
-            this.filename.Name = "filename";
-            this.filename.ReadOnly = true;
-            this.filename.Width = 250;
+            filename.DataPropertyName = "filename";
+            filename.Frozen = true;
+            filename.HeaderText = "파일명";
+            filename.MinimumWidth = 8;
+            filename.Name = "filename";
+            filename.ReadOnly = true;
+            filename.Width = 430;
             // 
             // exe
             // 
-            this.exe.DataPropertyName = "exe";
-            this.exe.HeaderText = "재생";
-            this.exe.MinimumWidth = 8;
-            this.exe.Name = "exe";
-            this.exe.ReadOnly = true;
-            this.exe.Width = 37;
+            exe.Frozen = true;
+            exe.HeaderText = "실행";
+            exe.MinimumWidth = 8;
+            exe.Name = "exe";
+            exe.ReadOnly = true;
+            exe.Width = 70;
             // 
             // lasttime
             // 
-            this.lasttime.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.lasttime.DataPropertyName = "lasttime";
-            this.lasttime.HeaderText = "마지막 실행";
-            this.lasttime.MinimumWidth = 120;
-            this.lasttime.Name = "lasttime";
-            this.lasttime.ReadOnly = true;
-            this.lasttime.Width = 120;
+            lasttime.DataPropertyName = "lasttime";
+            lasttime.Frozen = true;
+            lasttime.HeaderText = "실행시간";
+            lasttime.MinimumWidth = 8;
+            lasttime.Name = "lasttime";
+            lasttime.ReadOnly = true;
+            lasttime.Width = 190;
             // 
             // addtime
             // 
-            this.addtime.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.addtime.DataPropertyName = "addtime";
-            this.addtime.HeaderText = "추가된 시각";
-            this.addtime.MinimumWidth = 120;
-            this.addtime.Name = "addtime";
-            this.addtime.ReadOnly = true;
-            this.addtime.Width = 120;
+            addtime.DataPropertyName = "addtime";
+            addtime.Frozen = true;
+            addtime.HeaderText = "추가시간";
+            addtime.MinimumWidth = 8;
+            addtime.Name = "addtime";
+            addtime.ReadOnly = true;
+            addtime.Width = 190;
             // 
             // eval
             // 
-            this.eval.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
-            this.eval.DataPropertyName = "eval";
-            this.eval.HeaderText = "평가 (1~5)";
-            this.eval.MaxInputLength = 5;
-            this.eval.MinimumWidth = 8;
-            this.eval.Name = "eval";
-            this.eval.Width = 123;
+            eval.DataPropertyName = "eval";
+            eval.Frozen = true;
+            eval.HeaderText = "점수";
+            eval.MinimumWidth = 8;
+            eval.Name = "eval";
+            eval.ReadOnly = true;
+            eval.Width = 110;
             // 
-            // Score1
+            // score0
             // 
-            this.Score1.DataPropertyName = "Score1";
-            this.Score1.FillWeight = 10F;
-            this.Score1.HeaderText = "1";
-            this.Score1.MinimumWidth = 8;
-            this.Score1.Name = "Score1";
-            this.Score1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Score1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.Score1.Width = 20;
+            score0.Frozen = true;
+            score0.HeaderText = "0";
+            score0.MinimumWidth = 8;
+            score0.Name = "score0";
+            score0.ReadOnly = true;
+            score0.Width = 30;
             // 
-            // Score2
+            // score1
             // 
-            this.Score2.DataPropertyName = "Score2";
-            this.Score2.FillWeight = 10F;
-            this.Score2.HeaderText = "2";
-            this.Score2.MinimumWidth = 8;
-            this.Score2.Name = "Score2";
-            this.Score2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Score2.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.Score2.Width = 20;
+            score1.DataPropertyName = "score1";
+            score1.Frozen = true;
+            score1.HeaderText = "1";
+            score1.MinimumWidth = 8;
+            score1.Name = "score1";
+            score1.ReadOnly = true;
+            score1.Width = 30;
             // 
-            // Score3
+            // score2
             // 
-            this.Score3.DataPropertyName = "Score3";
-            this.Score3.FillWeight = 10F;
-            this.Score3.HeaderText = "3";
-            this.Score3.MinimumWidth = 8;
-            this.Score3.Name = "Score3";
-            this.Score3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Score3.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.Score3.Width = 20;
+            score2.DataPropertyName = "score2";
+            score2.Frozen = true;
+            score2.HeaderText = "2";
+            score2.MinimumWidth = 8;
+            score2.Name = "score2";
+            score2.ReadOnly = true;
+            score2.Width = 30;
             // 
-            // Score4
+            // score3
             // 
-            this.Score4.DataPropertyName = "Score4";
-            this.Score4.FillWeight = 10F;
-            this.Score4.HeaderText = "4";
-            this.Score4.MinimumWidth = 8;
-            this.Score4.Name = "Score4";
-            this.Score4.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Score4.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.Score4.Width = 20;
+            score3.DataPropertyName = "score3";
+            score3.Frozen = true;
+            score3.HeaderText = "3";
+            score3.MinimumWidth = 8;
+            score3.Name = "score3";
+            score3.ReadOnly = true;
+            score3.Width = 30;
             // 
-            // Score5
+            // score4
             // 
-            this.Score5.DataPropertyName = "Score5";
-            this.Score5.FillWeight = 10F;
-            this.Score5.HeaderText = "5";
-            this.Score5.MinimumWidth = 8;
-            this.Score5.Name = "Score5";
-            this.Score5.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.Score5.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.Score5.Width = 20;
+            score4.DataPropertyName = "score4";
+            score4.Frozen = true;
+            score4.HeaderText = "4";
+            score4.MinimumWidth = 8;
+            score4.Name = "score4";
+            score4.ReadOnly = true;
+            score4.Width = 30;
+            // 
+            // score5
+            // 
+            score5.DataPropertyName = "score5";
+            score5.Frozen = true;
+            score5.HeaderText = "5";
+            score5.MinimumWidth = 8;
+            score5.Name = "score5";
+            score5.ReadOnly = true;
+            score5.Width = 30;
             // 
             // desc
             // 
-            this.desc.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.desc.DataPropertyName = "desc";
-            this.desc.HeaderText = "메모";
-            this.desc.MinimumWidth = 8;
-            this.desc.Name = "desc";
+            desc.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            desc.DataPropertyName = "desc";
+            desc.HeaderText = "설명";
+            desc.MinimumWidth = 100;
+            desc.Name = "desc";
             // 
-            // OpenPath
+            // openpath
             // 
-            this.OpenPath.DataPropertyName = "OpenPath";
-            this.OpenPath.HeaderText = "Path";
-            this.OpenPath.MinimumWidth = 8;
-            this.OpenPath.Name = "OpenPath";
-            this.OpenPath.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.OpenPath.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.OpenPath.Width = 40;
+            openpath.HeaderText = "경로";
+            openpath.MinimumWidth = 8;
+            openpath.Name = "openpath";
+            openpath.ReadOnly = true;
+            openpath.Width = 70;
             // 
             // fullpath
             // 
-            this.fullpath.DataPropertyName = "fullpath";
-            this.fullpath.HeaderText = "fullpath";
-            this.fullpath.MinimumWidth = 8;
-            this.fullpath.Name = "fullpath";
-            this.fullpath.ReadOnly = true;
-            this.fullpath.Visible = false;
-            this.fullpath.Width = 73;
+            fullpath.DataPropertyName = "fullpath";
+            fullpath.HeaderText = "fullpath";
+            fullpath.MinimumWidth = 8;
+            fullpath.Name = "fullpath";
+            fullpath.ReadOnly = true;
+            fullpath.Visible = false;
+            fullpath.Width = 150;
+            // 
+            // label_status
+            // 
+            label_status.ImageScalingSize = new Size(20, 20);
+            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount });
+            label_status.Location = new Point(0, 1390);
+            label_status.Name = "label_status";
+            label_status.Padding = new Padding(1, 0, 20, 0);
+            label_status.Size = new Size(1549, 32);
+            label_status.TabIndex = 1;
+            label_status.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(56, 25);
+            toolStripStatusLabel1.Text = "Total:";
+            // 
+            // toolStripStatusLabel_totalcount
+            // 
+            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
+            toolStripStatusLabel_totalcount.Size = new Size(22, 25);
+            toolStripStatusLabel_totalcount.Text = "0";
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(889, 766);
-            this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.tableLayoutPanel1);
-            this.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.Name = "MainForm";
-            this.Text = "Baseball Video Manager V.3";
-            this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1549, 1422);
+            Controls.Add(label_status);
+            Controls.Add(tableLayoutPanel1);
+            Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            Margin = new Padding(4, 7, 4, 7);
+            Name = "MainForm";
+            Text = "Baseball Video Manager V.3";
+            tableLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel2.ResumeLayout(false);
+            tableLayoutPanel2.PerformLayout();
+            tableLayoutPanel3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            label_status.ResumeLayout(false);
+            label_status.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.Button button_lib;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button button_del;
-        private System.Windows.Forms.Label label_status;
-        private System.Windows.Forms.Button button_refresh;
-        private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel_totalcount;
-        private System.Windows.Forms.CheckBox checkBox1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn filename;
-        private System.Windows.Forms.DataGridViewButtonColumn exe;
-        private System.Windows.Forms.DataGridViewTextBoxColumn lasttime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn addtime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn eval;
-        private System.Windows.Forms.DataGridViewButtonColumn Score1;
-        private System.Windows.Forms.DataGridViewButtonColumn Score2;
-        private System.Windows.Forms.DataGridViewButtonColumn Score3;
-        private System.Windows.Forms.DataGridViewButtonColumn Score4;
-        private System.Windows.Forms.DataGridViewButtonColumn Score5;
-        private System.Windows.Forms.DataGridViewTextBoxColumn desc;
-        private System.Windows.Forms.DataGridViewButtonColumn OpenPath;
-        private System.Windows.Forms.DataGridViewTextBoxColumn fullpath;
+        private TableLayoutPanel tableLayoutPanel1;
+        private Button button_lib;
+        private Label label1;
+        private Button button_del;
+        private Button button_refresh;
+        private StatusStrip label_status;
+        private ToolStripStatusLabel toolStripStatusLabel1;
+        private ToolStripStatusLabel toolStripStatusLabel_totalcount;
+        private CheckBox checkBox1;
+        private TextBox textBox1;
+        private Button button2;
+        private TableLayoutPanel tableLayoutPanel2;
+        private Button button3;
+        private ProgressBar progressBar1;
+        private DataGridView dataGridView1;
+        private TableLayoutPanel tableLayoutPanel3;
+        private Button button1;
+        private DataGridViewTextBoxColumn idx;
+        private DataGridViewTextBoxColumn filename;
+        private DataGridViewButtonColumn exe;
+        private DataGridViewTextBoxColumn lasttime;
+        private DataGridViewTextBoxColumn addtime;
+        private DataGridViewTextBoxColumn eval;
+        private DataGridViewButtonColumn score0;
+        private DataGridViewButtonColumn score1;
+        private DataGridViewButtonColumn score2;
+        private DataGridViewButtonColumn score3;
+        private DataGridViewButtonColumn score4;
+        private DataGridViewButtonColumn score5;
+        private DataGridViewTextBoxColumn desc;
+        private DataGridViewButtonColumn openpath;
+        private DataGridViewTextBoxColumn fullpath;
     }
 }
 

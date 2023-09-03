@@ -1,10 +1,15 @@
-Ôªøusing System;
+//¡°ºˆ¡÷¥¬∫Œ∫–∫Œ≈Õ ∏∞≈•∑Œ «“∞Õ
+using MySqlConnector;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,512 +19,253 @@ namespace BaseBall_Video_Manager
 {
     public partial class MainForm : Form
     {
+        #region variable
+        MySqlConnection mySqlConnection = null;
+        string[] exts = new[] { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
         DataTable dt_file = new DataTable();
         DataTable dt_lib = new DataTable();
-        DataTable dt_clear = new DataTable();
-
         XmlDocument doc = new XmlDocument();
-        string[] exts = new[] { ".avi" , ".mp4" , ".mov" , ".wmv" , ".avchd" , ".flv" , ".f4v" , ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
-        
+
+        const string sqlInsertLib = "INSERT INTO `baseball_mgr`.`library` (`path`) VALUES (@path)";
+        const string sqlInsertFile = "INSERT INTO `baseball_mgr`.`files` (`filename`, `lasttime`, `addtime`, `eval`, `desc`, `fullpath`) VALUES (@filename, @lasttime, @addtime, @eval, @desc, @fullpath)";
+        const string sqlSelectlib = "SELECT * FROM `baseball_mgr`.`library`";
+        const string sqlSelectFile = "SELECT * FROM `baseball_mgr`.`files` order by addtime desc, idx";
+
+        #region ProgressBar
+        async void ProgressBarPlus()
+        {
+            try
+            {
+                this.progressBar1.Value = this.progressBar1.Maximum >= this.progressBar1.Value + 1 ? this.progressBar1.Value + 1 : this.progressBar1.Value;
+            }
+            catch { }
+        }
+        #endregion
+
+        #region StatusBar
+        private string StatusText
+        {
+            set { this.label_status.Text = value; }
+        }
+        private int StatusCount
+        {
+            get => Convert.ToInt32(toolStripStatusLabel_totalcount.Text);
+            set
+            {
+                this.toolStripStatusLabel_totalcount.Text = value.ToString();
+                this.progressBar1.Maximum = Convert.ToInt32(value.ToString());
+            }
+        }
+        #endregion
+
+        string SearchTextBox
+        {
+            get { return this.textBox1.Text; }
+        }
+        #endregion
+
+
+
         public MainForm()
         {
             InitializeComponent();
             try
             {
-                getLibrary();//ÎùºÏù¥Î∏åÎü¨Î¶¨ Ìï≠Î™© Í∞ÄÏ†∏Ïò§Í∏∞
-                getFiles();//ÌååÏùº Ï†ïÎ≥¥ Í∞ÄÏ†∏Ïò§Í∏∞
-                Refresh_Data();
-                Total = this.dataGridView1.Rows.Count;
+                // DB ø¨∞·
+                ConnMariaDB();
+                // DB ∑Œ∫Œ≈Õ ∂Û¿Ã∫Í∑Ø∏Æ ¡§∫∏ ∞°¡Æø¿±‚
+                GetLibraries();
+                // DB ∑Œ∫Œ≈Õ ∆ƒ¿œ ¡§∫∏ ∞°¡Æø¿±‚
+                GetFiles();
+                // ∆ƒ¿œªÛ≈¬ ¡°∞À«œø© √ﬂ∞°«œ±‚
+                // GetNewFiles();
+                // ±◊∏ÆµÂ ª˝º∫
+                SetGrid();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
-        int Total
+
+        #region Method
+        private void ExeFile(string path)
         {
-            set { this.toolStripStatusLabel_totalcount.Text = value.ToString(); }
-        }
-        string Status
-        {
-            set { this.label_status.Text = value; }
-            get { return this.label_status.Text; }
-        }
-        string SearchTextBox
-        {
-            get { return this.textBox1.Text; }
-        }
-        private void SetField(DataTable dt)
-        {
-            dt.Columns[0].ColumnName = "filename";
-            dt.Columns[1].ColumnName = "exe";
-            dt.Columns[2].ColumnName = "lasttime";
-            dt.Columns[3].ColumnName = "addtime";
-            dt.Columns[4].ColumnName = "eval";
-            dt.Columns[5].ColumnName = "desc";
-            dt.Columns[6].ColumnName = "fullpath";
-        }
-        private void button_lib_Click(object sender, EventArgs e)
-        {
-            Library libform = new Library();
-            libform.ShowDialog();
-            if(libform.DialogResult == DialogResult.OK)
+            using (Process proc = new Process())
             {
-                getLibrary();//ÎùºÏù¥Î∏åÎü¨Î¶¨ Ìï≠Î™© Í∞ÄÏ†∏Ïò§Í∏∞
-                getFiles();//ÌååÏùº Ï†ïÎ≥¥ Í∞ÄÏ†∏Ïò§Í∏∞
-                Refresh_Data();
-                Total = this.dataGridView1.Rows.Count;
+                bool pathExists = File.Exists(path);
+                if (!pathExists) throw new ArgumentException("Path doesnt exist");
+
+                var p = new Process();
+                p.StartInfo = new ProcessStartInfo(@$"{path}")
+                {
+                    UseShellExecute = true
+                };
+                p.Start();
             }
+        }
+        private void GetLibraries()
+        {
+            dt_lib = select(sqlSelectlib);
+        }
+        private void GetFiles()
+        {
+            dt_file = select(sqlSelectFile);
+            StatusCount = dt_file.Rows.Count;
         }
 
-        private void getLibrary()
+        async void GetNewFiles()
         {
-            FileInfo fi = new FileInfo(Application.StartupPath + @"\library.xml");
-            if (fi.Exists)
-            {
-                dt_lib = new DataTable("library");
-                try
-                {
-                    dt_lib.ReadXmlSchema(Application.StartupPath + @"\library.xml");
-                }
-                catch { return; }
-                dt_lib.ReadXml(Application.StartupPath + @"\library.xml");
-                dt_lib.Columns[0].ColumnName = "path";
-            }
-        }
+            this.progressBar1.Value = 0;
 
-        private void getFiles()
-        {
-            if (dt_lib.Rows.Count == 0)
-                return;
-            Status = "ÌååÏùºÏ†ïÎ≥¥ Í∞ÄÏ†∏Ïò§Îäî Ï§ë...";
-            FileInfo fi = new FileInfo(Application.StartupPath + @"\files.xml");
-            if (fi.Exists)
+            // ∫Ò±≥ ∞·∞˙ ∏Ò∑œ
+            DataTable dt_diff = new DataTable();
+            dt_diff.InitDataTable();
+
+            // Ω«¡¶ ∆ƒ¿œ ∏Ò∑œ
+            DataTable dt_real = new DataTable();
+            dt_real.InitDataTable();
+
+            // ¿¸ ∆ƒ¿œ ∏ÆΩ∫∆Æ
+            List<string> list_real = new List<string>();
+
+            // «ˆ¿Á Ω√∞£
+            string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            // Ω«¡¶ ∆ƒ¿œ ¿¸ ∏Ò∑œ ª˝º∫
+            foreach (DataRow dr in dt_lib.Rows)
             {
-                dt_file = new DataTable("files");
-                try
+                string path = dr["path"].ToString();
+                DirectoryInfo di = new DirectoryInfo(path);
+                // 1. √÷ªÛ¿ß ∆˙¥ıø°º≠ ∞Àªˆ«œø© √ﬂ∞°
+                List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
+                list_real.AddRange(list_fileNames);
+
+                // 2. «œ¿ß ∆˙¥ıø°º≠ ∞Àªˆ«œø© √ﬂ∞°
+                List<string> dirNames = Directory.GetDirectories(path).ToList<string>();
+                foreach (string dirName in dirNames)
                 {
-                    dt_file.ReadXmlSchema(Application.StartupPath + @"\files.xml");
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                    Status = ""; 
-                    return; 
-                }
-                dt_file.ReadXml(Application.StartupPath + @"\files.xml");
-                this.dataGridView1.DataSource = dt_file;
-            }
-            else
-            {
-                //ÎùºÏù¥Î∏åÎü¨Î¶¨ Ï†ïÎ≥¥Îäî ÏûàÎäîÎç∞, files.xml ÌååÏùºÏù¥ ÏóÜÎäî Í≤ΩÏö∞ Ïã†Í∑ú ÏÉùÏÑ±
-                if(dt_lib.Rows.Count > 0)
-                {
-                    createData();
-                    getFiles();
+                    List<string> filenames_indir = Directory.GetFiles(dirName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
+                    list_real.AddRange(filenames_indir);
                 }
             }
 
-            Status = "";
-        }
-
-        private void createData()
-        {
-            Status = "ÌååÏùºÏ†ïÎ≥¥ Ïã†Í∑ú ÏÉùÏÑ± Ï§ë...";
-
-            //1. datatable ÌïÑÎìú ÏÑ∏ÌåÖ
-            dt_file = new DataTable("files");
-            for(int col=0; col< dataGridView1.Columns.Count; col++)
+            // ª˝º∫µ» ¿¸ ∆ƒ¿œ ∏Ò∑œ¿ª ∞ÀªÁ«œø© √ﬂ∞°
+            dt_diff.Columns.Add("result");
+            foreach (string file in list_real)
             {
-                dt_file.Columns.Add();
-                dt_clear.Columns.Add();
-            }
-            SetField(dt_file);
-            SetField(dt_clear);
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            //2. datatable Ï±ÑÏõåÎÑ£Í∏∞
-            for (int i=0; i<dt_lib.Rows.Count; i++)
-            {
-                String FolderName = dt_lib.Rows[i][0].ToString();
-                System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(FolderName);
-                //ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò Î™®Îì† ÌååÏùº Î¶¨Ïä§Ìä∏
-                List<string> filenames = Directory.GetFiles(FolderName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                if(filenames.Count>0)
-                    Add_FileData(filenames, now);
-                //ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò ÌååÏùº Î¶¨Ïä§Ìä∏ÎèÑ Ï∂îÍ∞Ä
-                List<string> dirnames = Directory.GetDirectories(FolderName).ToList<string>();
-                foreach(string dirname in dirnames)
-                {
-                    List<string> filenames_indir = Directory.GetFiles(dirname, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                    if(filenames_indir.Count>0)
-                        Add_FileData(filenames_indir, now);
-                }
-            }
-            //3. xmlÌååÏùº ÏÉùÏÑ±
-            dt_file.WriteXml(Application.StartupPath + @"\files.xml", true);
-
-            Status = "";
-        }
-
-        private void Add_FileData(List<string> filenames, string now)
-        {
-            for (int j = 0; j < filenames.Count; j++)
-            {
-                dt_file.Rows.Add();
-                dt_file.Rows[dt_file.Rows.Count - 1]["filename"] = Path.GetFileName(filenames[j]);
-                dt_file.Rows[dt_file.Rows.Count - 1]["exe"] = "‚ñ∂";
-                dt_file.Rows[dt_file.Rows.Count - 1]["lasttime"] = "";
-                dt_file.Rows[dt_file.Rows.Count - 1]["addtime"] = now;
-                dt_file.Rows[dt_file.Rows.Count - 1]["eval"] = "";
-                dt_file.Rows[dt_file.Rows.Count - 1]["desc"] = "";
-                dt_file.Rows[dt_file.Rows.Count - 1]["fullpath"] = Path.GetFullPath(filenames[j]);
-            }
-        }
-        private void DupClear()
-        {
-            //Ï§ëÎ≥µÎç∞Ïù¥ÌÑ∞ Ï†úÍ±∞ Î∞è Datatable, XML ÌååÏùº ÏóÖÎç∞Ïù¥Ìä∏
-            int dt_count = dt_file.Rows.Count;
-            DataTable dt = dt_file.AsEnumerable()
-               .GroupBy(r => new { Col1 = r["fullpath"] })
-               .Select(g => g.OrderBy(r => r["lasttime"]).Last()
-               )
-               .CopyToDataTable();
-            if(dt_count > dt.Rows.Count)
-            {
-                dt.TableName = "files";
-                dataGridView1.DataSource = dt;
-                dt.WriteXml(Application.StartupPath + @"\files.xml", true);
-                Total = this.dataGridView1.Rows.Count;
-            }
-        }
-
-        private void Refresh_Data()
-        {
-            List<string> filenames = new List<string>();
-            for (int i = 0; i < dt_lib.Rows.Count; i++)
-            {
-                String FolderName = dt_lib.Rows[i][0].ToString();
-                System.IO.DirectoryInfo di = new System.IO.DirectoryInfo(FolderName);
-                //ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò Î™®Îì† ÌååÏùº Î¶¨Ïä§Ìä∏
-                List<string> filenames_ = Directory.GetFiles(FolderName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                //ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò ÎîîÎ†âÌÜ†Î¶¨ ÎÇ¥Ïùò ÌååÏùº Î¶¨Ïä§Ìä∏ÎèÑ Ï∂îÍ∞Ä
-                List<string> dirnames = Directory.GetDirectories(FolderName).ToList<string>();
-                foreach (string dirname in dirnames)
-                {
-                    List<string> filenames_indir = Directory.GetFiles(dirname, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                    foreach (string filename in filenames_indir)
-                    {
-                        filenames_.Add(filename);
-                    }
-                }
-                foreach (string f in filenames_)
-                    filenames.Add(f);
-            }
-            string fullpath = "";
-            //Í∑∏Î¶¨Îìú (dt_file) ÏóêÎäî Ï°¥Ïû¨ÌïòÏßÄÎßå, filenameÏóêÎäî ÏóÜÎäî Í≤ÉÏùÄ ÏÇ≠Ï†úÌïúÎã§.
-            for (int row = dataGridView1.Rows.Count - 1; row > -1 ; row--)
-            {
-                fullpath = dataGridView1.Rows[row].Cells["fullpath"].Value.ToString();
-                if (filenames.AsEnumerable().Where(x => x == fullpath).Count() == 0)
-                {
-                    dataGridView1.Rows.RemoveAt(row);
-                    //Update XML
-                    doc.Load(Application.StartupPath + @"\files.xml");
-                    XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                    if (node != null)
-                        node.ParentNode.RemoveAll();
-                    doc.Save(Application.StartupPath + @"\files.xml");
-                }
-            }
-
-            //Ï∂îÍ∞Ä ÎêúÍ≤ÉÏù¥ Ï°¥Ïû¨ÌïòÎ©¥ Í∞±Ïã†
-            int cur_count = filenames.Count;
-            int old_count = dataGridView1.Rows.Count;
-            if (cur_count > old_count)
-            {
-                int add_count = 0;
-                string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                for (int j = 0; j< cur_count; j++)
-                {
-                    //Ïã†Í∑ú ÌååÏùºÏùÑ Î∞úÍ≤¨Ìïú Í≤ΩÏö∞ DatableÏóê Ï∂îÍ∞Ä
-                    if (dt_file.AsEnumerable()
-                        .Where(x=>  x.Field<string>("fullpath") == Path.GetFullPath(filenames[j]))
-                        .Count() == 0)
-                    {
-                        dt_file.Rows.Add();
-                        dt_file.Rows[dt_file.Rows.Count - 1]["filename"] = Path.GetFileName(filenames[j]);
-                        dt_file.Rows[dt_file.Rows.Count - 1]["exe"] = "‚ñ∂";
-                        dt_file.Rows[dt_file.Rows.Count - 1]["lasttime"] = "";
-                        dt_file.Rows[dt_file.Rows.Count - 1]["addtime"] = now;
-                        dt_file.Rows[dt_file.Rows.Count - 1]["eval"] = "";
-                        dt_file.Rows[dt_file.Rows.Count - 1]["desc"] = "";
-                        dt_file.Rows[dt_file.Rows.Count - 1]["fullpath"] = Path.GetFullPath(filenames[j]);
-                        add_count++;
-                        if (cur_count - old_count == add_count)
-                            break;
-                    }
-                }
-                if(add_count > 0)
-                {
-                    dt_file.WriteXml(Application.StartupPath + @"\files.xml", true);
-                    this.dataGridView1.DataSource = dt_file;
-                    Total = this.dataGridView1.Rows.Count;
-                }
-            }
-            if(dataGridView1.Rows.Count > 0)
-            {
-                //Í∏∞Î≥∏ ÏÜåÌä∏Îäî Ï∂îÍ∞ÄÎêú ÏãúÍ∞Å DESC
-                this.dataGridView1.Sort(this.dataGridView1.Columns["addtime"], ListSortDirection.Descending);
-                //Ï≤´Ï§ÑÎ°ú Ïä§ÌÅ¨Î°§ Ïù¥Îèô
-                dataGridView1.FirstDisplayedScrollingRowIndex = 0;
-            }
-        }
-
-        private void button_refresh_Click(object sender, EventArgs e)
-        {
-            Refresh_Data();
-            DupClear();
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            DupClear();
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            List<int> del_list = new List<int>();
-            for(int row = 0; row< this.dataGridView1.Rows.Count; row++)
-            {
-                if(dataGridView1.Rows[row].Selected)
-                {
-                    del_list.Add(row);
-                }
-            }
-            for(int row = del_list.Count-1; row>=0; row--)
-            {
-                string fullpath = dataGridView1.Rows[del_list[row]].Cells["fullpath"].Value.ToString();
-                //ÌååÏùºÏÇ≠Ï†ú
-                new System.IO.FileInfo(fullpath).Delete();
-                //Update XML
-                doc.Load(Application.StartupPath + @"\files.xml");
-                XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                if (node != null)
-                    node.ParentNode.RemoveAll();
-                doc.Save(Application.StartupPath + @"\files.xml");
-                //Í∑∏Î¶¨Îìú ÏÇ≠Ï†ú
-                dataGridView1.Rows.RemoveAt(del_list[row]);
-
-            }
-            Total = this.dataGridView1.Rows.Count;
-        }
-
-        private void ExcuteFile(int ColumnIndex, int RowIndex)
-        {
-            int index_exe = dataGridView1.Columns["exe"].Index;
-            if (ColumnIndex == index_exe && RowIndex > -1)
-            {
-                dataGridView1.MultiSelect = false;
-                dataGridView1.CurrentCell = null;
-
-                string fullpath = dataGridView1.Rows[RowIndex].Cells["fullpath"].Value.ToString();
-
-                dataGridView1.CurrentCell = null;
-                System.Diagnostics.Process.Start(fullpath);
-
-                string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                //Update Í∑∏Î¶¨Îìú
-                dataGridView1.Rows[RowIndex].Cells["lasttime"].Value = now;
-                //Update XML
-                doc.Load(Application.StartupPath + @"\files.xml");
-                XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                if (node != null)
-                    node.ParentNode.ChildNodes[2].InnerText = now.ToString();
-                doc.Save(Application.StartupPath + @"\files.xml");
-            }
-            dataGridView1.MultiSelect = true;
-        }
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if(e.ColumnIndex != -1 && e.RowIndex != -1)
-            {
-                ExcuteFile(e.ColumnIndex, e.RowIndex);
-                dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
-            }
-        }
-        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex != -1 && e.RowIndex != -1)
-            {
-                ExcuteFile(1, e.RowIndex);
-                dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
-            }
-        }
-
-        private void dataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex == dataGridView1.Columns["eval"].Index
-              && e.Value != null )
-            {
-                if(e.Value.ToString().Length > 0)
-                {
-                    bool flag = false;
-                    switch (e.Value.ToString().Trim())
-                    {
-                        case "0":
-                            e.Value = "";
-                            flag = true;
-                            break;
-                        case "1":
-                            e.Value = "‚òÖ";
-                            flag = true;
-                            break;
-                        case "2":
-                            e.Value = "‚òÖ‚òÖ";
-                            flag = true;
-                            break;
-                        case "3":
-                            e.Value = "‚òÖ‚òÖ‚òÖ";
-                            flag = true;
-                            break;
-                        case "4":
-                            e.Value = "‚òÖ‚òÖ‚òÖ‚òÖ";
-                            flag = true;
-                            break;
-                        case "5":
-                            e.Value = "‚òÖ‚òÖ‚òÖ‚òÖ‚òÖ";
-                            flag = true;
-                            break;
-                    }
-                    if (flag)
-                    {
-                        string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
-                        //Update XML
-                        doc.Load(Application.StartupPath + @"\files.xml");
-                        XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                        if (node != null)
-                            node.ParentNode.ChildNodes[4].InnerText = e.Value.ToString();
-                        doc.Save(Application.StartupPath + @"\files.xml");
-                    }
-                }
-            }
-        }
-
-        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == dataGridView1.Columns["desc"].Index )
-            {
-                string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
-                //Update XML
-                doc.Load(Application.StartupPath + @"\files.xml");
-                XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                if (node != null)
-                    node.ParentNode.ChildNodes[5].InnerText = dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString();
-                doc.Save(Application.StartupPath + @"\files.xml");
-            }
-            if (e.ColumnIndex == dataGridView1.Columns["eval"].Index)
-            {
-                string j = dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString();
-                //if(dataGridView1.Rows[e.RowIndex].Cells["desc"].Value.ToString().Substring(0, 1) != )
-            }
-        }
-
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox1.Checked)
-                this.button_del.Enabled = false;
-            else
-                this.button_del.Enabled = true;
-        }
-
-        // ÌååÏùº Ïã§Ìñâ Ïù¥Î≤§Ìä∏
-        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            // ÌååÏùº Ïã§Ìñâ
-            if(dataGridView1.Columns[e.ColumnIndex].Name == "exe")
-            {
-                dataGridView1.BeginEdit(false);
-            }
-            // Ï†êÏàò
-            else if ((dataGridView1.Columns[e.ColumnIndex].Name).ToLower().Contains("score") )
-            {
-                string val = dataGridView1.Columns[e.ColumnIndex].Name;
-                val = val.Substring(val.Length - 1, 1);
-                bool flag = false;
-                switch (val)
-                {
-                    case "0":
-                        val = "";
-                        flag = true;
-                        break;
-                    case "1":
-                        val = "‚òÖ";
-                        flag = true;
-                        break;
-                    case "2":
-                        val = "‚òÖ‚òÖ";
-                        flag = true;
-                        break;
-                    case "3":
-                        val = "‚òÖ‚òÖ‚òÖ";
-                        flag = true;
-                        break;
-                    case "4":
-                        val = "‚òÖ‚òÖ‚òÖ‚òÖ";
-                        flag = true;
-                        break;
-                    case "5":
-                        val = "‚òÖ‚òÖ‚òÖ‚òÖ‚òÖ";
-                        flag = true;
-                        break;
-                }
-                if (flag)
-                {
-                    string fullpath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
-                    //Update XML
-                    doc.Load(Application.StartupPath + @"\files.xml");
-                    XmlNode node = doc.SelectSingleNode(string.Format("/descendant::DocumentElement/files/fullpath[.='{0}']", fullpath));
-                    if (node != null)
-                        node.ParentNode.ChildNodes[4].InnerText = val.ToString();
-                    doc.Save(Application.StartupPath + @"\files.xml");
-                    dataGridView1.Rows[e.RowIndex].Cells["eval"].Value = val.ToString();
-                }
-            }
-            // Í≤ΩÎ°ú Ïò§Ìîà
-            else if (dataGridView1.Columns[e.ColumnIndex].Name == "OpenPath")
-            {
-                System.Diagnostics.Process.Start(Path.GetDirectoryName(dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString()));
-            }
-        }
-        
-        /*
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-            dataGridView1.CurrentCell = null;
-            foreach (System.Windows.Forms.DataGridViewRow r in dataGridView1.Rows)
-            {
-                if ((r.Cells[0].Value).ToString().ToUpper().Contains(textBox1.Text.ToUpper()))
-                {
-                    r.Visible = true;
-                    //dataGridView1.Rows[r.Index].Visible = true;
-                }
+                ProgressBarPlus();
+                int pathExists = dt_file.AsEnumerable().Where(r => r.Field<string>("fullpath").Equals(file)).Count();
+                // ¿ÃπÃ ¡∏¿Á«œ¥¬ ∞ÊøÏ ¿Ø¡ˆ
+                if (pathExists == 1)
+                    continue;
                 else
-                {
-                     r.Visible = false;
-                    //dataGridView1.Rows[r.Index].Visible = false;
-                }
+                    INSERT_SINGLE(sqlInsertFile, file, nowTime, Path.GetFullPath(file));
             }
-        }
-        */
-        private void textBox1_KeyDown(object sender, KeyEventArgs e)
-        {
-            if(e.KeyCode == Keys.Enter)
-            {
-                Search();
-            }
-        }
+            // ¿Á¡∂»∏
+            GetFiles();
 
-        //Í≤ÄÏÉâ
+        }
+        async void SetDelFiles()
+        {
+            this.progressBar1.Value = 0;
+
+            // ∫Ò±≥ ∞·∞˙ ∏Ò∑œ
+            DataTable dt_diff = new DataTable();
+            dt_diff.InitDataTable();
+
+            // Ω«¡¶ ∆ƒ¿œ ∏Ò∑œ
+            DataTable dt_real = new DataTable();
+            dt_real.InitDataTable();
+
+            // ¿¸ ∆ƒ¿œ ∏ÆΩ∫∆Æ
+            List<string> list_real = new List<string>();
+
+            // «ˆ¿Á Ω√∞£
+            string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+            // DBø°º≠ ∞°¡ˆ∞Ìø¬ ∏Ò∑œ¿∏∑Œ ∫Œ≈Õ »Æ¿Œ«œø© ¡¶∞≈
+            foreach (DataRow row in dt_file.Rows)
+            {
+                ProgressBarPlus();
+                string fullpath = row["fullpath"].ToString();
+                bool pathExists = File.Exists(fullpath);
+                // ¿ÃπÃ ¡∏¿Á«œ¥¬ ∞ÊøÏ ¿Ø¡ˆ
+                if (pathExists)
+                    continue;
+                // ªÁ∏Æ¡¯∞≈∏È DBø°º≠ ªË¡¶
+                string idx = row["idx"].ToString();
+                QUERY($"DELETE FROM `baseball_mgr`.`files` WHERE  `idx`={idx}");
+            }
+            // ¿Á¡∂»∏
+            GetFiles();
+        }
+        private void SetGrid()
+        {
+            this.dataGridView1.DataSource = dt_file;
+        }
+        private void CreateDbFilesFromXML()
+        {
+            dt_file.InitDataTable();
+            doc.Load(Application.StartupPath + @"\files.xml");
+            foreach (System.Xml.XmlElement x in doc.ChildNodes[1].ChildNodes)
+            {
+                DataRow dr = dt_file.NewRow();
+                dr[0] = x.ChildNodes[0].ToNodeText();
+                dr[1] = x.ChildNodes[1].ToNodeText();
+                dr[2] = x.ChildNodes[2].ToNodeText();
+                dr[3] = x.ChildNodes[3].ToNodeText();
+                dr[4] = x.ChildNodes[4].ToNodeText();
+                dr[5] = x.ChildNodes[5].ToNodeText();
+                dr[6] = x.ChildNodes[6].ToNodeText();
+                dt_file.Rows.Add(dr);
+            }
+        }
+        // ∆ƒ¿œ¿« Ω««‡ + æ˜µ•¿Ã∆Æ
+        private void FileExe(string fullPath, int row)
+        {
+            fullPath = $@"{Path.GetFullPath(fullPath)}".Replace("\\", "/").Replace("/", "\\");
+            dataGridView1.CurrentCell = null;
+            ExeFile(fullPath);
+            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            dataGridView1.Rows[row].Cells["lasttime"].Value = now;
+            //Update DB
+            string idx = dataGridView1.Rows[row].Cells["idx"].Value.ToString();
+            QUERY($"UPDATE `baseball_mgr`.`files` SET `lasttime`='{now}' WHERE  `idx`={idx}");
+        }
+        // ∆ƒ¿œ¿« ∆Ú∞° + æ˜µ•¿Ã∆Æ
+        private void FileEval(string colHeaderName, int row)
+        {
+            int star = Convert.ToInt16(colHeaderName);
+            if (dataGridView1.Rows[row].Cells["eval"].Value.ToString().Length == star)
+                return;
+            string eval = string.Empty;
+            for (int i = 0; i < star; i++)
+            {
+                eval += "°⁄";
+            }
+            dataGridView1.Rows[row].Cells["eval"].Value = eval;
+            //Update DB
+            string idx = dataGridView1.Rows[row].Cells["idx"].Value.ToString();
+            QUERY($"UPDATE `baseball_mgr`.`files` SET `eval`='{eval}' WHERE  `idx`={idx}");
+        }
+        // ∆ƒ¿œ¿« ∏ﬁ∏ + æ˜µ•¿Ã∆Æ
+        private void FileMemo(string desc, string idx)
+        {
+            //Update DB
+            QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='{desc}' WHERE  `idx`={idx}");
+        }
+        // ∆ƒ¿œ¿« ∞Ê∑Œ ø≠±‚
+        private void FilePathOpen(int row)
+        {
+            var p = new Process();
+            p.StartInfo = new ProcessStartInfo(@$"{Path.GetDirectoryName(dataGridView1.Rows[row].Cells["fullpath"].Value.ToString())}")
+            {
+                UseShellExecute = true
+            };
+            p.Start();
+        }
+        //±◊∏ÆµÂ ¡∂»∏
         private void Search()
         {
             dataGridView1.Visible = true;
@@ -531,7 +277,7 @@ namespace BaseBall_Video_Manager
                 .Where(r => r.Field<string>("filename").ToUpper().Contains(SearchTextBox.ToUpper()) == true)
                 .CopyToDataTable();
                     dataGridView1.DataSource = dt;
-                    Total = this.dataGridView1.Rows.Count;
+                    StatusCount = this.dataGridView1.Rows.Count;
                 }
                 catch
                 {
@@ -541,31 +287,254 @@ namespace BaseBall_Video_Manager
             else
             {
                 dataGridView1.DataSource = dt_file;
-                Total = dt_file.Rows.Count;
+                StatusCount = dt_file.Rows.Count;
             }
         }
+        #endregion
 
-        private void dataGridView1_KeyDown(object sender, KeyEventArgs e)
+        #region Event Handler
+        // lib πˆ∆∞
+        private void button_lib_Click(object sender, EventArgs e)
         {
-            int col = dataGridView1.CurrentCellAddress.X;
-            int row = dataGridView1.CurrentCellAddress.Y;
-
-            if(col > -1 && col < 5 && row > -1)
+            Library libform = new Library();
+            libform.ShowDialog();
+            if (libform.DialogResult == DialogResult.OK)
             {
-                if(e.KeyCode == Keys.D0
-                    || e.KeyCode == Keys.Delete)
+                GetLibraries();
+                GetFiles();
+                SetGrid();
+                StatusCount = this.dataGridView1.Rows.Count;
+            }
+        }
+        // Ω≈±‘ ∆ƒ¿œ √£æ∆º≠ √ﬂ∞°«œ±‚ πˆ∆∞
+        private void button_refresh_Click(object sender, EventArgs e)
+        {
+            GetNewFiles();
+            SetGrid();
+        }
+        // ªÁ∂Û¡¯ ∆ƒ¿œ ¡¶∞≈«œ±‚ πˆ∆∞
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            SetDelFiles();
+            SetGrid();
+        }
+        private void button1_Click(object sender, EventArgs e)
+        {
+            List<int> del_list = new List<int>();
+            for (int row = 0; row < this.dataGridView1.Rows.Count; row++)
+            {
+                if (dataGridView1.Rows[row].Selected)
                 {
-                    dataGridView1[4, row].Value = string.Empty;
+                    del_list.Add(row);
                 }
-                else if (e.KeyCode == Keys.D1
-                    || e.KeyCode == Keys.D2
-                    || e.KeyCode == Keys.D3
-                    || e.KeyCode == Keys.D4
-                    || e.KeyCode == Keys.D5)
+            }
+            for (int row = del_list.Count - 1; row >= 0; row--)
+            {
+                string fullpath = dataGridView1.Rows[del_list[row]].Cells["fullpath"].Value.ToString();
+                //∆ƒ¿œªË¡¶
+                new System.IO.FileInfo(fullpath).Delete();
+                int idx = dt_file.AsEnumerable().Where(x => x.Field<string>("fullpath") == fullpath).Select(r => r.Field<int>("idx")).First();
+                QUERY($"DELETE FROM `baseball_mgr`.`files` WHERE  `idx`={idx}");
+
+                //±◊∏ÆµÂ ªË¡¶
+                dataGridView1.Rows.RemoveAt(del_list[row]);
+            }
+            StatusCount = this.dataGridView1.Rows.Count;
+        }
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == -1 || e.RowIndex == -1)
+                return;
+
+            int x = e.ColumnIndex;
+            int y = e.RowIndex;
+            string colName = this.dataGridView1.Columns[x].Name;
+
+            switch (colName)
+            {
+                case "exe":
+                    FileExe(this.dataGridView1.Rows[y].Cells["fullpath"].Value.ToString(), y);
+                    break;
+                case "score0":
+                case "score1":
+                case "score2":
+                case "score3":
+                case "score4":
+                case "score5":
+                    string colHeaderName = this.dataGridView1.Columns[x].HeaderText;
+                    FileEval(colHeaderName, y);
+                    break;
+                case "openpath":
+                    FilePathOpen(y);
+                    break;
+            }
+            return;
+        }
+        private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != -1 && e.RowIndex != -1)
+            {
+                FileExe(this.dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(), e.RowIndex);
+                dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
+            }
+        }
+        private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex != dataGridView1.Columns["desc"].Index)
+                return;
+
+            int x = e.ColumnIndex;
+            int y = e.RowIndex;
+            string idx = dataGridView1.Rows[y].Cells["idx"].Value.ToString();
+            string colName = this.dataGridView1.Columns[x].Name;
+
+            switch (colName)
+            {
+                case "desc":
+                    FileMemo(dataGridView1.Rows[y].Cells["desc"].Value.ToString().ToStr(), idx);
+                    break;
+            }
+            return;
+        }
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked)
+                this.button_del.Enabled = false;
+            else
+                this.button_del.Enabled = true;
+        }
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                Search();
+            }
+        }
+        #endregion
+
+        #region DataBase
+        private void ConnMariaDB()
+        {
+            if (mySqlConnection == null)
+                mySqlConnection = new MySqlConnection("Server=127.0.0.1;User ID=root;Password=root;Database=BASEBALL_MGR");
+            if (mySqlConnection.State != ConnectionState.Open)
+                mySqlConnection.Open();
+        }
+        //select ƒı∏Æ ºˆ«‡ -> DataTable ∏Æ≈œ
+        public DataTable select(String sql)
+        {
+            var mySqlDataTable = new DataTable();
+            try
+            {
+                MySqlCommand mySqlCommand = new MySqlCommand(sql, mySqlConnection);
+                MySqlDataReader mySqlDataReader = mySqlCommand.ExecuteReader();
+                mySqlDataTable.Load(mySqlDataReader);
+
+                StringBuilder output = new StringBuilder();
+                foreach (DataColumn col in mySqlDataTable.Columns)
                 {
-                    dataGridView1[4, row].Value = e.KeyData;
+                    output.AppendFormat("{0} ", col);
+                }
+                output.AppendLine();
+                foreach (DataRow page in mySqlDataTable.Rows)
+                {
+                    foreach (DataColumn col in mySqlDataTable.Columns)
+                    {
+                        output.AppendFormat("{0} ", page[col]);
+                    }
+                    output.AppendLine();
+
+                }
+                Console.WriteLine(output.ToString());
+
+                mySqlDataReader.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            return mySqlDataTable;
+        }
+        // µ•¿Ã≈Õ ¿Ã¿¸ : ∂Û¿Ã∫Í∑Ø∏Æ ≥÷±‚
+        private async Task INSERT1()
+        {
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.Connection = mySqlConnection;
+                try
+                {
+                    foreach (DataRow dr in dt_lib.Rows)
+                    {
+                        cmd.CommandText = sqlInsertLib;
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("path", dr["path"].ToString());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message); }
+            }
+        }
+        // µ•¿Ã≈Õ ¿Ã¿¸ : ∆ƒ¿œµÈ ≥÷±‚
+        private async Task INSERT2(string sql)
+        {
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.Connection = mySqlConnection;
+                foreach (DataRow dr in dt_file.Rows)
+                {
+                    cmd.CommandText = sql;
+                    cmd.Parameters.Clear();
+                    cmd.Parameters.AddWithValue("filename", dr["filename"]);
+                    cmd.Parameters.AddWithValue("lasttime", dr["lasttime"]);
+                    cmd.Parameters.AddWithValue("addtime", dr["addtime"]);
+                    cmd.Parameters.AddWithValue("eval", dr["eval"] == null ? "" : dr["eval"].ToString());
+                    cmd.Parameters.AddWithValue("desc", dr["desc"] == null ? "" : dr["desc"].ToString());
+                    cmd.Parameters.AddWithValue("fullpath", dr["fullpath"]);
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch { }
                 }
             }
         }
+        //ΩÃ±€ ƒı∏Æ
+        private async Task QUERY(string sql)
+        {
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.Connection = mySqlConnection;
+                try
+                {
+                    cmd.CommandText = sql;
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message); }
+            }
+        }
+        // ∆ƒ¿œ «—∞≥ √ﬂ∞°«œ±‚
+        private async Task INSERT_SINGLE(string sql, string filename, string addtime, string fullpath)
+        {
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.Connection = mySqlConnection;
+                cmd.CommandText = sql;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("filename", Path.GetFileName(filename));
+                cmd.Parameters.AddWithValue("lasttime", "");
+                cmd.Parameters.AddWithValue("addtime", addtime);
+                cmd.Parameters.AddWithValue("eval", "");
+                cmd.Parameters.AddWithValue("desc", "");
+                cmd.Parameters.AddWithValue("fullpath", fullpath);
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
+        #endregion
+
+
     }
 }
