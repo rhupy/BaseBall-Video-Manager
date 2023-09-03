@@ -253,7 +253,10 @@ namespace BaseBall_Video_Manager
         private void FileMemo(string desc, string idx)
         {
             //Update DB
-            QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='{desc}' WHERE  `idx`={idx}");
+            if(desc.Trim().Length == 0)
+                QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='' WHERE  `idx`={idx}");
+            else
+                QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='{desc}' WHERE  `idx`={idx}");
         }
         // 파일의 경로 열기
         private void FilePathOpen(int row)
@@ -381,11 +384,12 @@ namespace BaseBall_Video_Manager
         }
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex != dataGridView1.Columns["desc"].Index)
-                return;
-
             int x = e.ColumnIndex;
             int y = e.RowIndex;
+
+            if (dataGridView1.Rows[y].Cells["desc"] == null || x != dataGridView1.Columns["desc"].Index)
+                return;
+            
             string idx = dataGridView1.Rows[y].Cells["idx"].Value.ToString();
             string colName = this.dataGridView1.Columns[x].Name;
 
