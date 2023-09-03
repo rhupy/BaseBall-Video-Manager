@@ -354,6 +354,7 @@ namespace BaseBall_Video_Manager
             {
                 case "exe":
                     FileExe(this.dataGridView1.Rows[y].Cells["fullpath"].Value.ToString(), y);
+                    this.dataGridView1.Rows[y].Selected = true;
                     break;
                 case "score0":
                 case "score1":

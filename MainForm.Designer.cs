@@ -279,7 +279,6 @@
             dataGridView1.Dock = DockStyle.Fill;
             dataGridView1.Location = new Point(4, 68);
             dataGridView1.Margin = new Padding(4, 5, 4, 5);
-            dataGridView1.MultiSelect = false;
             dataGridView1.Name = "dataGridView1";
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = SystemColors.Control;
@@ -329,6 +328,8 @@
             exe.MinimumWidth = 8;
             exe.Name = "exe";
             exe.ReadOnly = true;
+            exe.Text = "📺";
+            exe.UseColumnTextForButtonValue = true;
             exe.Width = 70;
             // 
             // lasttime
@@ -368,6 +369,8 @@
             score0.MinimumWidth = 8;
             score0.Name = "score0";
             score0.ReadOnly = true;
+            score0.Text = "0";
+            score0.UseColumnTextForButtonValue = true;
             score0.Width = 30;
             // 
             // score1
@@ -378,6 +381,8 @@
             score1.MinimumWidth = 8;
             score1.Name = "score1";
             score1.ReadOnly = true;
+            score1.Text = "1";
+            score1.UseColumnTextForButtonValue = true;
             score1.Width = 30;
             // 
             // score2
@@ -388,6 +393,8 @@
             score2.MinimumWidth = 8;
             score2.Name = "score2";
             score2.ReadOnly = true;
+            score2.Text = "2";
+            score2.UseColumnTextForButtonValue = true;
             score2.Width = 30;
             // 
             // score3
@@ -398,6 +405,8 @@
             score3.MinimumWidth = 8;
             score3.Name = "score3";
             score3.ReadOnly = true;
+            score3.Text = "3";
+            score3.UseColumnTextForButtonValue = true;
             score3.Width = 30;
             // 
             // score4
@@ -408,6 +417,8 @@
             score4.MinimumWidth = 8;
             score4.Name = "score4";
             score4.ReadOnly = true;
+            score4.Text = "4";
+            score4.UseColumnTextForButtonValue = true;
             score4.Width = 30;
             // 
             // score5
@@ -418,6 +429,8 @@
             score5.MinimumWidth = 8;
             score5.Name = "score5";
             score5.ReadOnly = true;
+            score5.Text = "5";
+            score5.UseColumnTextForButtonValue = true;
             score5.Width = 30;
             // 
             // desc
@@ -434,6 +447,8 @@
             openpath.MinimumWidth = 8;
             openpath.Name = "openpath";
             openpath.ReadOnly = true;
+            openpath.Text = "📁";
+            openpath.UseColumnTextForButtonValue = true;
             openpath.Width = 70;
             // 
             // fullpath
