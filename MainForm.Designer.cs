@@ -35,7 +35,6 @@
             tableLayoutPanel2 = new TableLayoutPanel();
             textBox1 = new TextBox();
             button_lib = new Button();
-            label1 = new Label();
             button_del = new Button();
             checkBox1 = new CheckBox();
             button2 = new Button();
@@ -91,22 +90,17 @@
             // 
             // tableLayoutPanel2
             // 
-            tableLayoutPanel2.ColumnCount = 12;
+            tableLayoutPanel2.ColumnCount = 8;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 286F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 166F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 143F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
             tableLayoutPanel2.Controls.Add(textBox1, 0, 0);
             tableLayoutPanel2.Controls.Add(button_lib, 1, 0);
-            tableLayoutPanel2.Controls.Add(label1, 8, 0);
             tableLayoutPanel2.Controls.Add(button_del, 4, 0);
             tableLayoutPanel2.Controls.Add(checkBox1, 3, 0);
             tableLayoutPanel2.Controls.Add(button2, 7, 0);
@@ -138,32 +132,20 @@
             button_lib.Location = new Point(290, 7);
             button_lib.Margin = new Padding(4, 7, 4, 7);
             button_lib.Name = "button_lib";
-            button_lib.Size = new Size(135, 39);
+            button_lib.Size = new Size(112, 39);
             button_lib.TabIndex = 0;
             button_lib.Text = "라이브러리";
             button_lib.UseVisualStyleBackColor = true;
             button_lib.Click += button_lib_Click;
             // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Dock = DockStyle.Fill;
-            label1.Location = new Point(1291, 0);
-            label1.Margin = new Padding(4, 0, 4, 0);
-            label1.Name = "label1";
-            label1.Size = new Size(186, 53);
-            label1.TabIndex = 2;
-            label1.Text = "문의 : fmsj@naver.com";
-            label1.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // button_del
             // 
             button_del.Dock = DockStyle.Fill;
             button_del.Enabled = false;
-            button_del.Location = new Point(696, 7);
+            button_del.Location = new Point(830, 7);
             button_del.Margin = new Padding(4, 7, 4, 7);
             button_del.Name = "button_del";
-            button_del.Size = new Size(158, 39);
+            button_del.Size = new Size(172, 39);
             button_del.TabIndex = 3;
             button_del.Text = "선택한 파일 삭제";
             button_del.UseVisualStyleBackColor = true;
@@ -174,11 +156,11 @@
             checkBox1.AutoSize = true;
             checkBox1.Checked = true;
             checkBox1.CheckState = CheckState.Checked;
-            checkBox1.Dock = DockStyle.Fill;
-            checkBox1.Location = new Point(576, 5);
+            checkBox1.Dock = DockStyle.Right;
+            checkBox1.Location = new Point(712, 5);
             checkBox1.Margin = new Padding(4, 5, 4, 5);
             checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(112, 43);
+            checkBox1.Size = new Size(110, 43);
             checkBox1.TabIndex = 8;
             checkBox1.Text = "삭제잠금";
             checkBox1.UseVisualStyleBackColor = true;
@@ -186,10 +168,10 @@
             // 
             // button2
             // 
-            button2.Location = new Point(1148, 7);
+            button2.Location = new Point(1545, 7);
             button2.Margin = new Padding(4, 7, 4, 7);
             button2.Name = "button2";
-            button2.Size = new Size(134, 38);
+            button2.Size = new Size(1, 38);
             button2.TabIndex = 11;
             button2.Text = "files 이전";
             button2.UseVisualStyleBackColor = true;
@@ -197,10 +179,10 @@
             // 
             // button3
             // 
-            button3.Location = new Point(1005, 7);
+            button3.Location = new Point(1545, 7);
             button3.Margin = new Padding(4, 7, 4, 7);
             button3.Name = "button3";
-            button3.Size = new Size(134, 38);
+            button3.Size = new Size(1, 38);
             button3.TabIndex = 12;
             button3.Text = "lib 이전";
             button3.UseVisualStyleBackColor = true;
@@ -208,10 +190,12 @@
             // 
             // progressBar1
             // 
+            progressBar1.BackColor = SystemColors.ActiveCaption;
             progressBar1.Dock = DockStyle.Fill;
-            progressBar1.Location = new Point(861, 3);
+            progressBar1.ForeColor = Color.HotPink;
+            progressBar1.Location = new Point(1009, 3);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(137, 47);
+            progressBar1.Size = new Size(529, 47);
             progressBar1.TabIndex = 13;
             // 
             // tableLayoutPanel3
@@ -221,23 +205,24 @@
             tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tableLayoutPanel3.Controls.Add(button1, 1, 0);
             tableLayoutPanel3.Controls.Add(button_refresh, 0, 0);
-            tableLayoutPanel3.Location = new Point(429, 0);
+            tableLayoutPanel3.Dock = DockStyle.Fill;
+            tableLayoutPanel3.Location = new Point(406, 0);
             tableLayoutPanel3.Margin = new Padding(0);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
             tableLayoutPanel3.RowCount = 1;
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Size = new Size(143, 53);
+            tableLayoutPanel3.Size = new Size(300, 53);
             tableLayoutPanel3.TabIndex = 14;
             // 
             // button1
             // 
             button1.Dock = DockStyle.Fill;
-            button1.Location = new Point(75, 7);
+            button1.Location = new Point(154, 7);
             button1.Margin = new Padding(4, 7, 4, 7);
             button1.Name = "button1";
-            button1.Size = new Size(64, 39);
+            button1.Size = new Size(142, 39);
             button1.TabIndex = 8;
-            button1.Text = "DEL";
+            button1.Text = "삭제 검색";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click_1;
             // 
@@ -247,9 +232,9 @@
             button_refresh.Location = new Point(4, 7);
             button_refresh.Margin = new Padding(4, 7, 4, 7);
             button_refresh.Name = "button_refresh";
-            button_refresh.Size = new Size(63, 39);
+            button_refresh.Size = new Size(142, 39);
             button_refresh.TabIndex = 7;
-            button_refresh.Text = "ADD";
+            button_refresh.Text = "추가 검색";
             button_refresh.UseVisualStyleBackColor = true;
             button_refresh.Click += button_refresh_Click;
             // 
@@ -510,7 +495,6 @@
 
         private TableLayoutPanel tableLayoutPanel1;
         private Button button_lib;
-        private Label label1;
         private Button button_del;
         private Button button_refresh;
         private StatusStrip label_status;

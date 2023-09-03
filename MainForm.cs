@@ -78,7 +78,7 @@ namespace BaseBall_Video_Manager
                 // DB 로부터 파일 정보 가져오기
                 GetFiles();
                 // 파일상태 점검하여 추가하기
-                // GetNewFiles();
+                GetNewFiles();
                 // 그리드 생성
                 SetGrid();
             }
