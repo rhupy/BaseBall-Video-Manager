@@ -135,19 +135,23 @@ namespace BaseBall_Video_Manager
             // 실제 파일 전 목록 생성
             foreach (DataRow dr in dt_lib.Rows)
             {
-                string path = dr["path"].ToString();
-                DirectoryInfo di = new DirectoryInfo(path);
-                // 1. 최상위 폴더에서 검색하여 추가
-                List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                list_real.AddRange(list_fileNames);
-
-                // 2. 하위 폴더에서 검색하여 추가
-                List<string> dirNames = Directory.GetDirectories(path).ToList<string>();
-                foreach (string dirName in dirNames)
+                try
                 {
-                    List<string> filenames_indir = Directory.GetFiles(dirName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                    list_real.AddRange(filenames_indir);
+                    string path = dr["path"].ToString();
+                    DirectoryInfo di = new DirectoryInfo(path);
+                    // 1. 최상위 폴더에서 검색하여 추가
+                    List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
+                    list_real.AddRange(list_fileNames);
+
+                    // 2. 하위 폴더에서 검색하여 추가
+                    List<string> dirNames = Directory.GetDirectories(path).ToList<string>();
+                    foreach (string dirName in dirNames)
+                    {
+                        List<string> filenames_indir = Directory.GetFiles(dirName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
+                        list_real.AddRange(filenames_indir);
+                    }
                 }
+                catch { continue; }
             }
 
             // 생성된 전 파일 목록을 검사하여 추가
