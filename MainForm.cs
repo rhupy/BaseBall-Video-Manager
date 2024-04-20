@@ -1,5 +1,6 @@
 //점수주는부분부터 린큐로 할것
 using MySqlConnector;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -29,7 +30,7 @@ namespace BaseBall_Video_Manager
 
         const string sqlInsertLib = "INSERT INTO `baseball_mgr`.`library` (`path`) VALUES (@path)";
         const string sqlInsertFile = "INSERT INTO `baseball_mgr`.`files` (`filename`, `lasttime`, `addtime`, `eval`, `desc`, `fullpath`) VALUES (@filename, @lasttime, @addtime, @eval, @desc, @fullpath)";
-        const string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc, fullpath = @fullpath WHERE filename = @filename";
+        const string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc WHERE fullpath = @fullpath";
         const string sqlSelectlib = "SELECT * FROM `baseball_mgr`.`library`";
         const string sqlSelectFile = "SELECT * FROM `baseball_mgr`.`files` order by addtime desc, idx";
 
@@ -549,8 +550,8 @@ namespace BaseBall_Video_Manager
 
         private void button4_Click(object sender, EventArgs e)
         {
-            // DB -
-            readXml();
+            //readXml();
+            createJson();
         }
 
         // xml읽어서 db 넣기
@@ -558,6 +559,7 @@ namespace BaseBall_Video_Manager
         {
             try
             {
+                string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc, fullpath = @fullpath WHERE filename = @filename";
                 string xmlFilePath = "files.xml"; // 실행 파일과 동일한 위치에 있는 파일을 가리킵니다.
                 XDocument doc = XDocument.Load(xmlFilePath);
         
@@ -565,7 +567,6 @@ namespace BaseBall_Video_Manager
                     {
                         try
                         {
-                            string filename = element.Element("filename").Value;
                             string exe = element.Element("exe").Value;
                             string lasttime = element.Element("lasttime").Value;
                             string addtime = element.Element("addtime").Value;
@@ -574,7 +575,7 @@ namespace BaseBall_Video_Manager
                             string fullpath = element.Element("fullpath").Value;
 
                             MySqlCommand mySqlCommand = new MySqlCommand("sql", mySqlConnection);
-                            UPDATE_SINGLE(sqlUpdateFile, filename, lasttime, addtime, eval, fullpath, desc);
+                            UPDATE_SINGLE(sqlUpdateFile, lasttime, addtime, eval, fullpath, desc);
                         }
                         catch { continue; }
                     }
@@ -584,17 +585,14 @@ namespace BaseBall_Video_Manager
             }
         }
 
-        // db읽어서 json만들기
-
         // 업데이트하기
-        private async Task UPDATE_SINGLE(string sql, string filename, string lasttime, string addtime, string eval, string fullpath, string desc)
+        private async Task UPDATE_SINGLE(string sql, string lasttime, string addtime, string eval, string fullpath, string desc)
         {
             using (var cmd = new MySqlCommand())
             {
                 cmd.Connection = mySqlConnection;
                 cmd.CommandText = sql;
                 cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("filename", filename);
                 cmd.Parameters.AddWithValue("lasttime", lasttime);
                 cmd.Parameters.AddWithValue("addtime", addtime);
                 cmd.Parameters.AddWithValue("eval", eval);
@@ -605,6 +603,47 @@ namespace BaseBall_Video_Manager
                     cmd.ExecuteNonQuery();
                 }
                 catch { }
+            }
+        }
+
+        public void createJson()
+        {
+            try
+            {
+                string connectionString = "Server=127.0.0.1;Database=baseball_mgr;Uid=root;Pwd=root;";
+                string query = sqlSelectlib;
+
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    connection.Open();
+                    MySqlCommand command = new MySqlCommand(query, connection);
+                    MySqlDataReader reader = command.ExecuteReader();
+
+                    List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
+
+                    while (reader.Read())
+                    {
+                        Dictionary<string, object> data = new Dictionary<string, object>();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            data[reader.GetName(i)] = reader[i];
+                        }
+                        dataList.Add(data);
+                    }
+
+                    reader.Close();
+                    connection.Close();
+
+                    // JSON 파일로 변환하여 저장
+                    string json = JsonConvert.SerializeObject(dataList, Newtonsoft.Json.Formatting.Indented);
+                    File.WriteAllText("lib.json", json);
+
+                    Console.WriteLine("데이터베이스에서 JSON 파일로 변환 및 저장 완료");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
             }
         }
     }
