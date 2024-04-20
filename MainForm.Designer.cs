@@ -43,6 +43,7 @@
             tableLayoutPanel3 = new TableLayoutPanel();
             button1 = new Button();
             button_refresh = new Button();
+            button4 = new Button();
             dataGridView1 = new DataGridView();
             idx = new DataGridViewTextBoxColumn();
             filename = new DataGridViewTextBoxColumn();
@@ -90,7 +91,7 @@
             // 
             // tableLayoutPanel2
             // 
-            tableLayoutPanel2.ColumnCount = 8;
+            tableLayoutPanel2.ColumnCount = 9;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 286F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300F));
@@ -99,6 +100,7 @@
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 139F));
             tableLayoutPanel2.Controls.Add(textBox1, 0, 0);
             tableLayoutPanel2.Controls.Add(button_lib, 1, 0);
             tableLayoutPanel2.Controls.Add(button_del, 4, 0);
@@ -107,6 +109,7 @@
             tableLayoutPanel2.Controls.Add(button3, 6, 0);
             tableLayoutPanel2.Controls.Add(progressBar1, 5, 0);
             tableLayoutPanel2.Controls.Add(tableLayoutPanel3, 2, 0);
+            tableLayoutPanel2.Controls.Add(button4, 8, 0);
             tableLayoutPanel2.Dock = DockStyle.Fill;
             tableLayoutPanel2.Location = new Point(4, 5);
             tableLayoutPanel2.Margin = new Padding(4, 5, 4, 5);
@@ -154,8 +157,6 @@
             // checkBox1
             // 
             checkBox1.AutoSize = true;
-            checkBox1.Checked = true;
-            checkBox1.CheckState = CheckState.Checked;
             checkBox1.Dock = DockStyle.Right;
             checkBox1.Location = new Point(712, 5);
             checkBox1.Margin = new Padding(4, 5, 4, 5);
@@ -168,7 +169,7 @@
             // 
             // button2
             // 
-            button2.Location = new Point(1545, 7);
+            button2.Location = new Point(1406, 7);
             button2.Margin = new Padding(4, 7, 4, 7);
             button2.Name = "button2";
             button2.Size = new Size(1, 38);
@@ -179,7 +180,7 @@
             // 
             // button3
             // 
-            button3.Location = new Point(1545, 7);
+            button3.Location = new Point(1406, 7);
             button3.Margin = new Padding(4, 7, 4, 7);
             button3.Name = "button3";
             button3.Size = new Size(1, 38);
@@ -195,7 +196,7 @@
             progressBar1.ForeColor = Color.HotPink;
             progressBar1.Location = new Point(1009, 3);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(529, 47);
+            progressBar1.Size = new Size(390, 47);
             progressBar1.TabIndex = 13;
             // 
             // tableLayoutPanel3
@@ -237,6 +238,16 @@
             button_refresh.Text = "추가 검색";
             button_refresh.UseVisualStyleBackColor = true;
             button_refresh.Click += button_refresh_Click;
+            // 
+            // button4
+            // 
+            button4.Location = new Point(1406, 7);
+            button4.Margin = new Padding(4, 7, 4, 7);
+            button4.Name = "button4";
+            button4.Size = new Size(131, 39);
+            button4.TabIndex = 15;
+            button4.UseVisualStyleBackColor = true;
+            button4.Click += button4_Click;
             // 
             // dataGridView1
             // 
@@ -524,6 +535,7 @@
         private DataGridViewTextBoxColumn desc;
         private DataGridViewButtonColumn openpath;
         private DataGridViewTextBoxColumn fullpath;
+        private Button button4;
     }
 }
 

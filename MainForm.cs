@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace BaseBall_Video_Manager
 {
@@ -28,6 +29,7 @@ namespace BaseBall_Video_Manager
 
         const string sqlInsertLib = "INSERT INTO `baseball_mgr`.`library` (`path`) VALUES (@path)";
         const string sqlInsertFile = "INSERT INTO `baseball_mgr`.`files` (`filename`, `lasttime`, `addtime`, `eval`, `desc`, `fullpath`) VALUES (@filename, @lasttime, @addtime, @eval, @desc, @fullpath)";
+        const string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc, fullpath = @fullpath WHERE filename = @filename";
         const string sqlSelectlib = "SELECT * FROM `baseball_mgr`.`library`";
         const string sqlSelectFile = "SELECT * FROM `baseball_mgr`.`files` order by addtime desc, idx";
 
@@ -71,13 +73,13 @@ namespace BaseBall_Video_Manager
             InitializeComponent();
             try
             {
-                // DB 연결
+                // DB 연결 : 할필요없음
                 ConnMariaDB();
-                // DB 로부터 라이브러리 정보 가져오기
+                // DB 로부터 라이브러리 정보 가져오기 : json 읽어
                 GetLibraries();
-                // DB 로부터 파일 정보 가져오기
+                // DB 로부터 파일 정보 가져오기 : json 읽어
                 GetFiles();
-                // 파일상태 점검하여 추가하기
+                // 파일상태 점검하여 추가하기 : 점검해서 json 업데이트
                 GetNewFiles();
                 // 그리드 생성
                 SetGrid();
@@ -257,7 +259,7 @@ namespace BaseBall_Video_Manager
         private void FileMemo(string desc, string idx)
         {
             //Update DB
-            if(desc.Trim().Length == 0)
+            if (desc.Trim().Length == 0)
                 QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='' WHERE  `idx`={idx}");
             else
                 QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='{desc}' WHERE  `idx`={idx}");
@@ -393,7 +395,7 @@ namespace BaseBall_Video_Manager
 
             if (dataGridView1.Rows[y].Cells["desc"] == null || x != dataGridView1.Columns["desc"].Index)
                 return;
-            
+
             string idx = dataGridView1.Rows[y].Cells["idx"].Value.ToString();
             string colName = this.dataGridView1.Columns[x].Name;
 
@@ -545,5 +547,65 @@ namespace BaseBall_Video_Manager
         #endregion
 
 
+        private void button4_Click(object sender, EventArgs e)
+        {
+            // DB -
+            readXml();
+        }
+
+        // xml읽어서 db 넣기
+        public void readXml()
+        {
+            try
+            {
+                string xmlFilePath = "files.xml"; // 실행 파일과 동일한 위치에 있는 파일을 가리킵니다.
+                XDocument doc = XDocument.Load(xmlFilePath);
+        
+                    foreach (XElement element in doc.Root.Elements("files"))
+                    {
+                        try
+                        {
+                            string filename = element.Element("filename").Value;
+                            string exe = element.Element("exe").Value;
+                            string lasttime = element.Element("lasttime").Value;
+                            string addtime = element.Element("addtime").Value;
+                            string eval = element.Element("eval") == null ? "" : element.Element("eval").Value;
+                            string desc = element.Element("desc").Value;
+                            string fullpath = element.Element("fullpath").Value;
+
+                            MySqlCommand mySqlCommand = new MySqlCommand("sql", mySqlConnection);
+                            UPDATE_SINGLE(sqlUpdateFile, filename, lasttime, addtime, eval, fullpath, desc);
+                        }
+                        catch { continue; }
+                    }
+            }
+            catch (Exception ex){
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        // db읽어서 json만들기
+
+        // 업데이트하기
+        private async Task UPDATE_SINGLE(string sql, string filename, string lasttime, string addtime, string eval, string fullpath, string desc)
+        {
+            using (var cmd = new MySqlCommand())
+            {
+                cmd.Connection = mySqlConnection;
+                cmd.CommandText = sql;
+                cmd.Parameters.Clear();
+                cmd.Parameters.AddWithValue("filename", filename);
+                cmd.Parameters.AddWithValue("lasttime", lasttime);
+                cmd.Parameters.AddWithValue("addtime", addtime);
+                cmd.Parameters.AddWithValue("eval", eval);
+                cmd.Parameters.AddWithValue("fullpath", fullpath);
+                cmd.Parameters.AddWithValue("desc", desc);
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch { }
+            }
+        }
     }
 }
