@@ -1,5 +1,3 @@
-//점수주는부분부터 린큐로 할것
-using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -16,24 +14,21 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Linq;
+using Formatting = Newtonsoft.Json.Formatting;
 
 namespace BaseBall_Video_Manager
 {
     public partial class MainForm : Form
     {
         #region variable
-        MySqlConnection mySqlConnection = null;
         string[] exts = new[] { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
         DataTable dt_file = new DataTable();
         DataTable dt_lib = new DataTable();
-        XmlDocument doc = new XmlDocument();
+        List<Dictionary<string, object>> dataListLib;
+        List<Dictionary<string, object>> dataList;
 
-        const string sqlInsertLib = "INSERT INTO `baseball_mgr`.`library` (`path`) VALUES (@path)";
-        const string sqlInsertFile = "INSERT INTO `baseball_mgr`.`files` (`filename`, `lasttime`, `addtime`, `eval`, `desc`, `fullpath`) VALUES (@filename, @lasttime, @addtime, @eval, @desc, @fullpath)";
-        const string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc WHERE fullpath = @fullpath";
-        const string sqlSelectlib = "SELECT * FROM `baseball_mgr`.`library`";
-        const string sqlSelectFile = "SELECT * FROM `baseball_mgr`.`files` order by addtime desc, idx";
-
+        string jsonFilePathFiles = "data\\files.json";
+        string jsonFilePathLib = "data\\lib.json";
         #region ProgressBar
         async void ProgressBarPlus()
         {
@@ -74,11 +69,12 @@ namespace BaseBall_Video_Manager
             InitializeComponent();
             try
             {
-                // DB 연결 : 할필요없음
-                ConnMariaDB();
+                // 기존 데이터 리스트로 변환
+                dataListLib = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathLib));
+                dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathFiles));
+
                 // DB 로부터 라이브러리 정보 가져오기 : json 읽어
                 GetLibraries();
-                // DB 로부터 파일 정보 가져오기 : json 읽어
                 GetFiles();
                 // 파일상태 점검하여 추가하기 : 점검해서 json 업데이트
                 GetNewFiles();
@@ -109,11 +105,11 @@ namespace BaseBall_Video_Manager
         }
         private void GetLibraries()
         {
-            dt_lib = select(sqlSelectlib);
+            dt_lib = select(dataListLib, 1); // key : path
         }
         private void GetFiles()
         {
-            dt_file = select(sqlSelectFile);
+            dt_file = select(dataList, 5); // key : fullpath
             StatusCount = dt_file.Rows.Count;
         }
 
@@ -154,7 +150,10 @@ namespace BaseBall_Video_Manager
                         list_real.AddRange(filenames_indir);
                     }
                 }
-                catch { continue; }
+                catch (Exception ex)
+                {
+                    continue; 
+                }
             }
 
             // 생성된 전 파일 목록을 검사하여 추가
@@ -167,7 +166,7 @@ namespace BaseBall_Video_Manager
                 if (pathExists == 1)
                     continue;
                 else
-                    INSERT_SINGLE(sqlInsertFile, file, nowTime, Path.GetFullPath(file));
+                    INSERT_SINGLE(jsonFilePathFiles, file, nowTime, Path.GetFullPath(file));
             }
             // 재조회
             GetFiles();
@@ -200,34 +199,42 @@ namespace BaseBall_Video_Manager
                 // 이미 존재하는 경우 유지
                 if (pathExists)
                     continue;
-                // 사리진거면 DB에서 삭제
-                string idx = row["idx"].ToString();
-                QUERY($"DELETE FROM `baseball_mgr`.`files` WHERE  `idx`={idx}");
+                RemoveDataFromJson(jsonFilePathFiles, fullpath);
             }
             // 재조회
             GetFiles();
         }
+        public void RemoveDataFromJson(string jsonFilePath, string fullpath)
+        {
+            try
+            {
+                // 해당 fullpath를 가진 데이터 찾아서 삭제
+                var dataToRemove = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
+                if (dataToRemove != null)
+                {
+                    dataList.Remove(dataToRemove);
+                    Console.WriteLine("데이터 삭제 완료");
+                }
+                else
+                {
+                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
+                }
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePath, updatedJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+            }
+        }
+
         private void SetGrid()
         {
             this.dataGridView1.DataSource = dt_file;
         }
-        private void CreateDbFilesFromXML()
-        {
-            dt_file.InitDataTable();
-            doc.Load(Application.StartupPath + @"\files.xml");
-            foreach (System.Xml.XmlElement x in doc.ChildNodes[1].ChildNodes)
-            {
-                DataRow dr = dt_file.NewRow();
-                dr[0] = x.ChildNodes[0].ToNodeText();
-                dr[1] = x.ChildNodes[1].ToNodeText();
-                dr[2] = x.ChildNodes[2].ToNodeText();
-                dr[3] = x.ChildNodes[3].ToNodeText();
-                dr[4] = x.ChildNodes[4].ToNodeText();
-                dr[5] = x.ChildNodes[5].ToNodeText();
-                dr[6] = x.ChildNodes[6].ToNodeText();
-                dt_file.Rows.Add(dr);
-            }
-        }
+
         // 파일의 실행 + 업데이트
         private void FileExe(string fullPath, int row)
         {
@@ -236,12 +243,37 @@ namespace BaseBall_Video_Manager
             ExeFile(fullPath);
             string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             dataGridView1.Rows[row].Cells["lasttime"].Value = now;
-            //Update DB
-            string idx = dataGridView1.Rows[row].Cells["idx"].Value.ToString();
-            QUERY($"UPDATE `baseball_mgr`.`files` SET `lasttime`='{now}' WHERE  `idx`={idx}");
+            UpdateLastTimeInJson(jsonFilePathFiles, fullPath);
         }
+
+        public void UpdateLastTimeInJson(string jsonFilePath, string fullpath)
+        {
+            try
+            {
+                // 해당 fullpath를 가진 데이터 찾아서 lasttime을 현재 시간으로 업데이트
+                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
+                if (dataToUpdate != null)
+                {
+                    dataToUpdate["lasttime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    Console.WriteLine("lasttime이 현재 시간으로 업데이트되었습니다.");
+                }
+                else
+                {
+                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
+                }
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePath, updatedJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+            }
+        }
+
         // 파일의 평가 + 업데이트
-        private void FileEval(string colHeaderName, int row)
+        private void FileEval(string fullpath, string colHeaderName, int row)
         {
             int star = Convert.ToInt16(colHeaderName);
             if (dataGridView1.Rows[row].Cells["eval"].Value.ToString().Length == star)
@@ -252,19 +284,67 @@ namespace BaseBall_Video_Manager
                 eval += "★";
             }
             dataGridView1.Rows[row].Cells["eval"].Value = eval;
-            //Update DB
-            string idx = dataGridView1.Rows[row].Cells["idx"].Value.ToString();
-            QUERY($"UPDATE `baseball_mgr`.`files` SET `eval`='{eval}' WHERE  `idx`={idx}");
+            UpdateEvalByFullpath(fullpath, eval);
         }
-        // 파일의 메모 + 업데이트
-        private void FileMemo(string desc, string idx)
+        public void UpdateEvalByFullpath(string fullpath, string newEval)
         {
-            //Update DB
-            if (desc.Trim().Length == 0)
-                QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='' WHERE  `idx`={idx}");
-            else
-                QUERY($"UPDATE `baseball_mgr`.`files` SET `desc`='{desc}' WHERE  `idx`={idx}");
+            try
+            {
+                // 해당 fullpath를 가진 데이터 찾아서 eval 값을 업데이트
+                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
+                if (dataToUpdate != null)
+                {
+                    dataToUpdate["eval"] = newEval;
+                    Console.WriteLine("eval 값이 업데이트되었습니다.");
+                }
+                else
+                {
+                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
+                }
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePathFiles, updatedJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+            }
         }
+
+        // 파일의 메모 + 업데이트
+        private void FileMemo(string fullpath, string desc)
+        {
+            UpdateDescByFullpath(fullpath, desc);
+        }
+
+        public void UpdateDescByFullpath(string fullpath, string desc)
+        {
+            try
+            {
+                // 해당 fullpath를 가진 데이터 찾아서 eval 값을 업데이트
+                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
+                if (dataToUpdate != null)
+                {
+                    dataToUpdate["desc"] = desc;
+                    Console.WriteLine("eval 값이 업데이트되었습니다.");
+                }
+                else
+                {
+                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
+                }
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePathFiles, updatedJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+            }
+        }
+
+
         // 파일의 경로 열기
         private void FilePathOpen(int row)
         {
@@ -343,14 +423,39 @@ namespace BaseBall_Video_Manager
                 string fullpath = dataGridView1.Rows[del_list[row]].Cells["fullpath"].Value.ToString();
                 //파일삭제
                 new System.IO.FileInfo(fullpath).Delete();
-                int idx = dt_file.AsEnumerable().Where(x => x.Field<string>("fullpath") == fullpath).Select(r => r.Field<int>("idx")).First();
-                QUERY($"DELETE FROM `baseball_mgr`.`files` WHERE  `idx`={idx}");
-
+                RemoveDataByFullpath(jsonFilePathFiles, fullpath);
                 //그리드 삭제
                 dataGridView1.Rows.RemoveAt(del_list[row]);
             }
             StatusCount = this.dataGridView1.Rows.Count;
         }
+        public void RemoveDataByFullpath(string jsonFilePath, string fullpath)
+        {
+            try
+            {
+                // 해당 fullpath를 가진 데이터 찾아서 삭제
+                var dataToRemove = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
+                if (dataToRemove != null)
+                {
+                    dataList.Remove(dataToRemove);
+                    Console.WriteLine("데이터가 삭제되었습니다.");
+                }
+                else
+                {
+                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
+                }
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePath, updatedJson);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+            }
+        }
+
+
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
@@ -373,7 +478,7 @@ namespace BaseBall_Video_Manager
                 case "score4":
                 case "score5":
                     string colHeaderName = this.dataGridView1.Columns[x].HeaderText;
-                    FileEval(colHeaderName, y);
+                    FileEval(this.dataGridView1.Rows[y].Cells["fullpath"].Value.ToString(), colHeaderName, y);
                     break;
                 case "openpath":
                     FilePathOpen(y);
@@ -397,13 +502,12 @@ namespace BaseBall_Video_Manager
             if (dataGridView1.Rows[y].Cells["desc"] == null || x != dataGridView1.Columns["desc"].Index)
                 return;
 
-            string idx = dataGridView1.Rows[y].Cells["idx"].Value.ToString();
             string colName = this.dataGridView1.Columns[x].Name;
 
             switch (colName)
             {
                 case "desc":
-                    FileMemo(dataGridView1.Rows[y].Cells["desc"].Value.ToString().ToStr(), idx);
+                    FileMemo(jsonFilePathFiles, dataGridView1.Rows[y].Cells["desc"].Value.ToString().ToStr());
                     break;
             }
             return;
@@ -425,124 +529,71 @@ namespace BaseBall_Video_Manager
         #endregion
 
         #region DataBase
-        private void ConnMariaDB()
-        {
-            if (mySqlConnection == null)
-                mySqlConnection = new MySqlConnection("Server=127.0.0.1;User ID=root;Password=root;Database=BASEBALL_MGR");
-            if (mySqlConnection.State != ConnectionState.Open)
-                mySqlConnection.Open();
-        }
         //select 쿼리 수행 -> DataTable 리턴
-        public DataTable select(String sql)
+        public DataTable select(List<Dictionary<string, object>> data_, int keyCol_Index)
         {
-            var mySqlDataTable = new DataTable();
             try
             {
-                MySqlCommand mySqlCommand = new MySqlCommand(sql, mySqlConnection);
-                MySqlDataReader mySqlDataReader = mySqlCommand.ExecuteReader();
-                mySqlDataTable.Load(mySqlDataReader);
+                // DataTable 생성
+                DataTable dataTable = new DataTable();
 
-                StringBuilder output = new StringBuilder();
-                foreach (DataColumn col in mySqlDataTable.Columns)
+                // 첫 번째 행을 기준으로 컬럼 생성
+                if (data_.Count > 0)
                 {
-                    output.AppendFormat("{0} ", col);
-                }
-                output.AppendLine();
-                foreach (DataRow page in mySqlDataTable.Rows)
-                {
-                    foreach (DataColumn col in mySqlDataTable.Columns)
+                    foreach (string key in data_[keyCol_Index].Keys)
                     {
-                        output.AppendFormat("{0} ", page[col]);
+                        dataTable.Columns.Add(key, typeof(object));
                     }
-                    output.AppendLine();
 
+                    // 데이터 추가
+                    foreach (Dictionary<string, object> data in data_)
+                    {
+                        DataRow row = dataTable.NewRow();
+                        foreach (KeyValuePair<string, object> entry in data)
+                        {
+                            row[entry.Key] = entry.Value;
+                        }
+                        dataTable.Rows.Add(row);
+                    }
                 }
-                Console.WriteLine(output.ToString());
 
-                mySqlDataReader.Close();
+                return dataTable;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-            }
-            return mySqlDataTable;
-        }
-        // 데이터 이전 : 라이브러리 넣기
-        private async Task INSERT1()
-        {
-            using (var cmd = new MySqlCommand())
-            {
-                cmd.Connection = mySqlConnection;
-                try
-                {
-                    foreach (DataRow dr in dt_lib.Rows)
-                    {
-                        cmd.CommandText = sqlInsertLib;
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("path", dr["path"].ToString());
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-                catch (Exception ex) { MessageBox.Show(ex.Message); }
-            }
-        }
-        // 데이터 이전 : 파일들 넣기
-        private async Task INSERT2(string sql)
-        {
-            using (var cmd = new MySqlCommand())
-            {
-                cmd.Connection = mySqlConnection;
-                foreach (DataRow dr in dt_file.Rows)
-                {
-                    cmd.CommandText = sql;
-                    cmd.Parameters.Clear();
-                    cmd.Parameters.AddWithValue("filename", dr["filename"]);
-                    cmd.Parameters.AddWithValue("lasttime", dr["lasttime"]);
-                    cmd.Parameters.AddWithValue("addtime", dr["addtime"]);
-                    cmd.Parameters.AddWithValue("eval", dr["eval"] == null ? "" : dr["eval"].ToString());
-                    cmd.Parameters.AddWithValue("desc", dr["desc"] == null ? "" : dr["desc"].ToString());
-                    cmd.Parameters.AddWithValue("fullpath", dr["fullpath"]);
-                    try
-                    {
-                        cmd.ExecuteNonQuery();
-                    }
-                    catch { }
-                }
-            }
-        }
-        //싱글 쿼리
-        private async Task QUERY(string sql)
-        {
-            using (var cmd = new MySqlCommand())
-            {
-                cmd.Connection = mySqlConnection;
-                try
-                {
-                    cmd.CommandText = sql;
-                    cmd.ExecuteNonQuery();
-                }
-                catch (Exception ex) { MessageBox.Show(ex.Message); }
+                Console.WriteLine("오류 발생: " + ex.Message);
+                MessageBox.Show("오류 발생: " + ex.Message);
+                return null;
             }
         }
         // 파일 한개 추가하기
-        private async Task INSERT_SINGLE(string sql, string filename, string addtime, string fullpath)
+        public void INSERT_SINGLE(string jsonFilePath, string filename, string addtime, string fullpath)
         {
-            using (var cmd = new MySqlCommand())
+            try
             {
-                cmd.Connection = mySqlConnection;
-                cmd.CommandText = sql;
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("filename", Path.GetFileName(filename));
-                cmd.Parameters.AddWithValue("lasttime", "");
-                cmd.Parameters.AddWithValue("addtime", addtime);
-                cmd.Parameters.AddWithValue("eval", "");
-                cmd.Parameters.AddWithValue("desc", "");
-                cmd.Parameters.AddWithValue("fullpath", fullpath);
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                }
-                catch { }
+                // 새 데이터 생성 및 추가
+                Dictionary<string, object> newData = new Dictionary<string, object>();
+                newData["filename"] = Path.GetFileName(filename);
+                newData["addtime"] = addtime;
+                newData["fullpath"] = fullpath;
+                newData["lasttime"] = ""; // 기본값으로 빈 문자열 삽입
+                //newData["exe"] = ""; // 기본값으로 빈 문자열 삽입
+                newData["eval"] = ""; // 기본값으로 빈 문자열 삽입
+                newData["desc"] = ""; // 기본값으로 빈 문자열 삽입
+
+                // 데이터 리스트에 새 데이터 추가
+                dataList.Add(newData);
+
+                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
+                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
+                File.WriteAllText(jsonFilePath, updatedJson);
+
+                Console.WriteLine("데이터 추가 완료");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("오류 발생: " + ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
         #endregion
@@ -551,100 +602,7 @@ namespace BaseBall_Video_Manager
         private void button4_Click(object sender, EventArgs e)
         {
             //readXml();
-            createJson();
-        }
-
-        // xml읽어서 db 넣기
-        public void readXml()
-        {
-            try
-            {
-                string sqlUpdateFile = "UPDATE `baseball_mgr`.`files` SET lasttime = @lasttime, addtime = @addtime, eval = @eval, `desc` = @desc, fullpath = @fullpath WHERE filename = @filename";
-                string xmlFilePath = "files.xml"; // 실행 파일과 동일한 위치에 있는 파일을 가리킵니다.
-                XDocument doc = XDocument.Load(xmlFilePath);
-        
-                    foreach (XElement element in doc.Root.Elements("files"))
-                    {
-                        try
-                        {
-                            string exe = element.Element("exe").Value;
-                            string lasttime = element.Element("lasttime").Value;
-                            string addtime = element.Element("addtime").Value;
-                            string eval = element.Element("eval") == null ? "" : element.Element("eval").Value;
-                            string desc = element.Element("desc").Value;
-                            string fullpath = element.Element("fullpath").Value;
-
-                            MySqlCommand mySqlCommand = new MySqlCommand("sql", mySqlConnection);
-                            UPDATE_SINGLE(sqlUpdateFile, lasttime, addtime, eval, fullpath, desc);
-                        }
-                        catch { continue; }
-                    }
-            }
-            catch (Exception ex){
-                MessageBox.Show(ex.ToString());
-            }
-        }
-
-        // 업데이트하기
-        private async Task UPDATE_SINGLE(string sql, string lasttime, string addtime, string eval, string fullpath, string desc)
-        {
-            using (var cmd = new MySqlCommand())
-            {
-                cmd.Connection = mySqlConnection;
-                cmd.CommandText = sql;
-                cmd.Parameters.Clear();
-                cmd.Parameters.AddWithValue("lasttime", lasttime);
-                cmd.Parameters.AddWithValue("addtime", addtime);
-                cmd.Parameters.AddWithValue("eval", eval);
-                cmd.Parameters.AddWithValue("fullpath", fullpath);
-                cmd.Parameters.AddWithValue("desc", desc);
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                }
-                catch { }
-            }
-        }
-
-        public void createJson()
-        {
-            try
-            {
-                string connectionString = "Server=127.0.0.1;Database=baseball_mgr;Uid=root;Pwd=root;";
-                string query = sqlSelectlib;
-
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
-                {
-                    connection.Open();
-                    MySqlCommand command = new MySqlCommand(query, connection);
-                    MySqlDataReader reader = command.ExecuteReader();
-
-                    List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
-
-                    while (reader.Read())
-                    {
-                        Dictionary<string, object> data = new Dictionary<string, object>();
-                        for (int i = 0; i < reader.FieldCount; i++)
-                        {
-                            data[reader.GetName(i)] = reader[i];
-                        }
-                        dataList.Add(data);
-                    }
-
-                    reader.Close();
-                    connection.Close();
-
-                    // JSON 파일로 변환하여 저장
-                    string json = JsonConvert.SerializeObject(dataList, Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText("lib.json", json);
-
-                    Console.WriteLine("데이터베이스에서 JSON 파일로 변환 및 저장 완료");
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
+            //createJson();
         }
     }
 }
