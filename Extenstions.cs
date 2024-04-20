@@ -21,7 +21,7 @@ namespace BaseBall_Video_Manager
         public static void InitDataTable(this DataTable dt)
         {
             dt = new DataTable();
-            dt.Columns.Add("idx");
+            //dt.Columns.Add("idx");
             dt.Columns.Add("filename");
             dt.Columns.Add("lasttime");
             dt.Columns.Add("addtime");

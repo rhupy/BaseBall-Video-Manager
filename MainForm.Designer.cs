@@ -319,6 +319,7 @@
             // 
             // exe
             // 
+            exe.DataPropertyName = "exe";
             exe.Frozen = true;
             exe.HeaderText = "실행";
             exe.MinimumWidth = 8;
@@ -360,6 +361,7 @@
             // 
             // score0
             // 
+            score0.DataPropertyName = "score0";
             score0.Frozen = true;
             score0.HeaderText = "0";
             score0.MinimumWidth = 8;
@@ -439,6 +441,7 @@
             // 
             // openpath
             // 
+            openpath.DataPropertyName = "openpath";
             openpath.HeaderText = "경로";
             openpath.MinimumWidth = 8;
             openpath.Name = "openpath";
@@ -520,6 +523,7 @@
         private DataGridView dataGridView1;
         private TableLayoutPanel tableLayoutPanel3;
         private Button button1;
+        private Button button4;
         private DataGridViewTextBoxColumn idx;
         private DataGridViewTextBoxColumn filename;
         private DataGridViewButtonColumn exe;
@@ -535,7 +539,6 @@
         private DataGridViewTextBoxColumn desc;
         private DataGridViewButtonColumn openpath;
         private DataGridViewTextBoxColumn fullpath;
-        private Button button4;
     }
 }
 
