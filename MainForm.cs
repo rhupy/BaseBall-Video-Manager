@@ -67,6 +67,7 @@ namespace BaseBall_Video_Manager
         public MainForm()
         {
             InitializeComponent();
+            return;
             try
             {
                 // 기존 데이터 리스트로 변환
@@ -137,6 +138,7 @@ namespace BaseBall_Video_Manager
                 try
                 {
                     string path = dr["path"].ToString();
+                    //string path = "X:\\Filejo";
                     DirectoryInfo di = new DirectoryInfo(path);
                     // 1. 최상위 폴더에서 검색하여 추가
                     List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
@@ -152,7 +154,7 @@ namespace BaseBall_Video_Manager
                 }
                 catch (Exception ex)
                 {
-                    continue; 
+                    continue;
                 }
             }
 
@@ -234,6 +236,7 @@ namespace BaseBall_Video_Manager
         {
             this.dataGridView1.DataSource = dt_file;
         }
+
 
         // 파일의 실행 + 업데이트
         private void FileExe(string fullPath, int row)
@@ -512,13 +515,6 @@ namespace BaseBall_Video_Manager
             }
             return;
         }
-        private void checkBox1_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox1.Checked)
-                this.button_del.Enabled = false;
-            else
-                this.button_del.Enabled = true;
-        }
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
@@ -603,6 +599,28 @@ namespace BaseBall_Video_Manager
         {
             //readXml();
             //createJson();
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 기존 데이터 리스트로 변환
+                dataListLib = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathLib));
+                dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathFiles));
+
+                // DB 로부터 라이브러리 정보 가져오기 : json 읽어
+                GetLibraries();
+                GetFiles();
+                // 파일상태 점검하여 추가하기 : 점검해서 json 업데이트
+                GetNewFiles();
+                // 그리드 생성
+                SetGrid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
