@@ -28,15 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
             tableLayoutPanel1 = new TableLayoutPanel();
             tableLayoutPanel2 = new TableLayoutPanel();
             textBox1 = new TextBox();
             button_lib = new Button();
             button_del = new Button();
-            checkBox1 = new CheckBox();
             button2 = new Button();
             button3 = new Button();
             progressBar1 = new ProgressBar();
@@ -63,6 +62,7 @@
             label_status = new StatusStrip();
             toolStripStatusLabel1 = new ToolStripStatusLabel();
             toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
+            button5 = new Button();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
@@ -92,24 +92,24 @@
             // tableLayoutPanel2
             // 
             tableLayoutPanel2.ColumnCount = 9;
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 286F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 188F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 237F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 281F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 139F));
-            tableLayoutPanel2.Controls.Add(textBox1, 0, 0);
-            tableLayoutPanel2.Controls.Add(button_lib, 1, 0);
+            tableLayoutPanel2.Controls.Add(button1, 3, 0);
             tableLayoutPanel2.Controls.Add(button_del, 4, 0);
-            tableLayoutPanel2.Controls.Add(checkBox1, 3, 0);
             tableLayoutPanel2.Controls.Add(button2, 7, 0);
             tableLayoutPanel2.Controls.Add(button3, 6, 0);
             tableLayoutPanel2.Controls.Add(progressBar1, 5, 0);
             tableLayoutPanel2.Controls.Add(tableLayoutPanel3, 2, 0);
             tableLayoutPanel2.Controls.Add(button4, 8, 0);
+            tableLayoutPanel2.Controls.Add(textBox1, 1, 0);
+            tableLayoutPanel2.Controls.Add(button5, 0, 0);
             tableLayoutPanel2.Dock = DockStyle.Fill;
             tableLayoutPanel2.Location = new Point(4, 5);
             tableLayoutPanel2.Margin = new Padding(4, 5, 4, 5);
@@ -121,18 +121,16 @@
             // 
             // textBox1
             // 
-            textBox1.Dock = DockStyle.Fill;
-            textBox1.Location = new Point(4, 12);
+            textBox1.Location = new Point(192, 12);
             textBox1.Margin = new Padding(4, 12, 4, 5);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(278, 31);
+            textBox1.Size = new Size(229, 31);
             textBox1.TabIndex = 9;
             textBox1.KeyDown += textBox1_KeyDown;
             // 
             // button_lib
             // 
-            button_lib.Dock = DockStyle.Fill;
-            button_lib.Location = new Point(290, 7);
+            button_lib.Location = new Point(4, 7);
             button_lib.Margin = new Padding(4, 7, 4, 7);
             button_lib.Name = "button_lib";
             button_lib.Size = new Size(112, 39);
@@ -144,7 +142,6 @@
             // button_del
             // 
             button_del.Dock = DockStyle.Fill;
-            button_del.Enabled = false;
             button_del.Location = new Point(830, 7);
             button_del.Margin = new Padding(4, 7, 4, 7);
             button_del.Name = "button_del";
@@ -153,19 +150,6 @@
             button_del.Text = "선택한 파일 삭제";
             button_del.UseVisualStyleBackColor = true;
             button_del.Click += button1_Click;
-            // 
-            // checkBox1
-            // 
-            checkBox1.AutoSize = true;
-            checkBox1.Dock = DockStyle.Right;
-            checkBox1.Location = new Point(712, 5);
-            checkBox1.Margin = new Padding(4, 5, 4, 5);
-            checkBox1.Name = "checkBox1";
-            checkBox1.Size = new Size(110, 43);
-            checkBox1.TabIndex = 8;
-            checkBox1.Text = "삭제잠금";
-            checkBox1.UseVisualStyleBackColor = true;
-            checkBox1.CheckedChanged += checkBox1_CheckedChanged;
             // 
             // button2
             // 
@@ -202,26 +186,25 @@
             // tableLayoutPanel3
             // 
             tableLayoutPanel3.ColumnCount = 2;
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel3.Controls.Add(button1, 1, 0);
-            tableLayoutPanel3.Controls.Add(button_refresh, 0, 0);
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 44.1281128F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 55.8718872F));
+            tableLayoutPanel3.Controls.Add(button_refresh, 1, 0);
+            tableLayoutPanel3.Controls.Add(button_lib, 0, 0);
             tableLayoutPanel3.Dock = DockStyle.Fill;
-            tableLayoutPanel3.Location = new Point(406, 0);
+            tableLayoutPanel3.Location = new Point(425, 0);
             tableLayoutPanel3.Margin = new Padding(0);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
             tableLayoutPanel3.RowCount = 1;
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Size = new Size(300, 53);
+            tableLayoutPanel3.Size = new Size(281, 53);
             tableLayoutPanel3.TabIndex = 14;
             // 
             // button1
             // 
-            button1.Dock = DockStyle.Fill;
-            button1.Location = new Point(154, 7);
+            button1.Location = new Point(710, 7);
             button1.Margin = new Padding(4, 7, 4, 7);
             button1.Name = "button1";
-            button1.Size = new Size(142, 39);
+            button1.Size = new Size(112, 39);
             button1.TabIndex = 8;
             button1.Text = "삭제 검색";
             button1.UseVisualStyleBackColor = true;
@@ -229,8 +212,7 @@
             // 
             // button_refresh
             // 
-            button_refresh.Dock = DockStyle.Fill;
-            button_refresh.Location = new Point(4, 7);
+            button_refresh.Location = new Point(128, 7);
             button_refresh.Margin = new Padding(4, 7, 4, 7);
             button_refresh.Name = "button_refresh";
             button_refresh.Size = new Size(142, 39);
@@ -253,37 +235,37 @@
             // 
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = SystemColors.Control;
-            dataGridViewCellStyle1.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
-            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = SystemColors.Control;
+            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
+            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             dataGridView1.ColumnHeadersHeight = 34;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { idx, filename, exe, lasttime, addtime, eval, score0, score1, score2, score3, score4, score5, desc, openpath, fullpath });
-            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = SystemColors.Window;
-            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
-            dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = SystemColors.Window;
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle5.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
             dataGridView1.Dock = DockStyle.Fill;
             dataGridView1.Location = new Point(4, 68);
             dataGridView1.Margin = new Padding(4, 5, 4, 5);
             dataGridView1.Name = "dataGridView1";
-            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = SystemColors.Control;
-            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle3.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
-            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = SystemColors.Control;
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle6.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
+            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.RowHeadersWidth = 62;
             dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
@@ -457,7 +439,6 @@
             fullpath.MinimumWidth = 8;
             fullpath.Name = "fullpath";
             fullpath.ReadOnly = true;
-            fullpath.Visible = false;
             fullpath.Width = 150;
             // 
             // label_status
@@ -482,6 +463,17 @@
             toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
             toolStripStatusLabel_totalcount.Size = new Size(22, 25);
             toolStripStatusLabel_totalcount.Text = "0";
+            // 
+            // button5
+            // 
+            button5.Dock = DockStyle.Fill;
+            button5.Location = new Point(3, 3);
+            button5.Name = "button5";
+            button5.Size = new Size(182, 47);
+            button5.TabIndex = 16;
+            button5.Text = "START";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
             // 
             // MainForm
             // 
@@ -514,7 +506,6 @@
         private StatusStrip label_status;
         private ToolStripStatusLabel toolStripStatusLabel1;
         private ToolStripStatusLabel toolStripStatusLabel_totalcount;
-        private CheckBox checkBox1;
         private TextBox textBox1;
         private Button button2;
         private TableLayoutPanel tableLayoutPanel2;
@@ -539,6 +530,7 @@
         private DataGridViewTextBoxColumn desc;
         private DataGridViewButtonColumn openpath;
         private DataGridViewTextBoxColumn fullpath;
+        private Button button5;
     }
 }
 
