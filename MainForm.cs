@@ -21,14 +21,6 @@ namespace BaseBall_Video_Manager
     public partial class MainForm : Form
     {
         #region variable
-        string[] exts = new[] { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
-        DataTable dt_file = new DataTable();
-        DataTable dt_lib = new DataTable();
-        List<Dictionary<string, object>> dataListLib;
-        List<Dictionary<string, object>> dataList;
-
-        string jsonFilePathFiles = "data\\files.json";
-        string jsonFilePathLib = "data\\lib.json";
         #region ProgressBar
         async void ProgressBarPlus()
         {
@@ -39,7 +31,6 @@ namespace BaseBall_Video_Manager
             catch { }
         }
         #endregion
-
         #region StatusBar
         private string StatusText
         {
@@ -55,440 +46,118 @@ namespace BaseBall_Video_Manager
             }
         }
         #endregion
-
         string SearchTextBox
         {
             get { return this.textBox1.Text; }
         }
         #endregion
 
-
+        private FileManager fileManager;
+        private FileWatcher fileWatcher;
+        private List<DirectoryEntry> directoryEntries; // 디렉토리 목록을 저장하기 위한 리스트
+        private BindingList<FileEntry> fileEntries;
 
         public MainForm()
         {
             InitializeComponent();
-            return;
-            try
-            {
-                // 기존 데이터 리스트로 변환
-                dataListLib = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathLib));
-                dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathFiles));
-
-                // DB 로부터 라이브러리 정보 가져오기 : json 읽어
-                GetLibraries();
-                GetFiles();
-                // 파일상태 점검하여 추가하기 : 점검해서 json 업데이트
-                GetNewFiles();
-                // 그리드 생성
-                SetGrid();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            fileManager = new FileManager();
+            fileWatcher = new FileWatcher();
+            LoadFiles();  // 파일 목록을 로드하고 정렬하여 그리드에 표시
         }
 
-        #region Method
-        private void ExeFile(string path)
+        private void MainForm_Load(object sender, EventArgs e)
         {
-            using (Process proc = new Process())
-            {
-                bool pathExists = File.Exists(path);
-                if (!pathExists) throw new ArgumentException("Path doesnt exist");
-
-                var p = new Process();
-                p.StartInfo = new ProcessStartInfo(@$"{path}")
-                {
-                    UseShellExecute = true
-                };
-                p.Start();
-            }
+            dataGridView1.DataSource = fileEntries;
         }
-        private void GetLibraries()
+
+        private void LoadFiles()
         {
-            dt_lib = select(dataListLib, 1); // key : path
+            var entries = fileManager.LoadFiles();  // 파일 목록 로드
+                                                    // addtime을 기준으로 내림차순 정렬
+            entries.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
+            fileEntries = new BindingList<FileEntry>(entries);
+            dataGridView1.DataSource = fileEntries;
         }
-        private void GetFiles()
-        {
-            dt_file = select(dataList, 5); // key : fullpath
-            StatusCount = dt_file.Rows.Count;
-        }
-
-        async void GetNewFiles()
-        {
-            this.progressBar1.Value = 0;
-
-            // 비교 결과 목록
-            DataTable dt_diff = new DataTable();
-            dt_diff.InitDataTable();
-
-            // 실제 파일 목록
-            DataTable dt_real = new DataTable();
-            dt_real.InitDataTable();
-
-            // 전 파일 리스트
-            List<string> list_real = new List<string>();
-
-            // 폴더 목록
-            HashSet<string> folderSet = new HashSet<string>();
-
-            // 현재 시간
-            string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            // 실제 파일 전 목록 생성
-            foreach (DataRow dr in dt_lib.Rows)
-            {
-                try
-                {
-                    string path = dr["path"].ToString();
-                    DirectoryInfo di = new DirectoryInfo(path);
-                    List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                    list_real.AddRange(list_fileNames);
-
-                    // 파일이 존재하는 폴더 목록 추적
-                    foreach (string fileName in list_fileNames)
-                    {
-                        folderSet.Add(Path.GetDirectoryName(fileName));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    continue;
-                }
-            }
-
-            // 생성된 전 파일 목록을 검사하여 추가
-            dt_diff.Columns.Add("result");
-            foreach (string file in list_real)
-            {
-                ProgressBarPlus();
-                int pathExists = dt_file.AsEnumerable().Where(r => r.Field<string>("fullpath").Equals(file)).Count();
-                // 이미 존재하는 경우 유지
-                if (pathExists > 0)
-                    continue;
-                else
-                    INSERT_SINGLE(jsonFilePathFiles, file, nowTime, Path.GetFullPath(file)); // 없는 경우 JSON 에 추가
-            }
-
-            // 폴더에 파일이 없는 경우 폴더를 삭제
-            foreach (string folderPath in folderSet)
-            {
-                if (!Directory.EnumerateFileSystemEntries(folderPath).Any())
-                {
-                    try
-                    {
-                        Directory.Delete(folderPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("폴더 삭제 오류: " + ex.Message);
-                    }
-                }
-            }
-
-            // 재조회
-            GetFiles();
-        }
-
-        async void SetDelFiles()
-        {
-            this.progressBar1.Value = 0;
-
-            // 비교 결과 목록
-            DataTable dt_diff = new DataTable();
-            dt_diff.InitDataTable();
-
-            // 실제 파일 목록
-            DataTable dt_real = new DataTable();
-            dt_real.InitDataTable();
-
-            // 전 파일 리스트
-            List<string> list_real = new List<string>();
-
-            // 현재 시간
-            string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            // DB에서 가지고온 목록으로 부터 확인하여 제거
-            foreach (DataRow row in dt_file.Rows)
-            {
-                ProgressBarPlus();
-                string fullpath = row["fullpath"].ToString();
-                bool pathExists = File.Exists(fullpath);
-                // 이미 존재하는 경우 유지
-                if (pathExists)
-                    continue;
-                RemoveDataFromJson(jsonFilePathFiles, fullpath);
-            }
-            // 재조회
-            GetFiles();
-        }
-        public void RemoveDataFromJson(string jsonFilePath, string fullpath)
-        {
-            try
-            {
-                // 해당 fullpath를 가진 데이터 찾아서 삭제
-                var dataToRemove = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
-                if (dataToRemove != null)
-                {
-                    dataList.Remove(dataToRemove);
-                    Console.WriteLine("데이터 삭제 완료");
-                }
-                else
-                {
-                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
-                }
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePath, updatedJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-            }
-        }
-
-        private void SetGrid()
-        {
-            this.dataGridView1.DataSource = dt_file;
-        }
-
-
-        // 파일의 실행 + 업데이트
-        private void FileExe(string fullPath, int row)
-        {
-            fullPath = $@"{Path.GetFullPath(fullPath)}".Replace("\\", "/").Replace("/", "\\");
-            dataGridView1.CurrentCell = null;
-            ExeFile(fullPath);
-            string now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            dataGridView1.Rows[row].Cells["lasttime"].Value = now;
-            UpdateLastTimeInJson(jsonFilePathFiles, fullPath);
-        }
-
-        public void UpdateLastTimeInJson(string jsonFilePath, string fullpath)
-        {
-            try
-            {
-                // 해당 fullpath를 가진 데이터 찾아서 lasttime을 현재 시간으로 업데이트
-                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
-                if (dataToUpdate != null)
-                {
-                    dataToUpdate["lasttime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    Console.WriteLine("lasttime이 현재 시간으로 업데이트되었습니다.");
-                }
-                else
-                {
-                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
-                }
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePath, updatedJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-            }
-        }
-
-        // 파일의 평가 + 업데이트
-        private void FileEval(string fullpath, string colHeaderName, int row)
-        {
-            int star = Convert.ToInt16(colHeaderName);
-            if (dataGridView1.Rows[row].Cells["eval"].Value.ToString().Length == star)
-                return;
-            string eval = string.Empty;
-            for (int i = 0; i < star; i++)
-            {
-                eval += "★";
-            }
-            dataGridView1.Rows[row].Cells["eval"].Value = eval;
-            UpdateEvalByFullpath(fullpath, eval);
-        }
-        public void UpdateEvalByFullpath(string fullpath, string newEval)
-        {
-            try
-            {
-                // 해당 fullpath를 가진 데이터 찾아서 eval 값을 업데이트
-                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
-                if (dataToUpdate != null)
-                {
-                    dataToUpdate["eval"] = newEval;
-                    Console.WriteLine("eval 값이 업데이트되었습니다.");
-                }
-                else
-                {
-                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
-                }
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePathFiles, updatedJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-            }
-        }
-
-        // 파일의 메모 + 업데이트
-        private void FileMemo(string fullpath, string desc)
-        {
-            UpdateDescByFullpath(fullpath, desc);
-        }
-
-        public void UpdateDescByFullpath(string fullpath, string desc)
-        {
-            try
-            {
-                // 해당 fullpath를 가진 데이터 찾아서 eval 값을 업데이트
-                var dataToUpdate = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
-                if (dataToUpdate != null)
-                {
-                    dataToUpdate["desc"] = desc;
-                    Console.WriteLine("eval 값이 업데이트되었습니다.");
-                }
-                else
-                {
-                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
-                }
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePathFiles, updatedJson);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-            }
-        }
-
-
-        // 파일의 경로 열기
-        private void FilePathOpen(int row)
-        {
-            var p = new Process();
-            p.StartInfo = new ProcessStartInfo(@$"{Path.GetDirectoryName(dataGridView1.Rows[row].Cells["fullpath"].Value.ToString())}")
-            {
-                UseShellExecute = true
-            };
-            p.Start();
-        }
-        //그리드 조회
-        private void Search()
-        {
-            dataGridView1.Visible = true;
-            if (SearchTextBox.Trim() != String.Empty)
-            {
-                try
-                {
-                    DataTable dt = dt_file.AsEnumerable()
-                .Where(r => r.Field<string>("filename").ToUpper().Contains(SearchTextBox.ToUpper()) == true)
-                .CopyToDataTable();
-                    dataGridView1.DataSource = dt;
-                    StatusCount = this.dataGridView1.Rows.Count;
-                }
-                catch
-                {
-                    dataGridView1.Visible = false;
-                }
-            }
-            else
-            {
-                dataGridView1.DataSource = dt_file;
-                StatusCount = dt_file.Rows.Count;
-            }
-        }
-        #endregion
 
         #region Event Handler
+
+        // 스타트
+        private void button5_Click(object sender, EventArgs e)
+        {
+        }
         // lib 버튼
         private void button_lib_Click(object sender, EventArgs e)
         {
-            Library libform = new Library();
-            libform.ShowDialog();
-            if (libform.DialogResult == DialogResult.OK)
-            {
-                GetLibraries();
-                GetFiles();
-                SetGrid();
-                StatusCount = this.dataGridView1.Rows.Count;
-            }
         }
-        // 신규 파일 찾아서 추가하기 버튼
+        // 추가검색
         private void button_refresh_Click(object sender, EventArgs e)
         {
-            GetNewFiles();
-            SetGrid();
+
         }
-        // 사라진 파일 제거하기 버튼
+        // 삭제 검색
         private void button1_Click_1(object sender, EventArgs e)
         {
-            SetDelFiles();
-            SetGrid();
+
         }
+        // 삭제 버튼
         private void button1_Click(object sender, EventArgs e)
         {
-            List<int> del_list = new List<int>();
-            for (int row = 0; row < this.dataGridView1.Rows.Count; row++)
+            // 데이터 그리드 뷰에서 현재 선택된 행의 파일 경로를 가져옵니다.
+            if (dataGridView1.SelectedRows.Count > 0)
             {
-                if (dataGridView1.Rows[row].Selected)
-                {
-                    del_list.Add(row);
-                }
+                string fullpath = dataGridView1.SelectedRows[0].Cells["fullpath"].Value.ToString();
+                DeleteFileAndData(fullpath);
             }
-            for (int row = del_list.Count - 1; row >= 0; row--)
+            else
             {
-                string fullpath = dataGridView1.Rows[del_list[row]].Cells["fullpath"].Value.ToString();
-                //파일삭제
-                new System.IO.FileInfo(fullpath).Delete();
-                RemoveDataByFullpath(jsonFilePathFiles, fullpath);
-                //그리드 삭제
-                dataGridView1.Rows.RemoveAt(del_list[row]);
+                MessageBox.Show("삭제할 파일을 선택하세요.", "선택 필요", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            StatusCount = this.dataGridView1.Rows.Count;
         }
-        public void RemoveDataByFullpath(string jsonFilePath, string fullpath)
+        private void DeleteFileAndData(string fullpath)
         {
+            // 파일 시스템에서 파일을 삭제합니다.
             try
             {
-                // 해당 fullpath를 가진 데이터 찾아서 삭제
-                var dataToRemove = dataList.FirstOrDefault(data => data.ContainsKey("fullpath") && data["fullpath"].ToString() == fullpath);
-                if (dataToRemove != null)
-                {
-                    dataList.Remove(dataToRemove);
-                    Console.WriteLine("데이터가 삭제되었습니다.");
-                }
-                else
-                {
-                    Console.WriteLine("해당 fullpath를 가진 데이터가 없습니다.");
-                }
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePath, updatedJson);
+                File.Delete(fullpath);
             }
-            catch (Exception ex)
+            catch (IOException ex)
             {
-                Console.WriteLine("오류 발생: " + ex.Message);
+                MessageBox.Show($"파일 삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 데이터 바인딩 리스트에서 해당 파일 정보를 삭제합니다.
+            var fileToRemove = fileEntries.FirstOrDefault(f => f.Fullpath == fullpath);
+            if (fileToRemove != null)
+            {
+                fileEntries.Remove(fileToRemove);
             }
         }
+        // 기타 버튼
+        private void button4_Click(object sender, EventArgs e)
+        {
 
+        }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
                 return;
-
-            int x = e.ColumnIndex;
-            int y = e.RowIndex;
-            string colName = this.dataGridView1.Columns[x].Name;
-
+            string colName = this.dataGridView1.Columns[e.ColumnIndex].Name;
+            // 그리드안의 각 버튼을 클릭했을때의 로직
             switch (colName)
             {
                 case "exe":
-                    FileExe(this.dataGridView1.Rows[y].Cells["fullpath"].Value.ToString(), y);
-                    this.dataGridView1.Rows[y].Selected = true;
+                    string filePath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 실행할 파일 경로
+                    try
+                    {
+                        // explorer를 사용하여 파일을 실행
+                        System.Diagnostics.Process.Start("explorer", $"\"{filePath}\"");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"파일을 열 수 없습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                     break;
                 case "score0":
                 case "score1":
@@ -496,20 +165,60 @@ namespace BaseBall_Video_Manager
                 case "score3":
                 case "score4":
                 case "score5":
-                    string colHeaderName = this.dataGridView1.Columns[x].HeaderText;
-                    FileEval(this.dataGridView1.Rows[y].Cells["fullpath"].Value.ToString(), colHeaderName, y);
+                    int score = int.Parse(colName.Replace("score", "")); // "scoreX"에서 X 추출
+                    string fileID = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 파일 ID
+                    UpdateScore(fileID, score); // 점수 업데이트 함수
                     break;
                 case "openpath":
-                    FilePathOpen(y);
+                    string directoryPath = Path.GetDirectoryName(dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString());
+                    System.Diagnostics.Process.Start("explorer.exe", directoryPath);
                     break;
             }
             return;
         }
+
+        private void UpdateScore(string fullpath, int score)
+        {
+            // 파일 목록을 로드합니다.
+            List<FileEntry> entries = fileManager.LoadFiles();
+            // 해당 경로를 가진 파일을 찾습니다.
+            var file = entries.Find(f => f.Fullpath == fullpath);
+            if (file != null)
+            {
+                // 점수(score)만큼 별을 문자열로 생성합니다.
+                file.Eval = new string('★', score);
+                // 변경사항을 파일에 저장합니다.
+                fileManager.SaveFiles(entries);
+
+                // 데이터 그리드 뷰에서 해당 파일의 Eval 컬럼을 업데이트합니다.
+                UpdateDataGridViewCell(fullpath, file.Eval);
+            }
+            else
+            {
+                // 파일을 찾을 수 없는 경우 경고 메시지를 표시합니다.
+                MessageBox.Show("지정된 경로의 파일을 찾을 수 없습니다.", "파일 미발견", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void UpdateDataGridViewCell(string fullpath, string eval)
+        {
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.Cells["fullpath"].Value.ToString() == fullpath)
+                {
+                    row.Cells["Eval"].Value = eval;  // Eval 컬럼이 별 평가를 표시하는 컬럼이라고 가정
+                    break;
+                }
+            }
+        }
+
+
+
         private void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex != -1 && e.RowIndex != -1)
             {
-                FileExe(this.dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(), e.RowIndex);
+                //FileExe(this.dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(), e.RowIndex);
                 dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[0];
             }
         }
@@ -526,7 +235,7 @@ namespace BaseBall_Video_Manager
             switch (colName)
             {
                 case "desc":
-                    FileMemo(jsonFilePathFiles, dataGridView1.Rows[y].Cells["desc"].Value.ToString().ToStr());
+                    //FileMemo(jsonFilePathFiles, dataGridView1.Rows[y].Cells["desc"].Value.ToString().ToStr());
                     break;
             }
             return;
@@ -535,141 +244,12 @@ namespace BaseBall_Video_Manager
         {
             if (e.KeyCode == Keys.Enter)
             {
-                Search();
-            }
-        }
-        #endregion
-
-        #region DataBase
-        //select 쿼리 수행 -> DataTable 리턴
-        public DataTable select(List<Dictionary<string, object>> data_, int keyCol_Index)
-        {
-            try
-            {
-                // DataTable 생성
-                DataTable dataTable = new DataTable();
-
-                // 첫 번째 행을 기준으로 컬럼 생성
-                if (data_.Count > 0)
-                {
-                    foreach (string key in data_[keyCol_Index].Keys)
-                    {
-                        dataTable.Columns.Add(key, typeof(object));
-                    }
-
-                    // 데이터 추가
-                    foreach (Dictionary<string, object> data in data_)
-                    {
-                        DataRow row = dataTable.NewRow();
-                        foreach (KeyValuePair<string, object> entry in data)
-                        {
-                            row[entry.Key] = entry.Value;
-                        }
-                        dataTable.Rows.Add(row);
-                    }
-                }
-
-                return dataTable;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-                MessageBox.Show("오류 발생: " + ex.Message);
-                return null;
-            }
-        }
-        // 파일 한개 추가하기
-        public void INSERT_SINGLE(string jsonFilePath, string filename, string addtime, string fullpath)
-        {
-            try
-            {
-                // 새 데이터 생성 및 추가
-                Dictionary<string, object> newData = new Dictionary<string, object>();
-                newData["filename"] = Path.GetFileName(filename);
-                newData["addtime"] = addtime;
-                newData["fullpath"] = fullpath;
-                newData["lasttime"] = ""; // 기본값으로 빈 문자열 삽입
-                newData["eval"] = ""; // 기본값으로 빈 문자열 삽입
-                newData["desc"] = ""; // 기본값으로 빈 문자열 삽입
-
-                // 데이터 리스트에 새 데이터 추가
-                dataList.Add(newData);
-
-                // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
-                string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-
-                // JSON 파일을 UTF-8로 인코딩하여 저장
-                File.WriteAllText(jsonFilePath, updatedJson, Encoding.UTF8);
-
-                Console.WriteLine("데이터 추가 완료");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("오류 발생: " + ex.Message);
-                MessageBox.Show(ex.Message);
+                //Search();
             }
         }
 
         #endregion
 
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            //readXml();
-            //createJson();
-            deleteDup(jsonFilePathFiles);
-        }
-
-        private void deleteDup(string path)
-        {
-            string jsonFilePath = path;
-
-            // Read the JSON file and deserialize it into a list of dictionaries
-            List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
-
-            // Create a dictionary where the keys are the "fullpath" values
-            Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
-
-            // Populate the dictionary with data from the list
-            foreach (var data in dataList)
-            {
-                string fullpath = data["fullpath"].ToString();
-                if (!dict.ContainsKey(fullpath))
-                {
-                    dict.Add(fullpath, data);
-                }
-            }
-
-            // Convert the dictionary back into a list of dictionaries
-            List<Dictionary<string, object>> uniqueDataList = new List<Dictionary<string, object>>(dict.Values);
-
-            // Serialize the list of dictionaries back into JSON format and write it to the file
-            string updatedJson = JsonConvert.SerializeObject(uniqueDataList, Formatting.Indented);
-            File.WriteAllText(jsonFilePath, updatedJson);
-
-            Console.WriteLine("Duplicate entries with the same fullpath removed successfully.");
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // 기존 데이터 리스트로 변환
-                dataListLib = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathLib));
-                dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePathFiles));
-
-                // DB 로부터 라이브러리 정보 가져오기 : json 읽어
-                GetLibraries();
-                GetFiles();
-                // 파일상태 점검하여 추가하기 : 점검해서 json 업데이트
-                GetNewFiles();
-                // 그리드 생성
-                SetGrid();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
+        
     }
 }
