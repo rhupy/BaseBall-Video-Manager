@@ -45,6 +45,9 @@
             textBox1 = new TextBox();
             button5 = new Button();
             dataGridView1 = new DataGridView();
+            label_status = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
             idx = new DataGridViewTextBoxColumn();
             filename = new DataGridViewTextBoxColumn();
             exe = new DataGridViewButtonColumn();
@@ -60,9 +63,6 @@
             desc = new DataGridViewTextBoxColumn();
             openpath = new DataGridViewButtonColumn();
             fullpath = new DataGridViewTextBoxColumn();
-            label_status = new StatusStrip();
-            toolStripStatusLabel1 = new ToolStripStatusLabel();
-            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
@@ -289,6 +289,29 @@
             dataGridView1.CellContentDoubleClick += dataGridView1_CellDoubleClick;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             // 
+            // label_status
+            // 
+            label_status.ImageScalingSize = new Size(20, 20);
+            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount });
+            label_status.Location = new Point(0, 1390);
+            label_status.Name = "label_status";
+            label_status.Padding = new Padding(1, 0, 20, 0);
+            label_status.Size = new Size(1549, 32);
+            label_status.TabIndex = 1;
+            label_status.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(56, 25);
+            toolStripStatusLabel1.Text = "Total:";
+            // 
+            // toolStripStatusLabel_totalcount
+            // 
+            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
+            toolStripStatusLabel_totalcount.Size = new Size(22, 25);
+            toolStripStatusLabel_totalcount.Text = "0";
+            // 
             // idx
             // 
             idx.DataPropertyName = "idx";
@@ -318,6 +341,7 @@
             exe.MinimumWidth = 8;
             exe.Name = "exe";
             exe.ReadOnly = true;
+            exe.SortMode = DataGridViewColumnSortMode.Automatic;
             exe.Text = "📺";
             exe.UseColumnTextForButtonValue = true;
             exe.Width = 70;
@@ -452,29 +476,6 @@
             fullpath.ReadOnly = true;
             fullpath.Width = 150;
             // 
-            // label_status
-            // 
-            label_status.ImageScalingSize = new Size(20, 20);
-            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount });
-            label_status.Location = new Point(0, 1390);
-            label_status.Name = "label_status";
-            label_status.Padding = new Padding(1, 0, 20, 0);
-            label_status.Size = new Size(1549, 32);
-            label_status.TabIndex = 1;
-            label_status.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(56, 25);
-            toolStripStatusLabel1.Text = "Total:";
-            // 
-            // toolStripStatusLabel_totalcount
-            // 
-            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
-            toolStripStatusLabel_totalcount.Size = new Size(22, 25);
-            toolStripStatusLabel_totalcount.Text = "0";
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -516,6 +517,7 @@
         private TableLayoutPanel tableLayoutPanel3;
         private Button button1;
         private Button button4;
+        private Button button5;
         private DataGridViewTextBoxColumn idx;
         private DataGridViewTextBoxColumn filename;
         private DataGridViewButtonColumn exe;
@@ -531,7 +533,6 @@
         private DataGridViewTextBoxColumn desc;
         private DataGridViewButtonColumn openpath;
         private DataGridViewTextBoxColumn fullpath;
-        private Button button5;
     }
 }
 
