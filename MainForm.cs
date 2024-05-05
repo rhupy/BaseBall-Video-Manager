@@ -129,6 +129,9 @@ namespace BaseBall_Video_Manager
             // 전 파일 리스트
             List<string> list_real = new List<string>();
 
+            // 폴더 목록
+            HashSet<string> folderSet = new HashSet<string>();
+
             // 현재 시간
             string nowTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -138,18 +141,14 @@ namespace BaseBall_Video_Manager
                 try
                 {
                     string path = dr["path"].ToString();
-                    //string path = "X:\\Filejo";
                     DirectoryInfo di = new DirectoryInfo(path);
-                    // 1. 최상위 폴더에서 검색하여 추가
-                    List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
+                    List<string> list_fileNames = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
                     list_real.AddRange(list_fileNames);
 
-                    // 2. 하위 폴더에서 검색하여 추가
-                    List<string> dirNames = Directory.GetDirectories(path).ToList<string>();
-                    foreach (string dirName in dirNames)
+                    // 파일이 존재하는 폴더 목록 추적
+                    foreach (string fileName in list_fileNames)
                     {
-                        List<string> filenames_indir = Directory.GetFiles(dirName, "*.*", SearchOption.TopDirectoryOnly).Where(s => exts.Contains(Path.GetExtension(s), StringComparer.OrdinalIgnoreCase)).ToList<string>();
-                        list_real.AddRange(filenames_indir);
+                        folderSet.Add(Path.GetDirectoryName(fileName));
                     }
                 }
                 catch (Exception ex)
@@ -165,15 +164,32 @@ namespace BaseBall_Video_Manager
                 ProgressBarPlus();
                 int pathExists = dt_file.AsEnumerable().Where(r => r.Field<string>("fullpath").Equals(file)).Count();
                 // 이미 존재하는 경우 유지
-                if (pathExists == 1)
+                if (pathExists > 0)
                     continue;
                 else
-                    INSERT_SINGLE(jsonFilePathFiles, file, nowTime, Path.GetFullPath(file));
+                    INSERT_SINGLE(jsonFilePathFiles, file, nowTime, Path.GetFullPath(file)); // 없는 경우 JSON 에 추가
             }
+
+            // 폴더에 파일이 없는 경우 폴더를 삭제
+            foreach (string folderPath in folderSet)
+            {
+                if (!Directory.EnumerateFileSystemEntries(folderPath).Any())
+                {
+                    try
+                    {
+                        Directory.Delete(folderPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("폴더 삭제 오류: " + ex.Message);
+                    }
+                }
+            }
+
             // 재조회
             GetFiles();
-
         }
+
         async void SetDelFiles()
         {
             this.progressBar1.Value = 0;
@@ -573,7 +589,6 @@ namespace BaseBall_Video_Manager
                 newData["addtime"] = addtime;
                 newData["fullpath"] = fullpath;
                 newData["lasttime"] = ""; // 기본값으로 빈 문자열 삽입
-                //newData["exe"] = ""; // 기본값으로 빈 문자열 삽입
                 newData["eval"] = ""; // 기본값으로 빈 문자열 삽입
                 newData["desc"] = ""; // 기본값으로 빈 문자열 삽입
 
@@ -582,7 +597,9 @@ namespace BaseBall_Video_Manager
 
                 // 수정된 데이터를 JSON 형식으로 변환하여 파일에 쓰기
                 string updatedJson = JsonConvert.SerializeObject(dataList, Formatting.Indented);
-                File.WriteAllText(jsonFilePath, updatedJson);
+
+                // JSON 파일을 UTF-8로 인코딩하여 저장
+                File.WriteAllText(jsonFilePath, updatedJson, Encoding.UTF8);
 
                 Console.WriteLine("데이터 추가 완료");
             }
@@ -592,6 +609,7 @@ namespace BaseBall_Video_Manager
                 MessageBox.Show(ex.Message);
             }
         }
+
         #endregion
 
 
@@ -599,6 +617,37 @@ namespace BaseBall_Video_Manager
         {
             //readXml();
             //createJson();
+            deleteDup(jsonFilePathFiles);
+        }
+
+        private void deleteDup(string path)
+        {
+            string jsonFilePath = path;
+
+            // Read the JSON file and deserialize it into a list of dictionaries
+            List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
+
+            // Create a dictionary where the keys are the "fullpath" values
+            Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
+
+            // Populate the dictionary with data from the list
+            foreach (var data in dataList)
+            {
+                string fullpath = data["fullpath"].ToString();
+                if (!dict.ContainsKey(fullpath))
+                {
+                    dict.Add(fullpath, data);
+                }
+            }
+
+            // Convert the dictionary back into a list of dictionaries
+            List<Dictionary<string, object>> uniqueDataList = new List<Dictionary<string, object>>(dict.Values);
+
+            // Serialize the list of dictionaries back into JSON format and write it to the file
+            string updatedJson = JsonConvert.SerializeObject(uniqueDataList, Formatting.Indented);
+            File.WriteAllText(jsonFilePath, updatedJson);
+
+            Console.WriteLine("Duplicate entries with the same fullpath removed successfully.");
         }
 
         private void button5_Click(object sender, EventArgs e)
