@@ -28,21 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DataGridViewCellStyle dataGridViewCellStyle4 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle5 = new DataGridViewCellStyle();
-            DataGridViewCellStyle dataGridViewCellStyle6 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle3 = new DataGridViewCellStyle();
             tableLayoutPanel1 = new TableLayoutPanel();
             tableLayoutPanel2 = new TableLayoutPanel();
-            textBox1 = new TextBox();
-            button_lib = new Button();
+            button1 = new Button();
             button_del = new Button();
             button2 = new Button();
             button3 = new Button();
             progressBar1 = new ProgressBar();
             tableLayoutPanel3 = new TableLayoutPanel();
-            button1 = new Button();
             button_refresh = new Button();
+            button_lib = new Button();
             button4 = new Button();
+            textBox1 = new TextBox();
+            button5 = new Button();
             dataGridView1 = new DataGridView();
             idx = new DataGridViewTextBoxColumn();
             filename = new DataGridViewTextBoxColumn();
@@ -62,7 +63,6 @@
             label_status = new StatusStrip();
             toolStripStatusLabel1 = new ToolStripStatusLabel();
             toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
-            button5 = new Button();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
@@ -119,25 +119,16 @@
             tableLayoutPanel2.Size = new Size(1541, 53);
             tableLayoutPanel2.TabIndex = 4;
             // 
-            // textBox1
+            // button1
             // 
-            textBox1.Location = new Point(192, 12);
-            textBox1.Margin = new Padding(4, 12, 4, 5);
-            textBox1.Name = "textBox1";
-            textBox1.Size = new Size(229, 31);
-            textBox1.TabIndex = 9;
-            textBox1.KeyDown += textBox1_KeyDown;
-            // 
-            // button_lib
-            // 
-            button_lib.Location = new Point(4, 7);
-            button_lib.Margin = new Padding(4, 7, 4, 7);
-            button_lib.Name = "button_lib";
-            button_lib.Size = new Size(112, 39);
-            button_lib.TabIndex = 0;
-            button_lib.Text = "라이브러리";
-            button_lib.UseVisualStyleBackColor = true;
-            button_lib.Click += button_lib_Click;
+            button1.Location = new Point(710, 7);
+            button1.Margin = new Padding(4, 7, 4, 7);
+            button1.Name = "button1";
+            button1.Size = new Size(112, 39);
+            button1.TabIndex = 8;
+            button1.Text = "삭제 검색";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click_1;
             // 
             // button_del
             // 
@@ -199,17 +190,6 @@
             tableLayoutPanel3.Size = new Size(281, 53);
             tableLayoutPanel3.TabIndex = 14;
             // 
-            // button1
-            // 
-            button1.Location = new Point(710, 7);
-            button1.Margin = new Padding(4, 7, 4, 7);
-            button1.Name = "button1";
-            button1.Size = new Size(112, 39);
-            button1.TabIndex = 8;
-            button1.Text = "삭제 검색";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click_1;
-            // 
             // button_refresh
             // 
             button_refresh.Location = new Point(128, 7);
@@ -221,6 +201,17 @@
             button_refresh.UseVisualStyleBackColor = true;
             button_refresh.Click += button_refresh_Click;
             // 
+            // button_lib
+            // 
+            button_lib.Location = new Point(4, 7);
+            button_lib.Margin = new Padding(4, 7, 4, 7);
+            button_lib.Name = "button_lib";
+            button_lib.Size = new Size(112, 39);
+            button_lib.TabIndex = 0;
+            button_lib.Text = "라이브러리";
+            button_lib.UseVisualStyleBackColor = true;
+            button_lib.Click += button_lib_Click;
+            // 
             // button4
             // 
             button4.Location = new Point(1406, 7);
@@ -231,41 +222,61 @@
             button4.UseVisualStyleBackColor = true;
             button4.Click += button4_Click;
             // 
+            // textBox1
+            // 
+            textBox1.Location = new Point(192, 12);
+            textBox1.Margin = new Padding(4, 12, 4, 5);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(229, 31);
+            textBox1.TabIndex = 9;
+            textBox1.KeyDown += textBox1_KeyDown;
+            // 
+            // button5
+            // 
+            button5.Dock = DockStyle.Fill;
+            button5.Location = new Point(3, 3);
+            button5.Name = "button5";
+            button5.Size = new Size(182, 47);
+            button5.TabIndex = 16;
+            button5.Text = "START";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
+            // 
             // dataGridView1
             // 
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = SystemColors.Control;
-            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
-            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = SystemColors.Control;
+            dataGridViewCellStyle1.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             dataGridView1.ColumnHeadersHeight = 34;
             dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridView1.Columns.AddRange(new DataGridViewColumn[] { idx, filename, exe, lasttime, addtime, eval, score0, score1, score2, score3, score4, score5, desc, openpath, fullpath });
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = SystemColors.Window;
-            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle5.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle2.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
             dataGridView1.Dock = DockStyle.Fill;
             dataGridView1.Location = new Point(4, 68);
             dataGridView1.Margin = new Padding(4, 5, 4, 5);
             dataGridView1.Name = "dataGridView1";
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = SystemColors.Control;
-            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle6.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
-            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = SystemColors.Control;
+            dataGridViewCellStyle3.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle3.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = DataGridViewTriState.True;
+            dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             dataGridView1.RowHeadersVisible = false;
             dataGridView1.RowHeadersWidth = 62;
             dataGridView1.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
@@ -464,17 +475,6 @@
             toolStripStatusLabel_totalcount.Size = new Size(22, 25);
             toolStripStatusLabel_totalcount.Text = "0";
             // 
-            // button5
-            // 
-            button5.Dock = DockStyle.Fill;
-            button5.Location = new Point(3, 3);
-            button5.Name = "button5";
-            button5.Size = new Size(182, 47);
-            button5.TabIndex = 16;
-            button5.Text = "START";
-            button5.UseVisualStyleBackColor = true;
-            button5.Click += button5_Click;
-            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
@@ -486,6 +486,7 @@
             Margin = new Padding(4, 7, 4, 7);
             Name = "MainForm";
             Text = "Baseball Video Manager V.3";
+            Load += MainForm_Load;
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
