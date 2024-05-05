@@ -77,6 +77,7 @@ namespace BaseBall_Video_Manager
             entries.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
             fileEntries = new BindingList<FileEntry>(entries);
             dataGridView1.DataSource = fileEntries;
+            StatusText = fileEntries.Count().ToString();
         }
 
         #region Event Handler
@@ -84,6 +85,7 @@ namespace BaseBall_Video_Manager
         // 스타트
         private void button5_Click(object sender, EventArgs e)
         {
+            LoadFiles();  // 파일 목록을 로드하고 정렬하여 그리드에 표시
         }
         // lib 버튼
         private void button_lib_Click(object sender, EventArgs e)
@@ -92,7 +94,7 @@ namespace BaseBall_Video_Manager
         // 추가검색
         private void button_refresh_Click(object sender, EventArgs e)
         {
-
+            fileManager.UpdateFiles();  // 파일 목록을 로드하고 정렬하여 그리드에 표시
         }
         // 삭제 검색
         private void button1_Click_1(object sender, EventArgs e)
@@ -122,7 +124,12 @@ namespace BaseBall_Video_Manager
             }
             catch (IOException ex)
             {
-                MessageBox.Show($"파일 삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var fileToRemove_ = fileEntries.FirstOrDefault(f => f.Fullpath == fullpath);
+                if (fileToRemove_ != null)
+                {
+                    fileEntries.Remove(fileToRemove_);
+                }
+                //MessageBox.Show($"파일 삭제 중 오류가 발생했습니다: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -136,7 +143,7 @@ namespace BaseBall_Video_Manager
         // 기타 버튼
         private void button4_Click(object sender, EventArgs e)
         {
-
+            deleteDup("data\\files.json");
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -153,6 +160,8 @@ namespace BaseBall_Video_Manager
                     {
                         // explorer를 사용하여 파일을 실행
                         System.Diagnostics.Process.Start("explorer", $"\"{filePath}\"");
+                        string fileID_ = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 파일 ID
+                        UpdateAddtime(fileID_);
                     }
                     catch (Exception ex)
                     {
@@ -192,6 +201,29 @@ namespace BaseBall_Video_Manager
 
                 // 데이터 그리드 뷰에서 해당 파일의 Eval 컬럼을 업데이트합니다.
                 UpdateDataGridViewCell(fullpath, file.Eval);
+            }
+            else
+            {
+                // 파일을 찾을 수 없는 경우 경고 메시지를 표시합니다.
+                MessageBox.Show("지정된 경로의 파일을 찾을 수 없습니다.", "파일 미발견", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        private void UpdateAddtime(string fullpath)
+        {
+            // 파일 목록을 로드합니다.
+            List<FileEntry> entries = fileManager.LoadFiles();
+            // 해당 경로를 가진 파일을 찾습니다.
+            var file = entries.Find(f => f.Fullpath == fullpath);
+            if (file != null)
+            {
+                // 점수(score)만큼 별을 문자열로 생성합니다.
+                file.Lasttime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                // 변경사항을 파일에 저장합니다.
+                fileManager.SaveFiles(entries);
+
+                // 데이터 그리드 뷰에서 해당 파일의 Eval 컬럼을 업데이트합니다.
+                UpdateDataGridViewCell(fullpath, file.Lasttime);
             }
             else
             {
@@ -248,8 +280,37 @@ namespace BaseBall_Video_Manager
             }
         }
 
+        private void deleteDup(string path)
+        {
+            string jsonFilePath = path;
+
+            // Read the JSON file and deserialize it into a list of dictionaries
+            List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
+
+            // Create a dictionary where the keys are the "fullpath" values
+            Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
+
+            // Populate the dictionary with data from the list
+            foreach (var data in dataList)
+            {
+                string fullpath = data["fullpath"].ToString();
+                if (!dict.ContainsKey(fullpath))
+                {
+                    dict.Add(fullpath, data);
+                }
+            }
+
+            // Convert the dictionary back into a list of dictionaries
+            List<Dictionary<string, object>> uniqueDataList = new List<Dictionary<string, object>>(dict.Values);
+
+            // Serialize the list of dictionaries back into JSON format and write it to the file
+            string updatedJson = JsonConvert.SerializeObject(uniqueDataList, Formatting.Indented);
+            File.WriteAllText(jsonFilePath, updatedJson);
+
+            Console.WriteLine("Duplicate entries with the same fullpath removed successfully.");
+        }
         #endregion
 
-        
+
     }
 }
