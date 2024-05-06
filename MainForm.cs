@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -70,14 +71,22 @@ namespace BaseBall_Video_Manager
             dataGridView1.DataSource = fileEntries;
         }
 
+
+
         private void LoadFiles()
         {
             var entries = fileManager.LoadFiles();  // 파일 목록 로드
-                                                    // addtime을 기준으로 내림차순 정렬
-            entries.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
-            fileEntries = new BindingList<FileEntry>(entries);
+            entries.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));// addtime을 기준으로 내림차순 정렬
+
+            // SortableBindingList로 변경
+            fileEntries = new SortableBindingList<FileEntry>(entries);
+
+            // DataGridView에 바인딩
             dataGridView1.DataSource = fileEntries;
-            StatusText = fileEntries.Count().ToString();
+
+            //fileEntries = new BindingList<FileEntry>(entries);
+            //dataGridView1.DataSource = fileEntries;
+            StatusCount = fileEntries.Count();
         }
 
         #region Event Handler
@@ -94,7 +103,8 @@ namespace BaseBall_Video_Manager
         // 추가검색
         private void button_refresh_Click(object sender, EventArgs e)
         {
-            fileManager.UpdateFiles();  // 파일 목록을 로드하고 정렬하여 그리드에 표시
+            
+            fileManager.UpdateFiles(this.progressBar1.Value);  // 파일 목록을 로드하고 정렬하여 그리드에 표시
         }
         // 삭제 검색
         private void button1_Click_1(object sender, EventArgs e)
@@ -161,7 +171,7 @@ namespace BaseBall_Video_Manager
                         // explorer를 사용하여 파일을 실행
                         System.Diagnostics.Process.Start("explorer", $"\"{filePath}\"");
                         string fileID_ = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 파일 ID
-                        UpdateAddtime(fileID_);
+                        UpdateLasttime(fileID_);
                     }
                     catch (Exception ex)
                     {
@@ -209,7 +219,7 @@ namespace BaseBall_Video_Manager
             }
         }
 
-        private void UpdateAddtime(string fullpath)
+        private void UpdateLasttime(string fullpath)
         {
             // 파일 목록을 로드합니다.
             List<FileEntry> entries = fileManager.LoadFiles();
@@ -223,7 +233,7 @@ namespace BaseBall_Video_Manager
                 fileManager.SaveFiles(entries);
 
                 // 데이터 그리드 뷰에서 해당 파일의 Eval 컬럼을 업데이트합니다.
-                UpdateDataGridViewCell(fullpath, file.Lasttime);
+                UpdateDataGridViewCell1(fullpath, file.Lasttime);
             }
             else
             {
@@ -232,6 +242,17 @@ namespace BaseBall_Video_Manager
             }
         }
 
+        private void UpdateDataGridViewCell1(string fullpath, string lasttime)
+        {
+            foreach (DataGridViewRow row in dataGridView1.Rows)
+            {
+                if (row.Cells["fullpath"].Value.ToString() == fullpath)
+                {
+                    row.Cells["Lasttime"].Value = lasttime;  // Eval 컬럼이 별 평가를 표시하는 컬럼이라고 가정
+                    break;
+                }
+            }
+        }
         private void UpdateDataGridViewCell(string fullpath, string eval)
         {
             foreach (DataGridViewRow row in dataGridView1.Rows)
@@ -284,33 +305,101 @@ namespace BaseBall_Video_Manager
         {
             string jsonFilePath = path;
 
-            // Read the JSON file and deserialize it into a list of dictionaries
+            // JSON 파일을 읽고, 리스트의 딕셔너리로 역직렬화합니다.
             List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
 
-            // Create a dictionary where the keys are the "fullpath" values
+            // "fullpath" 값을 키로 사용하는 딕셔너리를 생성합니다.
             Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
 
-            // Populate the dictionary with data from the list
+            // 리스트에서 데이터를 가져와 딕셔너리를 채웁니다.
             foreach (var data in dataList)
             {
-                string fullpath = data["fullpath"].ToString();
-                if (!dict.ContainsKey(fullpath))
+                if (data.ContainsKey("Fullpath"))
                 {
-                    dict.Add(fullpath, data);
+                    string fullpath = data["Fullpath"].ToString();
+                    if (!dict.ContainsKey(fullpath))
+                    {
+                        dict.Add(fullpath, data);
+                    }
+                }
+                else
+                {
+                    // "fullpath" 키가 없는 데이터에 대한 처리 (예: 로깅 또는 오류 메시지 출력)
+                    Console.WriteLine("Warning: A record without a 'Fullpath' was found and skipped.");
                 }
             }
 
-            // Convert the dictionary back into a list of dictionaries
+            // 딕셔너리를 다시 딕셔너리의 리스트로 변환합니다.
             List<Dictionary<string, object>> uniqueDataList = new List<Dictionary<string, object>>(dict.Values);
 
-            // Serialize the list of dictionaries back into JSON format and write it to the file
+            // 리스트의 딕셔너리를 JSON 형식으로 직렬화하고 파일에 기록합니다.
             string updatedJson = JsonConvert.SerializeObject(uniqueDataList, Formatting.Indented);
             File.WriteAllText(jsonFilePath, updatedJson);
 
             Console.WriteLine("Duplicate entries with the same fullpath removed successfully.");
         }
+
         #endregion
 
 
+    }
+
+
+    public class SortableBindingList<T> : BindingList<T> where T : class
+    {
+        private ListSortDirection sortDirection;
+        private PropertyDescriptor sortProperty;
+        private bool isSorted;
+
+        protected override bool SupportsSortingCore => true;
+        protected override bool IsSortedCore => this.isSorted;
+        protected override ListSortDirection SortDirectionCore => this.sortDirection;
+        protected override PropertyDescriptor SortPropertyCore => this.sortProperty;
+
+        // 추가된 생성자
+        public SortableBindingList(IList<T> list) : base(list)
+        {
+        }
+
+        protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)
+        {
+            var itemList = this.Items as List<T>;
+            if (itemList != null)
+            {
+                var comparer = new CustomComparer<T>(prop, direction);
+                itemList.Sort(comparer);
+                this.sortProperty = prop;
+                this.sortDirection = direction;
+                this.isSorted = true;
+
+                this.OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
+            }
+        }
+
+        private class CustomComparer<K> : IComparer<K> where K : class
+        {
+            private PropertyDescriptor propertyDescriptor;
+            private ListSortDirection sortDirection;
+
+            public CustomComparer(PropertyDescriptor prop, ListSortDirection direction)
+            {
+                this.propertyDescriptor = prop;
+                this.sortDirection = direction;
+            }
+
+            public int Compare(K x, K y)
+            {
+                var xValue = propertyDescriptor.GetValue(x);
+                var yValue = propertyDescriptor.GetValue(y);
+                if (sortDirection == ListSortDirection.Ascending)
+                {
+                    return Comparer.Default.Compare(xValue, yValue);
+                }
+                else
+                {
+                    return Comparer.Default.Compare(yValue, xValue);
+                }
+            }
+        }
     }
 }
