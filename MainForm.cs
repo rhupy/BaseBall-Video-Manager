@@ -165,11 +165,17 @@ namespace BaseBall_Video_Manager
             switch (colName)
             {
                 case "exe":
-                    string filePath = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 실행할 파일 경로
                     try
                     {
                         // explorer를 사용하여 파일을 실행
-                        System.Diagnostics.Process.Start("explorer", $"\"{filePath}\"");
+                        // 파일 직접 실행
+                        string fullPath = Path.GetFullPath(dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString());
+                        ProcessStartInfo startInfo = new ProcessStartInfo
+                        {
+                            FileName = fullPath,
+                            UseShellExecute = true  // 셸을 사용하여 파일 실행
+                        };
+                        Process.Start(startInfo);
                         string fileID_ = dataGridView1.Rows[e.RowIndex].Cells["fullpath"].Value.ToString(); // 파일 ID
                         UpdateLasttime(fileID_);
                     }
@@ -297,8 +303,31 @@ namespace BaseBall_Video_Manager
         {
             if (e.KeyCode == Keys.Enter)
             {
-                //Search();
+                Search();
             }
+        }
+
+        private BindingList<FileEntry> filteredFiles = new BindingList<FileEntry>(); // 필터링된 파일 목록
+
+        private void Search()
+        {
+            string filterText = textBox1.Text.ToLower(); // 대소문자를 구분하지 않기 위해 소문자로 변환
+            filteredFiles.Clear(); // 이전 검색 결과를 클리어
+            if (filterText.Trim().Length == 0)
+            {
+                dataGridView1.DataSource = fileEntries; // DataGridView에 바인딩
+                return;
+            }
+
+            foreach (var file in fileEntries)
+            {
+                if (file.Filename.ToLower().Contains(filterText))
+                {
+                    filteredFiles.Add(file); // 필터 조건에 맞는 파일만 추가
+                }
+            }
+
+            dataGridView1.DataSource = filteredFiles; // DataGridView에 바인딩
         }
 
         private void deleteDup(string path)
