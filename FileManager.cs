@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace BaseBall_Video_Manager
 {
@@ -21,8 +22,9 @@ namespace BaseBall_Video_Manager
             return new List<DirectoryEntry>();
         }
 
-        public void UpdateFiles()
+        public void UpdateFiles(int progressBar)
         {
+            progressBar = 0;
             List<FileEntry> existingFiles = LoadFiles(); // 기존 파일 목록 로드
             List<FileEntry> updatedFiles = existingFiles.ToList(); // 기존 파일 목록을 업데이트 목록에 복사
 
@@ -53,6 +55,7 @@ namespace BaseBall_Video_Manager
                             Desc = ""  // 초기 설명
                         });
                     }
+                    progressBar++;
                 }
             }
 
