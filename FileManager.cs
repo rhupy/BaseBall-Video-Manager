@@ -10,7 +10,7 @@ namespace BaseBall_Video_Manager
     {
         string libPath = "data\\lib.json"; // 디렉토리 목록 파일
         string filesPath = "data\\files.json"; // 파일 목록 파일
-        private string[] extensions = { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
+        private string[] extensions = { ".zip", ".7z", ".ezc", ".alzip", ".001", ".zpaq" };
 
         public List<DirectoryEntry> LoadLibraries()
         {
