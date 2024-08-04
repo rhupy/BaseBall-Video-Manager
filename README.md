@@ -1,4 +1,4 @@
-# Baseball Video Manager V.3
+# Baseball Video Manager
 
 Baseball Video Manager V.3은 비디오 파일과 기타 파일들을 효율적으로 관리하기 위한 Windows 데스크톱 애플리케이션입니다.
 
