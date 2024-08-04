@@ -61,6 +61,7 @@ namespace BaseBall_Video_Manager
         private BindingList<FileEntry> fileEntries2;
         private DataGridView CurrentDataGridView => fileManager.tabIndex == 0 ? dataGridView1 : dataGridView2;
 
+        // 예를 들어, 생성자에서 호출할 경우
         public MainForm()
         {
             InitializeComponent();
@@ -75,7 +76,9 @@ namespace BaseBall_Video_Manager
             dataGridView1.CellEndEdit += DataGridView_CellEndEdit;
             dataGridView2.CellEndEdit += DataGridView_CellEndEdit;
 
-            _ = LoadFiles(); // 비동기로 LoadFiles 실행
+            // LoadFiles 메서드 호출
+            _ = LoadFiles();  // 비동기 메서드를 동기적으로 실행하지 않기 위해 _ = 사용
+
             changeTab(0); // 초기 탭 설정
         }
 
@@ -150,7 +153,6 @@ namespace BaseBall_Video_Manager
             });
         }
 
-
         private void button1_Click(object sender, EventArgs e)
         {
             if (CurrentDataGridView.SelectedRows.Count > 0)
@@ -215,7 +217,7 @@ namespace BaseBall_Video_Manager
                         {
                             Console.WriteLine("Warning: A record without a 'Fullpath' was found and skipped.");
                         }
-                        int progressPercentage = (int)((i + 1) / (float)totalItems * 50);
+                        int progressPercentage = (int)((i + 1) / (float)totalItems * 33);
                         this.Invoke((MethodInvoker)delegate {
                             toolStripProgressBar1.Value = progressPercentage;
                         });
@@ -234,11 +236,20 @@ namespace BaseBall_Video_Manager
                         Desc = d["Desc"].ToString()
                     }).ToList();
 
+                    this.Invoke((MethodInvoker)delegate {
+                        toolStripProgressBar1.Value = 33;
+                    });
+
                     // 빈 폴더 제거
-                    files = fileManager.RemoveEmptyFolders(files);
+                    files = fileManager.RemoveEmptyFolders(files, (progress) =>
+                    {
+                        this.Invoke((MethodInvoker)delegate {
+                            toolStripProgressBar1.Value = 33 + (int)((float)progress / 100 * 33);
+                        });
+                    });
 
                     this.Invoke((MethodInvoker)delegate {
-                        toolStripProgressBar1.Value = 75;
+                        toolStripProgressBar1.Value = 66;
                     });
 
                     // 결과 저장

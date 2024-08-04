@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace BaseBall_Video_Manager
 {
@@ -55,7 +54,6 @@ namespace BaseBall_Video_Manager
             int totalFiles = 0;
             int processedFiles = 0;
 
-            // 먼저 총 파일 수를 계산
             foreach (var directory in directories)
             {
                 totalFiles += Directory.GetFiles(directory.Path, "*.*", SearchOption.AllDirectories)
@@ -120,31 +118,57 @@ namespace BaseBall_Video_Manager
             File.WriteAllText(filePath, json);
         }
 
-        // 빈 폴더 제거 메서드
-        public List<FileEntry> RemoveEmptyFolders(List<FileEntry> files)
+        public List<FileEntry> RemoveEmptyFolders(List<FileEntry> files, Action<int> progressCallback = null)
         {
-            HashSet<string> allDirectories = new HashSet<string>(files.Select(f => Path.GetDirectoryName(f.Fullpath)));
-            List<string> emptyDirectories = new List<string>();
+            HashSet<string> allDirectories = new HashSet<string>();
+            List<DirectoryEntry> libraries = LoadLibraries();
 
-            foreach (string dir in allDirectories)
+            // 라이브러리의 모든 디렉토리를 가져옵니다.
+            foreach (var library in libraries)
             {
-                if (Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
+                allDirectories.UnionWith(Directory.GetDirectories(library.Path, "*", SearchOption.AllDirectories));
+            }
+
+            List<string> emptyDirectories = new List<string>();
+            int totalDirectories = allDirectories.Count;
+            int processedDirectories = 0;
+
+            foreach (string dir in allDirectories.OrderByDescending(d => d.Length))
+            {
+                if (Directory.Exists(dir) && IsDirectoryEmpty(dir))
                 {
                     emptyDirectories.Add(dir);
                     try
                     {
                         Directory.Delete(dir, false);
+                        Console.WriteLine($"Deleted empty directory: {dir}");
                     }
                     catch (Exception ex)
                     {
-                        // 폴더 삭제 실패 로깅 또는 처리
                         Console.WriteLine($"Failed to delete directory: {dir}. Error: {ex.Message}");
                     }
                 }
+                processedDirectories++;
+                progressCallback?.Invoke((int)((float)processedDirectories / totalDirectories * 100));
             }
 
-            // 삭제된 폴더에 있던 파일들을 목록에서 제거
             return files.Where(f => !emptyDirectories.Contains(Path.GetDirectoryName(f.Fullpath))).ToList();
+        }
+
+        private bool IsDirectoryEmpty(string path)
+        {
+            return !Directory.EnumerateFileSystemEntries(path).Any(
+                entry => !IsHiddenOrSystem(entry) &&
+                         (File.Exists(entry) ||
+                         (Directory.Exists(entry) && !IsDirectoryEmpty(entry)))
+            );
+        }
+
+        private bool IsHiddenOrSystem(string path)
+        {
+            FileAttributes attr = File.GetAttributes(path);
+            return (attr & FileAttributes.Hidden) == FileAttributes.Hidden ||
+                   (attr & FileAttributes.System) == FileAttributes.System;
         }
     }
 
