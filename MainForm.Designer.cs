@@ -45,9 +45,6 @@
             textBox1 = new TextBox();
             button5 = new Button();
             dataGridView1 = new DataGridView();
-            label_status = new StatusStrip();
-            toolStripStatusLabel1 = new ToolStripStatusLabel();
-            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
             idx = new DataGridViewTextBoxColumn();
             filename = new DataGridViewTextBoxColumn();
             exe = new DataGridViewButtonColumn();
@@ -63,6 +60,9 @@
             desc = new DataGridViewTextBoxColumn();
             openpath = new DataGridViewButtonColumn();
             fullpath = new DataGridViewTextBoxColumn();
+            label_status = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
@@ -74,33 +74,33 @@
             // 
             tableLayoutPanel1.ColumnCount = 1;
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 29F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 29F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
+            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 20F));
             tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 0, 0);
             tableLayoutPanel1.Controls.Add(dataGridView1, 0, 1);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 0);
-            tableLayoutPanel1.Margin = new Padding(4, 7, 4, 7);
+            tableLayoutPanel1.Margin = new Padding(3, 4, 3, 4);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             tableLayoutPanel1.RowCount = 3;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 63F));
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 38F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 43F));
-            tableLayoutPanel1.Size = new Size(1549, 1422);
+            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            tableLayoutPanel1.Size = new Size(1084, 853);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // tableLayoutPanel2
             // 
             tableLayoutPanel2.ColumnCount = 9;
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 188F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 237F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 281F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 132F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 166F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 197F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 126F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 0F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 139F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 97F));
             tableLayoutPanel2.Controls.Add(button1, 3, 0);
             tableLayoutPanel2.Controls.Add(button_del, 4, 0);
             tableLayoutPanel2.Controls.Add(button2, 7, 0);
@@ -111,20 +111,19 @@
             tableLayoutPanel2.Controls.Add(textBox1, 1, 0);
             tableLayoutPanel2.Controls.Add(button5, 0, 0);
             tableLayoutPanel2.Dock = DockStyle.Fill;
-            tableLayoutPanel2.Location = new Point(4, 5);
-            tableLayoutPanel2.Margin = new Padding(4, 5, 4, 5);
+            tableLayoutPanel2.Location = new Point(3, 3);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
             tableLayoutPanel2.RowCount = 1;
             tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.Size = new Size(1541, 53);
+            tableLayoutPanel2.Size = new Size(1078, 32);
             tableLayoutPanel2.TabIndex = 4;
             // 
             // button1
             // 
-            button1.Location = new Point(710, 7);
-            button1.Margin = new Padding(4, 7, 4, 7);
+            button1.Location = new Point(498, 4);
+            button1.Margin = new Padding(3, 4, 3, 4);
             button1.Name = "button1";
-            button1.Size = new Size(112, 39);
+            button1.Size = new Size(78, 23);
             button1.TabIndex = 8;
             button1.Text = "삭제 검색";
             button1.UseVisualStyleBackColor = true;
@@ -133,10 +132,10 @@
             // button_del
             // 
             button_del.Dock = DockStyle.Fill;
-            button_del.Location = new Point(830, 7);
-            button_del.Margin = new Padding(4, 7, 4, 7);
+            button_del.Location = new Point(582, 4);
+            button_del.Margin = new Padding(3, 4, 3, 4);
             button_del.Name = "button_del";
-            button_del.Size = new Size(172, 39);
+            button_del.Size = new Size(120, 24);
             button_del.TabIndex = 3;
             button_del.Text = "선택한 파일 삭제";
             button_del.UseVisualStyleBackColor = true;
@@ -144,10 +143,10 @@
             // 
             // button2
             // 
-            button2.Location = new Point(1406, 7);
-            button2.Margin = new Padding(4, 7, 4, 7);
+            button2.Location = new Point(984, 4);
+            button2.Margin = new Padding(3, 4, 3, 4);
             button2.Name = "button2";
-            button2.Size = new Size(1, 38);
+            button2.Size = new Size(1, 23);
             button2.TabIndex = 11;
             button2.Text = "files 이전";
             button2.UseVisualStyleBackColor = true;
@@ -155,10 +154,10 @@
             // 
             // button3
             // 
-            button3.Location = new Point(1406, 7);
-            button3.Margin = new Padding(4, 7, 4, 7);
+            button3.Location = new Point(984, 4);
+            button3.Margin = new Padding(3, 4, 3, 4);
             button3.Name = "button3";
-            button3.Size = new Size(1, 38);
+            button3.Size = new Size(1, 23);
             button3.TabIndex = 12;
             button3.Text = "lib 이전";
             button3.UseVisualStyleBackColor = true;
@@ -169,9 +168,10 @@
             progressBar1.BackColor = SystemColors.ActiveCaption;
             progressBar1.Dock = DockStyle.Fill;
             progressBar1.ForeColor = Color.HotPink;
-            progressBar1.Location = new Point(1009, 3);
+            progressBar1.Location = new Point(707, 2);
+            progressBar1.Margin = new Padding(2);
             progressBar1.Name = "progressBar1";
-            progressBar1.Size = new Size(390, 47);
+            progressBar1.Size = new Size(272, 28);
             progressBar1.TabIndex = 13;
             // 
             // tableLayoutPanel3
@@ -182,20 +182,20 @@
             tableLayoutPanel3.Controls.Add(button_refresh, 1, 0);
             tableLayoutPanel3.Controls.Add(button_lib, 0, 0);
             tableLayoutPanel3.Dock = DockStyle.Fill;
-            tableLayoutPanel3.Location = new Point(425, 0);
+            tableLayoutPanel3.Location = new Point(298, 0);
             tableLayoutPanel3.Margin = new Padding(0);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
             tableLayoutPanel3.RowCount = 1;
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Size = new Size(281, 53);
+            tableLayoutPanel3.Size = new Size(197, 32);
             tableLayoutPanel3.TabIndex = 14;
             // 
             // button_refresh
             // 
-            button_refresh.Location = new Point(128, 7);
-            button_refresh.Margin = new Padding(4, 7, 4, 7);
+            button_refresh.Location = new Point(89, 4);
+            button_refresh.Margin = new Padding(3, 4, 3, 4);
             button_refresh.Name = "button_refresh";
-            button_refresh.Size = new Size(142, 39);
+            button_refresh.Size = new Size(99, 23);
             button_refresh.TabIndex = 7;
             button_refresh.Text = "추가 검색";
             button_refresh.UseVisualStyleBackColor = true;
@@ -203,10 +203,10 @@
             // 
             // button_lib
             // 
-            button_lib.Location = new Point(4, 7);
-            button_lib.Margin = new Padding(4, 7, 4, 7);
+            button_lib.Location = new Point(3, 4);
+            button_lib.Margin = new Padding(3, 4, 3, 4);
             button_lib.Name = "button_lib";
-            button_lib.Size = new Size(112, 39);
+            button_lib.Size = new Size(78, 23);
             button_lib.TabIndex = 0;
             button_lib.Text = "라이브러리";
             button_lib.UseVisualStyleBackColor = true;
@@ -214,29 +214,30 @@
             // 
             // button4
             // 
-            button4.Location = new Point(1406, 7);
-            button4.Margin = new Padding(4, 7, 4, 7);
+            button4.Location = new Point(984, 4);
+            button4.Margin = new Padding(3, 4, 3, 4);
             button4.Name = "button4";
-            button4.Size = new Size(131, 39);
+            button4.Size = new Size(91, 23);
             button4.TabIndex = 15;
             button4.UseVisualStyleBackColor = true;
             button4.Click += button4_Click;
             // 
             // textBox1
             // 
-            textBox1.Location = new Point(192, 12);
-            textBox1.Margin = new Padding(4, 12, 4, 5);
+            textBox1.Location = new Point(135, 7);
+            textBox1.Margin = new Padding(3, 7, 3, 3);
             textBox1.Name = "textBox1";
-            textBox1.Size = new Size(229, 31);
+            textBox1.Size = new Size(160, 23);
             textBox1.TabIndex = 9;
             textBox1.KeyDown += textBox1_KeyDown;
             // 
             // button5
             // 
             button5.Dock = DockStyle.Fill;
-            button5.Location = new Point(3, 3);
+            button5.Location = new Point(2, 2);
+            button5.Margin = new Padding(2);
             button5.Name = "button5";
-            button5.Size = new Size(182, 47);
+            button5.Size = new Size(128, 28);
             button5.TabIndex = 16;
             button5.Text = "START";
             button5.UseVisualStyleBackColor = true;
@@ -266,8 +267,7 @@
             dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
             dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
             dataGridView1.Dock = DockStyle.Fill;
-            dataGridView1.Location = new Point(4, 68);
-            dataGridView1.Margin = new Padding(4, 5, 4, 5);
+            dataGridView1.Location = new Point(3, 41);
             dataGridView1.Name = "dataGridView1";
             dataGridViewCellStyle3.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = SystemColors.Control;
@@ -283,34 +283,11 @@
             dataGridView1.RowTemplate.Height = 25;
             dataGridView1.RowTemplate.Resizable = DataGridViewTriState.False;
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView1.Size = new Size(1541, 1306);
+            dataGridView1.Size = new Size(1078, 783);
             dataGridView1.TabIndex = 5;
             dataGridView1.CellContentClick += dataGridView1_CellContentClick;
             dataGridView1.CellContentDoubleClick += dataGridView1_CellDoubleClick;
             dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
-            // 
-            // label_status
-            // 
-            label_status.ImageScalingSize = new Size(20, 20);
-            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount });
-            label_status.Location = new Point(0, 1390);
-            label_status.Name = "label_status";
-            label_status.Padding = new Padding(1, 0, 20, 0);
-            label_status.Size = new Size(1549, 32);
-            label_status.TabIndex = 1;
-            label_status.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(56, 25);
-            toolStripStatusLabel1.Text = "Total:";
-            // 
-            // toolStripStatusLabel_totalcount
-            // 
-            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
-            toolStripStatusLabel_totalcount.Size = new Size(22, 25);
-            toolStripStatusLabel_totalcount.Text = "0";
             // 
             // idx
             // 
@@ -476,15 +453,37 @@
             fullpath.ReadOnly = true;
             fullpath.Width = 150;
             // 
+            // label_status
+            // 
+            label_status.ImageScalingSize = new Size(20, 20);
+            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount });
+            label_status.Location = new Point(0, 831);
+            label_status.Name = "label_status";
+            label_status.Size = new Size(1084, 22);
+            label_status.TabIndex = 1;
+            label_status.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(36, 17);
+            toolStripStatusLabel1.Text = "Total:";
+            // 
+            // toolStripStatusLabel_totalcount
+            // 
+            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
+            toolStripStatusLabel_totalcount.Size = new Size(14, 17);
+            toolStripStatusLabel_totalcount.Text = "0";
+            // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(10F, 25F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1549, 1422);
+            ClientSize = new Size(1084, 853);
             Controls.Add(label_status);
             Controls.Add(tableLayoutPanel1);
             Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            Margin = new Padding(4, 7, 4, 7);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "MainForm";
             Text = "Baseball Video Manager V.3";
             Load += MainForm_Load;
