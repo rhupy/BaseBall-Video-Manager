@@ -46,28 +46,6 @@
             tabControl1 = new TabControl();
             tabPage1 = new TabPage();
             dataGridView1 = new DataGridView();
-            tabPage2 = new TabPage();
-            dataGridView2 = new DataGridView();
-            label_status = new StatusStrip();
-            toolStripStatusLabel1 = new ToolStripStatusLabel();
-            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
-            toolStripProgressBar1 = new ToolStripProgressBar();
-            toolStripStatusLabel2 = new ToolStripStatusLabel();
-            dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
-            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
-            dataGridViewButtonColumn1 = new DataGridViewButtonColumn();
-            dataGridViewTextBoxColumn3 = new DataGridViewTextBoxColumn();
-            dataGridViewTextBoxColumn4 = new DataGridViewTextBoxColumn();
-            dataGridViewTextBoxColumn5 = new DataGridViewTextBoxColumn();
-            dataGridViewButtonColumn2 = new DataGridViewButtonColumn();
-            dataGridViewButtonColumn3 = new DataGridViewButtonColumn();
-            dataGridViewButtonColumn4 = new DataGridViewButtonColumn();
-            dataGridViewButtonColumn5 = new DataGridViewButtonColumn();
-            dataGridViewButtonColumn6 = new DataGridViewButtonColumn();
-            dataGridViewButtonColumn7 = new DataGridViewButtonColumn();
-            dataGridViewTextBoxColumn6 = new DataGridViewTextBoxColumn();
-            dataGridViewButtonColumn8 = new DataGridViewButtonColumn();
-            dataGridViewTextBoxColumn7 = new DataGridViewTextBoxColumn();
             idx = new DataGridViewTextBoxColumn();
             filename = new DataGridViewTextBoxColumn();
             exe = new DataGridViewButtonColumn();
@@ -83,6 +61,28 @@
             desc = new DataGridViewTextBoxColumn();
             openpath = new DataGridViewButtonColumn();
             fullpath = new DataGridViewTextBoxColumn();
+            tabPage2 = new TabPage();
+            dataGridView2 = new DataGridView();
+            label_status = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            toolStripStatusLabel_totalcount = new ToolStripStatusLabel();
+            toolStripProgressBar1 = new ToolStripProgressBar();
+            toolStripStatusLabel2 = new ToolStripStatusLabel();
+            idx_ = new DataGridViewTextBoxColumn();
+            filename_ = new DataGridViewTextBoxColumn();
+            exe_ = new DataGridViewButtonColumn();
+            lasttime_ = new DataGridViewTextBoxColumn();
+            addtime_ = new DataGridViewTextBoxColumn();
+            eval_ = new DataGridViewTextBoxColumn();
+            score0_ = new DataGridViewButtonColumn();
+            score1_ = new DataGridViewButtonColumn();
+            score2_ = new DataGridViewButtonColumn();
+            score3_ = new DataGridViewButtonColumn();
+            score4_ = new DataGridViewButtonColumn();
+            score5_ = new DataGridViewButtonColumn();
+            desc_ = new DataGridViewTextBoxColumn();
+            openpath_ = new DataGridViewButtonColumn();
+            fullpath_ = new DataGridViewTextBoxColumn();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             tabControl1.SuspendLayout();
@@ -286,260 +286,6 @@
             dataGridView1.Size = new Size(1333, 839);
             dataGridView1.TabIndex = 5;
             // 
-            // tabPage2
-            // 
-            tabPage2.Controls.Add(dataGridView2);
-            tabPage2.Location = new Point(4, 24);
-            tabPage2.Name = "tabPage2";
-            tabPage2.Padding = new Padding(3);
-            tabPage2.Size = new Size(1339, 845);
-            tabPage2.TabIndex = 1;
-            tabPage2.Text = "      파일      ";
-            tabPage2.UseVisualStyleBackColor = true;
-            // 
-            // dataGridView2
-            // 
-            dataGridView2.AllowUserToAddRows = false;
-            dataGridView2.AllowUserToDeleteRows = false;
-            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = SystemColors.Control;
-            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
-            dataGridView2.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
-            dataGridView2.ColumnHeadersHeight = 34;
-            dataGridView2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dataGridView2.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn1, dataGridViewTextBoxColumn2, dataGridViewButtonColumn1, dataGridViewTextBoxColumn3, dataGridViewTextBoxColumn4, dataGridViewTextBoxColumn5, dataGridViewButtonColumn2, dataGridViewButtonColumn3, dataGridViewButtonColumn4, dataGridViewButtonColumn5, dataGridViewButtonColumn6, dataGridViewButtonColumn7, dataGridViewTextBoxColumn6, dataGridViewButtonColumn8, dataGridViewTextBoxColumn7 });
-            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = SystemColors.Window;
-            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle5.ForeColor = SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
-            dataGridView2.DefaultCellStyle = dataGridViewCellStyle5;
-            dataGridView2.Dock = DockStyle.Fill;
-            dataGridView2.Location = new Point(3, 3);
-            dataGridView2.Name = "dataGridView2";
-            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = SystemColors.Control;
-            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
-            dataGridViewCellStyle6.ForeColor = SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
-            dataGridView2.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-            dataGridView2.RowHeadersVisible = false;
-            dataGridView2.RowHeadersWidth = 62;
-            dataGridView2.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            dataGridView2.RowTemplate.Height = 25;
-            dataGridView2.RowTemplate.Resizable = DataGridViewTriState.False;
-            dataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            dataGridView2.Size = new Size(1333, 839);
-            dataGridView2.TabIndex = 6;
-            // 
-            // label_status
-            // 
-            label_status.ImageScalingSize = new Size(20, 20);
-            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount, toolStripProgressBar1, toolStripStatusLabel2 });
-            label_status.Location = new Point(0, 922);
-            label_status.Name = "label_status";
-            label_status.Size = new Size(1353, 22);
-            label_status.TabIndex = 1;
-            label_status.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(36, 17);
-            toolStripStatusLabel1.Text = "Total:";
-            // 
-            // toolStripStatusLabel_totalcount
-            // 
-            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
-            toolStripStatusLabel_totalcount.Size = new Size(14, 17);
-            toolStripStatusLabel_totalcount.Text = "0";
-            // 
-            // toolStripProgressBar1
-            // 
-            toolStripProgressBar1.Alignment = ToolStripItemAlignment.Right;
-            toolStripProgressBar1.Name = "toolStripProgressBar1";
-            toolStripProgressBar1.Size = new Size(200, 16);
-            // 
-            // toolStripStatusLabel2
-            // 
-            toolStripStatusLabel2.Name = "toolStripStatusLabel2";
-            toolStripStatusLabel2.Size = new Size(0, 17);
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            dataGridViewTextBoxColumn1.DataPropertyName = "idx";
-            dataGridViewTextBoxColumn1.Frozen = true;
-            dataGridViewTextBoxColumn1.HeaderText = "Column1";
-            dataGridViewTextBoxColumn1.MinimumWidth = 8;
-            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            dataGridViewTextBoxColumn1.ReadOnly = true;
-            dataGridViewTextBoxColumn1.Visible = false;
-            dataGridViewTextBoxColumn1.Width = 150;
-            // 
-            // dataGridViewTextBoxColumn2
-            // 
-            dataGridViewTextBoxColumn2.DataPropertyName = "filename";
-            dataGridViewTextBoxColumn2.Frozen = true;
-            dataGridViewTextBoxColumn2.HeaderText = "파일명";
-            dataGridViewTextBoxColumn2.MinimumWidth = 8;
-            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            dataGridViewTextBoxColumn2.ReadOnly = true;
-            dataGridViewTextBoxColumn2.Width = 450;
-            // 
-            // dataGridViewButtonColumn1
-            // 
-            dataGridViewButtonColumn1.DataPropertyName = "exe";
-            dataGridViewButtonColumn1.Frozen = true;
-            dataGridViewButtonColumn1.HeaderText = "실행";
-            dataGridViewButtonColumn1.MinimumWidth = 8;
-            dataGridViewButtonColumn1.Name = "dataGridViewButtonColumn1";
-            dataGridViewButtonColumn1.ReadOnly = true;
-            dataGridViewButtonColumn1.SortMode = DataGridViewColumnSortMode.Automatic;
-            dataGridViewButtonColumn1.Text = "📺";
-            dataGridViewButtonColumn1.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn1.Width = 70;
-            // 
-            // dataGridViewTextBoxColumn3
-            // 
-            dataGridViewTextBoxColumn3.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridViewTextBoxColumn3.DataPropertyName = "lasttime";
-            dataGridViewTextBoxColumn3.Frozen = true;
-            dataGridViewTextBoxColumn3.HeaderText = "실행시간";
-            dataGridViewTextBoxColumn3.MinimumWidth = 8;
-            dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
-            dataGridViewTextBoxColumn3.ReadOnly = true;
-            dataGridViewTextBoxColumn3.Width = 80;
-            // 
-            // dataGridViewTextBoxColumn4
-            // 
-            dataGridViewTextBoxColumn4.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridViewTextBoxColumn4.DataPropertyName = "addtime";
-            dataGridViewTextBoxColumn4.Frozen = true;
-            dataGridViewTextBoxColumn4.HeaderText = "추가시간";
-            dataGridViewTextBoxColumn4.MinimumWidth = 8;
-            dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
-            dataGridViewTextBoxColumn4.ReadOnly = true;
-            dataGridViewTextBoxColumn4.Width = 80;
-            // 
-            // dataGridViewTextBoxColumn5
-            // 
-            dataGridViewTextBoxColumn5.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            dataGridViewTextBoxColumn5.DataPropertyName = "eval";
-            dataGridViewTextBoxColumn5.Frozen = true;
-            dataGridViewTextBoxColumn5.HeaderText = "점수";
-            dataGridViewTextBoxColumn5.MinimumWidth = 8;
-            dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
-            dataGridViewTextBoxColumn5.ReadOnly = true;
-            dataGridViewTextBoxColumn5.Width = 56;
-            // 
-            // dataGridViewButtonColumn2
-            // 
-            dataGridViewButtonColumn2.DataPropertyName = "score0";
-            dataGridViewButtonColumn2.Frozen = true;
-            dataGridViewButtonColumn2.HeaderText = "0";
-            dataGridViewButtonColumn2.MinimumWidth = 8;
-            dataGridViewButtonColumn2.Name = "dataGridViewButtonColumn2";
-            dataGridViewButtonColumn2.ReadOnly = true;
-            dataGridViewButtonColumn2.Text = "0";
-            dataGridViewButtonColumn2.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn2.Width = 30;
-            // 
-            // dataGridViewButtonColumn3
-            // 
-            dataGridViewButtonColumn3.DataPropertyName = "score1";
-            dataGridViewButtonColumn3.Frozen = true;
-            dataGridViewButtonColumn3.HeaderText = "1";
-            dataGridViewButtonColumn3.MinimumWidth = 8;
-            dataGridViewButtonColumn3.Name = "dataGridViewButtonColumn3";
-            dataGridViewButtonColumn3.ReadOnly = true;
-            dataGridViewButtonColumn3.Text = "1";
-            dataGridViewButtonColumn3.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn3.Width = 30;
-            // 
-            // dataGridViewButtonColumn4
-            // 
-            dataGridViewButtonColumn4.DataPropertyName = "score2";
-            dataGridViewButtonColumn4.Frozen = true;
-            dataGridViewButtonColumn4.HeaderText = "2";
-            dataGridViewButtonColumn4.MinimumWidth = 8;
-            dataGridViewButtonColumn4.Name = "dataGridViewButtonColumn4";
-            dataGridViewButtonColumn4.ReadOnly = true;
-            dataGridViewButtonColumn4.Text = "2";
-            dataGridViewButtonColumn4.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn4.Width = 30;
-            // 
-            // dataGridViewButtonColumn5
-            // 
-            dataGridViewButtonColumn5.DataPropertyName = "score3";
-            dataGridViewButtonColumn5.Frozen = true;
-            dataGridViewButtonColumn5.HeaderText = "3";
-            dataGridViewButtonColumn5.MinimumWidth = 8;
-            dataGridViewButtonColumn5.Name = "dataGridViewButtonColumn5";
-            dataGridViewButtonColumn5.ReadOnly = true;
-            dataGridViewButtonColumn5.Text = "3";
-            dataGridViewButtonColumn5.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn5.Width = 30;
-            // 
-            // dataGridViewButtonColumn6
-            // 
-            dataGridViewButtonColumn6.DataPropertyName = "score4";
-            dataGridViewButtonColumn6.Frozen = true;
-            dataGridViewButtonColumn6.HeaderText = "4";
-            dataGridViewButtonColumn6.MinimumWidth = 8;
-            dataGridViewButtonColumn6.Name = "dataGridViewButtonColumn6";
-            dataGridViewButtonColumn6.ReadOnly = true;
-            dataGridViewButtonColumn6.Text = "4";
-            dataGridViewButtonColumn6.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn6.Width = 30;
-            // 
-            // dataGridViewButtonColumn7
-            // 
-            dataGridViewButtonColumn7.DataPropertyName = "score5";
-            dataGridViewButtonColumn7.Frozen = true;
-            dataGridViewButtonColumn7.HeaderText = "5";
-            dataGridViewButtonColumn7.MinimumWidth = 8;
-            dataGridViewButtonColumn7.Name = "dataGridViewButtonColumn7";
-            dataGridViewButtonColumn7.ReadOnly = true;
-            dataGridViewButtonColumn7.Text = "5";
-            dataGridViewButtonColumn7.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn7.Width = 30;
-            // 
-            // dataGridViewTextBoxColumn6
-            // 
-            dataGridViewTextBoxColumn6.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewTextBoxColumn6.DataPropertyName = "desc";
-            dataGridViewTextBoxColumn6.HeaderText = "설명";
-            dataGridViewTextBoxColumn6.MinimumWidth = 100;
-            dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
-            // 
-            // dataGridViewButtonColumn8
-            // 
-            dataGridViewButtonColumn8.DataPropertyName = "openpath";
-            dataGridViewButtonColumn8.HeaderText = "경로";
-            dataGridViewButtonColumn8.MinimumWidth = 8;
-            dataGridViewButtonColumn8.Name = "dataGridViewButtonColumn8";
-            dataGridViewButtonColumn8.ReadOnly = true;
-            dataGridViewButtonColumn8.Text = "📁";
-            dataGridViewButtonColumn8.UseColumnTextForButtonValue = true;
-            dataGridViewButtonColumn8.Width = 37;
-            // 
-            // dataGridViewTextBoxColumn7
-            // 
-            dataGridViewTextBoxColumn7.DataPropertyName = "fullpath";
-            dataGridViewTextBoxColumn7.HeaderText = "fullpath";
-            dataGridViewTextBoxColumn7.MinimumWidth = 8;
-            dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
-            dataGridViewTextBoxColumn7.ReadOnly = true;
-            dataGridViewTextBoxColumn7.Width = 150;
-            // 
             // idx
             // 
             idx.DataPropertyName = "idx";
@@ -707,6 +453,260 @@
             fullpath.ReadOnly = true;
             fullpath.Width = 150;
             // 
+            // tabPage2
+            // 
+            tabPage2.Controls.Add(dataGridView2);
+            tabPage2.Location = new Point(4, 24);
+            tabPage2.Name = "tabPage2";
+            tabPage2.Padding = new Padding(3);
+            tabPage2.Size = new Size(1339, 845);
+            tabPage2.TabIndex = 1;
+            tabPage2.Text = "      파일      ";
+            tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // dataGridView2
+            // 
+            dataGridView2.AllowUserToAddRows = false;
+            dataGridView2.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle4.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = SystemColors.Control;
+            dataGridViewCellStyle4.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle4.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = DataGridViewTriState.True;
+            dataGridView2.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridView2.ColumnHeadersHeight = 34;
+            dataGridView2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            dataGridView2.Columns.AddRange(new DataGridViewColumn[] { idx_, filename_, exe_, lasttime_, addtime_, eval_, score0_, score1_, score2_, score3_, score4_, score5_, desc_, openpath_, fullpath_ });
+            dataGridViewCellStyle5.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = SystemColors.Window;
+            dataGridViewCellStyle5.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle5.ForeColor = SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = DataGridViewTriState.False;
+            dataGridView2.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridView2.Dock = DockStyle.Fill;
+            dataGridView2.Location = new Point(3, 3);
+            dataGridView2.Name = "dataGridView2";
+            dataGridViewCellStyle6.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = SystemColors.Control;
+            dataGridViewCellStyle6.Font = new Font("맑은 고딕", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            dataGridViewCellStyle6.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = DataGridViewTriState.True;
+            dataGridView2.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridView2.RowHeadersVisible = false;
+            dataGridView2.RowHeadersWidth = 62;
+            dataGridView2.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            dataGridView2.RowTemplate.Height = 25;
+            dataGridView2.RowTemplate.Resizable = DataGridViewTriState.False;
+            dataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dataGridView2.Size = new Size(1333, 839);
+            dataGridView2.TabIndex = 6;
+            // 
+            // label_status
+            // 
+            label_status.ImageScalingSize = new Size(20, 20);
+            label_status.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1, toolStripStatusLabel_totalcount, toolStripProgressBar1, toolStripStatusLabel2 });
+            label_status.Location = new Point(0, 922);
+            label_status.Name = "label_status";
+            label_status.Size = new Size(1353, 22);
+            label_status.TabIndex = 1;
+            label_status.Text = "statusStrip1";
+            // 
+            // toolStripStatusLabel1
+            // 
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(36, 17);
+            toolStripStatusLabel1.Text = "Total:";
+            // 
+            // toolStripStatusLabel_totalcount
+            // 
+            toolStripStatusLabel_totalcount.Name = "toolStripStatusLabel_totalcount";
+            toolStripStatusLabel_totalcount.Size = new Size(14, 17);
+            toolStripStatusLabel_totalcount.Text = "0";
+            // 
+            // toolStripProgressBar1
+            // 
+            toolStripProgressBar1.Alignment = ToolStripItemAlignment.Right;
+            toolStripProgressBar1.Name = "toolStripProgressBar1";
+            toolStripProgressBar1.Size = new Size(200, 16);
+            // 
+            // toolStripStatusLabel2
+            // 
+            toolStripStatusLabel2.Name = "toolStripStatusLabel2";
+            toolStripStatusLabel2.Size = new Size(0, 17);
+            // 
+            // idx_
+            // 
+            idx_.DataPropertyName = "idx";
+            idx_.Frozen = true;
+            idx_.HeaderText = "Column1";
+            idx_.MinimumWidth = 8;
+            idx_.Name = "idx_";
+            idx_.ReadOnly = true;
+            idx_.Visible = false;
+            idx_.Width = 150;
+            // 
+            // filename_
+            // 
+            filename_.DataPropertyName = "filename";
+            filename_.Frozen = true;
+            filename_.HeaderText = "파일명";
+            filename_.MinimumWidth = 8;
+            filename_.Name = "filename_";
+            filename_.ReadOnly = true;
+            filename_.Width = 450;
+            // 
+            // exe_
+            // 
+            exe_.DataPropertyName = "exe";
+            exe_.Frozen = true;
+            exe_.HeaderText = "실행";
+            exe_.MinimumWidth = 8;
+            exe_.Name = "exe_";
+            exe_.ReadOnly = true;
+            exe_.SortMode = DataGridViewColumnSortMode.Automatic;
+            exe_.Text = "📺";
+            exe_.UseColumnTextForButtonValue = true;
+            exe_.Width = 70;
+            // 
+            // lasttime_
+            // 
+            lasttime_.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            lasttime_.DataPropertyName = "lasttime";
+            lasttime_.Frozen = true;
+            lasttime_.HeaderText = "실행시간";
+            lasttime_.MinimumWidth = 8;
+            lasttime_.Name = "lasttime_";
+            lasttime_.ReadOnly = true;
+            lasttime_.Width = 80;
+            // 
+            // addtime_
+            // 
+            addtime_.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            addtime_.DataPropertyName = "addtime";
+            addtime_.Frozen = true;
+            addtime_.HeaderText = "추가시간";
+            addtime_.MinimumWidth = 8;
+            addtime_.Name = "addtime_";
+            addtime_.ReadOnly = true;
+            addtime_.Width = 80;
+            // 
+            // eval_
+            // 
+            eval_.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            eval_.DataPropertyName = "eval";
+            eval_.Frozen = true;
+            eval_.HeaderText = "점수";
+            eval_.MinimumWidth = 8;
+            eval_.Name = "eval_";
+            eval_.ReadOnly = true;
+            eval_.Width = 56;
+            // 
+            // score0_
+            // 
+            score0_.DataPropertyName = "score0";
+            score0_.Frozen = true;
+            score0_.HeaderText = "0";
+            score0_.MinimumWidth = 8;
+            score0_.Name = "score0_";
+            score0_.ReadOnly = true;
+            score0_.Text = "0";
+            score0_.UseColumnTextForButtonValue = true;
+            score0_.Width = 30;
+            // 
+            // score1_
+            // 
+            score1_.DataPropertyName = "score1";
+            score1_.Frozen = true;
+            score1_.HeaderText = "1";
+            score1_.MinimumWidth = 8;
+            score1_.Name = "score1_";
+            score1_.ReadOnly = true;
+            score1_.Text = "1";
+            score1_.UseColumnTextForButtonValue = true;
+            score1_.Width = 30;
+            // 
+            // score2_
+            // 
+            score2_.DataPropertyName = "score2";
+            score2_.Frozen = true;
+            score2_.HeaderText = "2";
+            score2_.MinimumWidth = 8;
+            score2_.Name = "score2_";
+            score2_.ReadOnly = true;
+            score2_.Text = "2";
+            score2_.UseColumnTextForButtonValue = true;
+            score2_.Width = 30;
+            // 
+            // score3_
+            // 
+            score3_.DataPropertyName = "score3";
+            score3_.Frozen = true;
+            score3_.HeaderText = "3";
+            score3_.MinimumWidth = 8;
+            score3_.Name = "score3_";
+            score3_.ReadOnly = true;
+            score3_.Text = "3";
+            score3_.UseColumnTextForButtonValue = true;
+            score3_.Width = 30;
+            // 
+            // score4_
+            // 
+            score4_.DataPropertyName = "score4";
+            score4_.Frozen = true;
+            score4_.HeaderText = "4";
+            score4_.MinimumWidth = 8;
+            score4_.Name = "score4_";
+            score4_.ReadOnly = true;
+            score4_.Text = "4";
+            score4_.UseColumnTextForButtonValue = true;
+            score4_.Width = 30;
+            // 
+            // score5_
+            // 
+            score5_.DataPropertyName = "score5";
+            score5_.Frozen = true;
+            score5_.HeaderText = "5";
+            score5_.MinimumWidth = 8;
+            score5_.Name = "score5_";
+            score5_.ReadOnly = true;
+            score5_.Text = "5";
+            score5_.UseColumnTextForButtonValue = true;
+            score5_.Width = 30;
+            // 
+            // desc_
+            // 
+            desc_.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            desc_.DataPropertyName = "desc";
+            desc_.HeaderText = "설명";
+            desc_.MinimumWidth = 100;
+            desc_.Name = "desc_";
+            // 
+            // openpath_
+            // 
+            openpath_.DataPropertyName = "openpath";
+            openpath_.HeaderText = "경로";
+            openpath_.MinimumWidth = 8;
+            openpath_.Name = "openpath_";
+            openpath_.ReadOnly = true;
+            openpath_.Text = "📁";
+            openpath_.UseColumnTextForButtonValue = true;
+            openpath_.Width = 37;
+            // 
+            // fullpath_
+            // 
+            fullpath_.DataPropertyName = "fullpath";
+            fullpath_.HeaderText = "fullpath";
+            fullpath_.MinimumWidth = 8;
+            fullpath_.Name = "fullpath_";
+            fullpath_.ReadOnly = true;
+            fullpath_.Width = 150;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -769,21 +769,21 @@
         private DataGridViewTextBoxColumn desc;
         private DataGridViewButtonColumn openpath;
         private DataGridViewTextBoxColumn fullpath;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        private DataGridViewButtonColumn dataGridViewButtonColumn1;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
-        private DataGridViewButtonColumn dataGridViewButtonColumn2;
-        private DataGridViewButtonColumn dataGridViewButtonColumn3;
-        private DataGridViewButtonColumn dataGridViewButtonColumn4;
-        private DataGridViewButtonColumn dataGridViewButtonColumn5;
-        private DataGridViewButtonColumn dataGridViewButtonColumn6;
-        private DataGridViewButtonColumn dataGridViewButtonColumn7;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn6;
-        private DataGridViewButtonColumn dataGridViewButtonColumn8;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn7;
+        private DataGridViewTextBoxColumn idx_;
+        private DataGridViewTextBoxColumn filename_;
+        private DataGridViewButtonColumn exe_;
+        private DataGridViewTextBoxColumn lasttime_;
+        private DataGridViewTextBoxColumn addtime_;
+        private DataGridViewTextBoxColumn eval_;
+        private DataGridViewButtonColumn score0_;
+        private DataGridViewButtonColumn score1_;
+        private DataGridViewButtonColumn score2_;
+        private DataGridViewButtonColumn score3_;
+        private DataGridViewButtonColumn score4_;
+        private DataGridViewButtonColumn score5_;
+        private DataGridViewTextBoxColumn desc_;
+        private DataGridViewButtonColumn openpath_;
+        private DataGridViewTextBoxColumn fullpath_;
     }
 }
 

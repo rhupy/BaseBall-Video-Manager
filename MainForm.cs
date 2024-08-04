@@ -281,6 +281,7 @@ namespace BaseBall_Video_Manager
             if (e.ColumnIndex == -1 || e.RowIndex == -1)
                 return;
             string colName = dgv.Columns[e.ColumnIndex].Name;
+            colName = fileManager.tabIndex == 1 ? colName.Substring(0, colName.Length - 1).ToString() : colName;
 
             switch (colName)
             {
