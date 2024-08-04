@@ -63,14 +63,15 @@ Baseball Video Manager supports the following file types:
 
 ### Video Files
 Supported video file extensions:
-.avi, .mp4, .mov, .wmv, .avchd, .flv, .f4v, .swf, .mkv, .mpeg2, .ts, .tp
+`.avi`, `.mp4`, `.mov`, `.wmv`, `.avchd`, `.flv`, `.f4v`, `.swf`, `.mkv`, `.mpeg2`, `.ts`, `.tp`
 
 ### Other Files
 Supported extensions for other file types:
-.zip, .7z, .ezc, .alzip, .001, .zpaq
+`.zip`, `.7z`, `.ezc`, `.alzip`, `.001`, `.zpaq`
 
 The program automatically recognizes and manages files with these extensions. Video files and other file types are managed in separate tabs.
 
 **Note**: Extension configuration is not yet supported.
-Supported file types are defined in the extensionsMedia and extensionsFils arrays of the FileManager class.
+Supported file types are defined in the `extensionsMedia` and `extensionsFils` arrays of the `FileManager` class.
 You can modify these arrays to change the supported file types as needed.
+
