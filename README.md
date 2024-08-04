@@ -1,6 +1,6 @@
 # Baseball Video Manager
 
-Baseball Video Manager 는 비디오 파일과 기타 파일들을 효율적으로 관리하기 위한 Windows 데스크톱 애플리케이션입니다.
+Baseball Video Manager는 비디오 파일과 기타 파일들을 효율적으로 관리하기 위한 Windows 데스크톱 애플리케이션입니다.
 
 ## 소개
 
@@ -54,6 +54,7 @@ Baseball Video Manager 는 비디오 파일과 기타 파일들을 효율적으�
     "Path": "D:\\Documents"
   }
 ]
+```
 
 ## 파일 유형
 
