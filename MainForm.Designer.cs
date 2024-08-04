@@ -285,9 +285,6 @@
             dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView1.Size = new Size(1064, 748);
             dataGridView1.TabIndex = 5;
-            dataGridView1.CellContentClick += dataGridView1_CellContentClick;
-            dataGridView1.CellContentDoubleClick += dataGridView1_CellDoubleClick;
-            dataGridView1.CellEndEdit += dataGridView1_CellEndEdit;
             // 
             // idx
             // 
@@ -513,7 +510,7 @@
             dataGridViewTextBoxColumn1.Frozen = true;
             dataGridViewTextBoxColumn1.HeaderText = "Column1";
             dataGridViewTextBoxColumn1.MinimumWidth = 8;
-            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            dataGridViewTextBoxColumn1.Name = "idx";
             dataGridViewTextBoxColumn1.ReadOnly = true;
             dataGridViewTextBoxColumn1.Visible = false;
             dataGridViewTextBoxColumn1.Width = 150;
@@ -524,7 +521,7 @@
             dataGridViewTextBoxColumn2.Frozen = true;
             dataGridViewTextBoxColumn2.HeaderText = "파일명";
             dataGridViewTextBoxColumn2.MinimumWidth = 8;
-            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            dataGridViewTextBoxColumn2.Name = "filename";
             dataGridViewTextBoxColumn2.ReadOnly = true;
             dataGridViewTextBoxColumn2.Width = 430;
             // 
@@ -534,7 +531,7 @@
             dataGridViewButtonColumn1.Frozen = true;
             dataGridViewButtonColumn1.HeaderText = "실행";
             dataGridViewButtonColumn1.MinimumWidth = 8;
-            dataGridViewButtonColumn1.Name = "dataGridViewButtonColumn1";
+            dataGridViewButtonColumn1.Name = "exe";
             dataGridViewButtonColumn1.ReadOnly = true;
             dataGridViewButtonColumn1.SortMode = DataGridViewColumnSortMode.Automatic;
             dataGridViewButtonColumn1.Text = "📺";
@@ -547,7 +544,7 @@
             dataGridViewTextBoxColumn3.Frozen = true;
             dataGridViewTextBoxColumn3.HeaderText = "실행시간";
             dataGridViewTextBoxColumn3.MinimumWidth = 8;
-            dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            dataGridViewTextBoxColumn3.Name = "lasttime";
             dataGridViewTextBoxColumn3.ReadOnly = true;
             dataGridViewTextBoxColumn3.Width = 190;
             // 
@@ -557,7 +554,7 @@
             dataGridViewTextBoxColumn4.Frozen = true;
             dataGridViewTextBoxColumn4.HeaderText = "추가시간";
             dataGridViewTextBoxColumn4.MinimumWidth = 8;
-            dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            dataGridViewTextBoxColumn4.Name = "addtime";
             dataGridViewTextBoxColumn4.ReadOnly = true;
             dataGridViewTextBoxColumn4.Width = 190;
             // 
@@ -567,7 +564,7 @@
             dataGridViewTextBoxColumn5.Frozen = true;
             dataGridViewTextBoxColumn5.HeaderText = "점수";
             dataGridViewTextBoxColumn5.MinimumWidth = 8;
-            dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
+            dataGridViewTextBoxColumn5.Name = "eval";
             dataGridViewTextBoxColumn5.ReadOnly = true;
             dataGridViewTextBoxColumn5.Width = 110;
             // 
@@ -577,7 +574,7 @@
             dataGridViewButtonColumn2.Frozen = true;
             dataGridViewButtonColumn2.HeaderText = "0";
             dataGridViewButtonColumn2.MinimumWidth = 8;
-            dataGridViewButtonColumn2.Name = "dataGridViewButtonColumn2";
+            dataGridViewButtonColumn2.Name = "score0";
             dataGridViewButtonColumn2.ReadOnly = true;
             dataGridViewButtonColumn2.Text = "0";
             dataGridViewButtonColumn2.UseColumnTextForButtonValue = true;
@@ -589,7 +586,7 @@
             dataGridViewButtonColumn3.Frozen = true;
             dataGridViewButtonColumn3.HeaderText = "1";
             dataGridViewButtonColumn3.MinimumWidth = 8;
-            dataGridViewButtonColumn3.Name = "dataGridViewButtonColumn3";
+            dataGridViewButtonColumn3.Name = "score1";
             dataGridViewButtonColumn3.ReadOnly = true;
             dataGridViewButtonColumn3.Text = "1";
             dataGridViewButtonColumn3.UseColumnTextForButtonValue = true;
@@ -601,7 +598,7 @@
             dataGridViewButtonColumn4.Frozen = true;
             dataGridViewButtonColumn4.HeaderText = "2";
             dataGridViewButtonColumn4.MinimumWidth = 8;
-            dataGridViewButtonColumn4.Name = "dataGridViewButtonColumn4";
+            dataGridViewButtonColumn4.Name = "score2";
             dataGridViewButtonColumn4.ReadOnly = true;
             dataGridViewButtonColumn4.Text = "2";
             dataGridViewButtonColumn4.UseColumnTextForButtonValue = true;
@@ -613,7 +610,7 @@
             dataGridViewButtonColumn5.Frozen = true;
             dataGridViewButtonColumn5.HeaderText = "3";
             dataGridViewButtonColumn5.MinimumWidth = 8;
-            dataGridViewButtonColumn5.Name = "dataGridViewButtonColumn5";
+            dataGridViewButtonColumn5.Name = "score3";
             dataGridViewButtonColumn5.ReadOnly = true;
             dataGridViewButtonColumn5.Text = "3";
             dataGridViewButtonColumn5.UseColumnTextForButtonValue = true;
@@ -625,7 +622,7 @@
             dataGridViewButtonColumn6.Frozen = true;
             dataGridViewButtonColumn6.HeaderText = "4";
             dataGridViewButtonColumn6.MinimumWidth = 8;
-            dataGridViewButtonColumn6.Name = "dataGridViewButtonColumn6";
+            dataGridViewButtonColumn6.Name = "score4";
             dataGridViewButtonColumn6.ReadOnly = true;
             dataGridViewButtonColumn6.Text = "4";
             dataGridViewButtonColumn6.UseColumnTextForButtonValue = true;
@@ -637,7 +634,7 @@
             dataGridViewButtonColumn7.Frozen = true;
             dataGridViewButtonColumn7.HeaderText = "5";
             dataGridViewButtonColumn7.MinimumWidth = 8;
-            dataGridViewButtonColumn7.Name = "dataGridViewButtonColumn7";
+            dataGridViewButtonColumn7.Name = "score5";
             dataGridViewButtonColumn7.ReadOnly = true;
             dataGridViewButtonColumn7.Text = "5";
             dataGridViewButtonColumn7.UseColumnTextForButtonValue = true;
@@ -649,14 +646,14 @@
             dataGridViewTextBoxColumn6.DataPropertyName = "desc";
             dataGridViewTextBoxColumn6.HeaderText = "설명";
             dataGridViewTextBoxColumn6.MinimumWidth = 100;
-            dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
+            dataGridViewTextBoxColumn6.Name = "desc";
             // 
             // dataGridViewButtonColumn8
             // 
             dataGridViewButtonColumn8.DataPropertyName = "openpath";
             dataGridViewButtonColumn8.HeaderText = "경로";
             dataGridViewButtonColumn8.MinimumWidth = 8;
-            dataGridViewButtonColumn8.Name = "dataGridViewButtonColumn8";
+            dataGridViewButtonColumn8.Name = "openpath";
             dataGridViewButtonColumn8.ReadOnly = true;
             dataGridViewButtonColumn8.Text = "📁";
             dataGridViewButtonColumn8.UseColumnTextForButtonValue = true;
@@ -667,7 +664,7 @@
             dataGridViewTextBoxColumn7.DataPropertyName = "fullpath";
             dataGridViewTextBoxColumn7.HeaderText = "fullpath";
             dataGridViewTextBoxColumn7.MinimumWidth = 8;
-            dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
+            dataGridViewTextBoxColumn7.Name = "fullpath";
             dataGridViewTextBoxColumn7.ReadOnly = true;
             dataGridViewTextBoxColumn7.Width = 150;
             // 

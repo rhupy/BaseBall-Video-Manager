@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace BaseBall_Video_Manager
 {
@@ -14,9 +14,10 @@ namespace BaseBall_Video_Manager
         private static string[] extensionsMedia = { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
         private static string[] extensionsFils = { ".zip", ".7z", ".ezc", ".alzip", ".001", ".zpaq" };
         public int tabIndex = 0;
-        public string[] selectedExtensions = extensionsMedia;
+        public string[] selectedExtensions => tabIndex == 0 ? extensionsMedia : extensionsFils;
 
-        // for 하단 상태 창
+        public string CurrentFilesPath => tabIndex == 0 ? media_FilesPath : file_FilesPath;
+
         public string fileListString()
         {
             string r = "검색 확장자 : ";
@@ -26,16 +27,10 @@ namespace BaseBall_Video_Manager
             }
             return r;
         }
+
         public void changeExtension(int index)
         {
-            if (index == 0)
-            {
-                selectedExtensions = extensionsMedia;
-            }
-            if (index == 1)
-            {
-                selectedExtensions = extensionsFils;
-            }
+            tabIndex = index;
         }
 
         public List<DirectoryEntry> LoadLibraries()
@@ -51,8 +46,8 @@ namespace BaseBall_Video_Manager
         public void UpdateFiles(int progressBar)
         {
             progressBar = 0;
-            List<FileEntry> existingFiles = LoadFiles(); // 기존 파일 목록 로드
-            List<FileEntry> updatedFiles = existingFiles.ToList(); // 기존 파일 목록을 업데이트 목록에 복사
+            List<FileEntry> existingFiles = LoadFiles(tabIndex);
+            List<FileEntry> updatedFiles = existingFiles.ToList();
 
             List<DirectoryEntry> directories = LoadLibraries();
             HashSet<string> allFoundFiles = new HashSet<string>();
@@ -61,51 +56,50 @@ namespace BaseBall_Video_Manager
             {
                 DirectoryInfo dirInfo = new DirectoryInfo(directory.Path);
                 var fileInfos = dirInfo.GetFiles("*.*", SearchOption.AllDirectories)
-                    .Where(f => extensionsMedia.Contains(f.Extension.ToLower()));
+                    .Where(f => selectedExtensions.Contains(f.Extension.ToLower()));
 
                 foreach (var fileInfo in fileInfos)
                 {
-                    allFoundFiles.Add(fileInfo.FullName); // 실제 존재하는 파일 경로 추가
+                    allFoundFiles.Add(fileInfo.FullName);
                     var existingFile = existingFiles.FirstOrDefault(fe => fe.Fullpath == fileInfo.FullName);
 
                     if (existingFile == null)
                     {
-                        // 새로운 파일만 추가
                         updatedFiles.Add(new FileEntry
                         {
                             Filename = fileInfo.Name,
                             Lasttime = "",
                             Addtime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                             Fullpath = fileInfo.FullName,
-                            Eval = "", // 초기 평가
-                            Desc = ""  // 초기 설명
+                            Eval = "",
+                            Desc = ""
                         });
                     }
                     progressBar++;
                 }
             }
 
-            // 실제로 존재하지 않는 파일은 목록에서 제거
             updatedFiles = updatedFiles.Where(fe => allFoundFiles.Contains(fe.Fullpath)).ToList();
 
-            SaveFiles(updatedFiles); // 업데이트된 파일 목록 저장
+            SaveFiles(updatedFiles, tabIndex);
         }
 
-
-        public List<FileEntry> LoadFiles()
+        public List<FileEntry> LoadFiles(int tabIndex)
         {
-            if (File.Exists(media_FilesPath))
+            string filePath = tabIndex == 0 ? media_FilesPath : file_FilesPath;
+            if (File.Exists(filePath))
             {
-                string json = File.ReadAllText(media_FilesPath);
+                string json = File.ReadAllText(filePath);
                 return JsonConvert.DeserializeObject<List<FileEntry>>(json);
             }
             return new List<FileEntry>();
         }
 
-        public void SaveFiles(List<FileEntry> files)
+        public void SaveFiles(List<FileEntry> files, int tabIndex)
         {
+            string filePath = tabIndex == 0 ? media_FilesPath : file_FilesPath;
             string json = JsonConvert.SerializeObject(files, Formatting.Indented);
-            File.WriteAllText(media_FilesPath, json);
+            File.WriteAllText(filePath, json);
         }
     }
 
