@@ -27,7 +27,7 @@ namespace BaseBall_Video_Manager
         {
             try
             {
-                this.progressBar1.Value = this.progressBar1.Maximum >= this.progressBar1.Value + 1 ? this.progressBar1.Value + 1 : this.progressBar1.Value;
+                this.toolStripProgressBar1.Value = this.toolStripProgressBar1.Maximum >= this.toolStripProgressBar1.Value + 1 ? this.toolStripProgressBar1.Value + 1 : this.toolStripProgressBar1.Value;
             }
             catch { }
         }
@@ -43,7 +43,7 @@ namespace BaseBall_Video_Manager
             set
             {
                 this.toolStripStatusLabel_totalcount.Text = value.ToString();
-                this.progressBar1.Maximum = Convert.ToInt32(value.ToString());
+                this.toolStripProgressBar1.Maximum = Convert.ToInt32(value.ToString());
             }
         }
         #endregion
@@ -53,6 +53,7 @@ namespace BaseBall_Video_Manager
         }
         #endregion
 
+        private Library library = new Library();
         private FileManager fileManager;
         private FileWatcher fileWatcher;
         private List<DirectoryEntry> directoryEntries; // 디렉토리 목록을 저장하기 위한 리스트
@@ -69,9 +70,8 @@ namespace BaseBall_Video_Manager
         private void MainForm_Load(object sender, EventArgs e)
         {
             dataGridView1.DataSource = fileEntries;
+            changeTab(0);
         }
-
-
 
         private void LoadFiles()
         {
@@ -99,17 +99,13 @@ namespace BaseBall_Video_Manager
         // lib 버튼
         private void button_lib_Click(object sender, EventArgs e)
         {
+            library.ShowDialog();
         }
         // 추가검색
         private void button_refresh_Click(object sender, EventArgs e)
         {
-            
-            fileManager.UpdateFiles(this.progressBar1.Value);  // 파일 목록을 로드하고 정렬하여 그리드에 표시
-        }
-        // 삭제 검색
-        private void button1_Click_1(object sender, EventArgs e)
-        {
 
+            fileManager.UpdateFiles(this.toolStripProgressBar1.Value);  // 파일 목록을 로드하고 정렬하여 그리드에 표시
         }
         // 삭제 버튼
         private void button1_Click(object sender, EventArgs e)
@@ -371,6 +367,16 @@ namespace BaseBall_Video_Manager
         #endregion
 
 
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            changeTab(tabControl1.SelectedIndex);
+        }
+        private void changeTab(int index)
+        {
+            fileManager.tabIndex = index;
+            fileManager.changeExtension(index);
+            toolStripStatusLabel2.Text = fileManager.fileListString();
+        }
     }
 
 

@@ -8,10 +8,35 @@ namespace BaseBall_Video_Manager
 {
     public class FileManager
     {
-        string libPath = "data\\lib.json"; // 디렉토리 목록 파일
-        string filesPath = "data\\files.json"; // 파일 목록 파일
-        private string[] extensions = { ".zip", ".7z", ".ezc", ".alzip", ".001", ".zpaq" };
-        // private string[] extensions = { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
+        string libPath = @"data\\lib.json";
+        string media_FilesPath = @"data\\media\files.json";
+        string file_FilesPath = @"data\\file\files.json";
+        private static string[] extensionsMedia = { ".avi", ".mp4", ".mov", ".wmv", ".avchd", ".flv", ".f4v", ".swf", ".mkv", ".mpeg2", ".ts", ".tp" };
+        private static string[] extensionsFils = { ".zip", ".7z", ".ezc", ".alzip", ".001", ".zpaq" };
+        public int tabIndex = 0;
+        public string[] selectedExtensions = extensionsMedia;
+
+        // for 하단 상태 창
+        public string fileListString()
+        {
+            string r = "검색 확장자 : ";
+            foreach (string ext in selectedExtensions)
+            {
+                r = r + ext + "  ";
+            }
+            return r;
+        }
+        public void changeExtension(int index)
+        {
+            if (index == 0)
+            {
+                selectedExtensions = extensionsMedia;
+            }
+            if (index == 1)
+            {
+                selectedExtensions = extensionsFils;
+            }
+        }
 
         public List<DirectoryEntry> LoadLibraries()
         {
@@ -36,7 +61,7 @@ namespace BaseBall_Video_Manager
             {
                 DirectoryInfo dirInfo = new DirectoryInfo(directory.Path);
                 var fileInfos = dirInfo.GetFiles("*.*", SearchOption.AllDirectories)
-                    .Where(f => extensions.Contains(f.Extension.ToLower()));
+                    .Where(f => extensionsMedia.Contains(f.Extension.ToLower()));
 
                 foreach (var fileInfo in fileInfos)
                 {
@@ -69,9 +94,9 @@ namespace BaseBall_Video_Manager
 
         public List<FileEntry> LoadFiles()
         {
-            if (File.Exists(filesPath))
+            if (File.Exists(media_FilesPath))
             {
-                string json = File.ReadAllText(filesPath);
+                string json = File.ReadAllText(media_FilesPath);
                 return JsonConvert.DeserializeObject<List<FileEntry>>(json);
             }
             return new List<FileEntry>();
@@ -80,7 +105,7 @@ namespace BaseBall_Video_Manager
         public void SaveFiles(List<FileEntry> files)
         {
             string json = JsonConvert.SerializeObject(files, Formatting.Indented);
-            File.WriteAllText(filesPath, json);
+            File.WriteAllText(media_FilesPath, json);
         }
     }
 
