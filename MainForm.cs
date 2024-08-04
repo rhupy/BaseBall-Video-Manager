@@ -282,20 +282,21 @@ namespace BaseBall_Video_Manager
                 return;
             string colName = dgv.Columns[e.ColumnIndex].Name;
             colName = fileManager.tabIndex == 1 ? colName.Substring(0, colName.Length - 1).ToString() : colName;
-
+            string fullPath = fileManager.tabIndex == 1 ? "fullpath_" : "fullpath";
+            string score = fileManager.tabIndex == 1 ? "score_" : "score";
             switch (colName)
             {
                 case "exe":
                     try
                     {
-                        string fullPath = Path.GetFullPath(dgv.Rows[e.RowIndex].Cells["fullpath"].Value.ToString());
+                        string fullPath_ = Path.GetFullPath(dgv.Rows[e.RowIndex].Cells[fullPath].Value.ToString());
                         ProcessStartInfo startInfo = new ProcessStartInfo
                         {
-                            FileName = fullPath,
+                            FileName = fullPath_,
                             UseShellExecute = true
                         };
                         Process.Start(startInfo);
-                        string fileID_ = dgv.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
+                        string fileID_ = dgv.Rows[e.RowIndex].Cells[fullPath].Value.ToString();
                         UpdateLasttime(fileID_);
                     }
                     catch (Exception ex)
@@ -309,12 +310,12 @@ namespace BaseBall_Video_Manager
                 case "score3":
                 case "score4":
                 case "score5":
-                    int score = int.Parse(colName.Replace("score", ""));
-                    string fileID = dgv.Rows[e.RowIndex].Cells["fullpath"].Value.ToString();
-                    UpdateScore(fileID, score);
+                    int score_ = int.Parse(colName.Replace("score", ""));
+                    string fileID = dgv.Rows[e.RowIndex].Cells[fullPath].Value.ToString();
+                    UpdateScore(fileID, score_);
                     break;
                 case "openpath":
-                    string directoryPath = Path.GetDirectoryName(dgv.Rows[e.RowIndex].Cells["fullpath"].Value.ToString());
+                    string directoryPath = Path.GetDirectoryName(dgv.Rows[e.RowIndex].Cells[fullPath].Value.ToString());
                     System.Diagnostics.Process.Start("explorer.exe", directoryPath);
                     break;
             }
@@ -354,11 +355,13 @@ namespace BaseBall_Video_Manager
 
         private void UpdateDataGridViewCell1(string fullpath, string lasttime)
         {
+            string fullpath_ = fileManager.tabIndex == 1 ? "fullpath_" : "fullpath";
+            string lastTime_ = fileManager.tabIndex == 1 ? "lastTime_" : "lastTime";
             foreach (DataGridViewRow row in CurrentDataGridView.Rows)
             {
-                if (row.Cells["fullpath"].Value.ToString() == fullpath)
+                if (row.Cells[fullpath_].Value.ToString() == fullpath)
                 {
-                    row.Cells["Lasttime"].Value = lasttime;
+                    row.Cells[lastTime_].Value = lasttime;
                     break;
                 }
             }
@@ -366,11 +369,13 @@ namespace BaseBall_Video_Manager
 
         private void UpdateDataGridViewCell(string fullpath, string eval)
         {
+            string fullpath_ = fileManager.tabIndex == 1 ? "fullpath_" : "fullpath";
+            string eval_ = fileManager.tabIndex == 1 ? "eval_" : "eval";
             foreach (DataGridViewRow row in CurrentDataGridView.Rows)
             {
-                if (row.Cells["fullpath"].Value.ToString() == fullpath)
+                if (row.Cells[fullpath_].Value.ToString() == fullpath)
                 {
-                    row.Cells["Eval"].Value = eval;
+                    row.Cells[eval_].Value = eval;
                     break;
                 }
             }
@@ -462,6 +467,7 @@ namespace BaseBall_Video_Manager
             string jsonFilePath = path;
             List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
             Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
+
 
             foreach (var data in dataList)
             {
