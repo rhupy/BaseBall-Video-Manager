@@ -75,7 +75,7 @@ namespace BaseBall_Video_Manager
             dataGridView1.CellEndEdit += DataGridView_CellEndEdit;
             dataGridView2.CellEndEdit += DataGridView_CellEndEdit;
 
-            LoadFiles();
+            _ = LoadFiles(); // 비동기로 LoadFiles 실행
             changeTab(0); // 초기 탭 설정
         }
 
@@ -84,22 +84,6 @@ namespace BaseBall_Video_Manager
             dataGridView1.DataSource = fileEntries1;
             dataGridView2.DataSource = fileEntries2;
             changeTab(0);
-        }
-
-        private void LoadFiles()
-        {
-            var entries1 = fileManager.LoadFiles(0);
-            var entries2 = fileManager.LoadFiles(1);
-            entries1.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
-            entries2.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
-
-            fileEntries1 = new SortableBindingList<FileEntry>(entries1);
-            fileEntries2 = new SortableBindingList<FileEntry>(entries2);
-
-            dataGridView1.DataSource = fileEntries1;
-            dataGridView2.DataSource = fileEntries2;
-
-            StatusCount = fileEntries1.Count + fileEntries2.Count;
         }
 
         #region Event Handler
@@ -114,10 +98,58 @@ namespace BaseBall_Video_Manager
             library.ShowDialog();
         }
 
-        private void button_refresh_Click(object sender, EventArgs e)
+        private async void button_refresh_Click(object sender, EventArgs e)
         {
-            fileManager.UpdateFiles(this.toolStripProgressBar1.Value);
+            // button_refresh.Enabled = false;
+            toolStripProgressBar1.Value = 0;
+            toolStripProgressBar1.Visible = true;
+
+            var progress = new Progress<int>(value =>
+            {
+                toolStripProgressBar1.Value = value;
+            });
+
+            try
+            {
+                await fileManager.UpdateFiles(progress);
+                await LoadFiles(); // 비동기로 LoadFiles 실행
+                this.Invoke((MethodInvoker)delegate {
+                    dataGridView1.Refresh();
+                    dataGridView2.Refresh();
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"파일 업데이트 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                button_refresh.Enabled = true;
+                toolStripProgressBar1.Visible = false;
+            }
         }
+
+        private async Task LoadFiles()
+        {
+            var entries1 = await Task.Run(() => fileManager.LoadFiles(0));
+            var entries2 = await Task.Run(() => fileManager.LoadFiles(1));
+
+            await Task.Run(() => {
+                entries1.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
+                entries2.Sort((x, y) => DateTime.Parse(y.Addtime).CompareTo(DateTime.Parse(x.Addtime)));
+            });
+
+            this.Invoke((MethodInvoker)delegate {
+                fileEntries1 = new SortableBindingList<FileEntry>(entries1);
+                fileEntries2 = new SortableBindingList<FileEntry>(entries2);
+
+                dataGridView1.DataSource = fileEntries1;
+                dataGridView2.DataSource = fileEntries2;
+
+                StatusCount = fileEntries1.Count + fileEntries2.Count;
+            });
+        }
+
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -152,9 +184,84 @@ namespace BaseBall_Video_Manager
             }
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private async void button4_Click(object sender, EventArgs e)
         {
-            deleteDup(fileManager.CurrentFilesPath);
+            button4.Enabled = false;
+            toolStripProgressBar1.Value = 0;
+            toolStripProgressBar1.Visible = true;
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    // 중복 데이터 삭제
+                    string jsonFilePath = fileManager.CurrentFilesPath;
+                    List<Dictionary<string, object>> dataList = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(File.ReadAllText(jsonFilePath));
+                    Dictionary<string, Dictionary<string, object>> dict = new Dictionary<string, Dictionary<string, object>>();
+
+                    int totalItems = dataList.Count;
+                    for (int i = 0; i < dataList.Count; i++)
+                    {
+                        var data = dataList[i];
+                        if (data.ContainsKey("Fullpath"))
+                        {
+                            string fullpath = data["Fullpath"].ToString();
+                            if (!dict.ContainsKey(fullpath))
+                            {
+                                dict.Add(fullpath, data);
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Warning: A record without a 'Fullpath' was found and skipped.");
+                        }
+                        int progressPercentage = (int)((i + 1) / (float)totalItems * 50);
+                        this.Invoke((MethodInvoker)delegate {
+                            toolStripProgressBar1.Value = progressPercentage;
+                        });
+                    }
+
+                    List<Dictionary<string, object>> uniqueDataList = new List<Dictionary<string, object>>(dict.Values);
+
+                    // 중복이 제거된 데이터를 FileEntry 리스트로 변환
+                    List<FileEntry> files = uniqueDataList.Select(d => new FileEntry
+                    {
+                        Filename = d["Filename"].ToString(),
+                        Fullpath = d["Fullpath"].ToString(),
+                        Lasttime = d["Lasttime"].ToString(),
+                        Addtime = d["Addtime"].ToString(),
+                        Eval = d["Eval"].ToString(),
+                        Desc = d["Desc"].ToString()
+                    }).ToList();
+
+                    // 빈 폴더 제거
+                    files = fileManager.RemoveEmptyFolders(files);
+
+                    this.Invoke((MethodInvoker)delegate {
+                        toolStripProgressBar1.Value = 75;
+                    });
+
+                    // 결과 저장
+                    string updatedJson = JsonConvert.SerializeObject(files, Formatting.Indented);
+                    File.WriteAllText(jsonFilePath, updatedJson);
+
+                    this.Invoke((MethodInvoker)delegate {
+                        toolStripProgressBar1.Value = 100;
+                    });
+                });
+
+                await LoadFiles(); // 업데이트 후 파일 목록 다시 로드
+                MessageBox.Show("중복 데이터 및 빈 폴더 제거가 완료되었습니다.", "작업 완료", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"작업 중 오류 발생: {ex.Message}", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                button4.Enabled = true;
+                toolStripProgressBar1.Visible = false;
+            }
         }
 
         private void DataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)

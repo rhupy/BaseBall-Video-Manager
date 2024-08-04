@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace BaseBall_Video_Manager
 {
@@ -43,41 +44,58 @@ namespace BaseBall_Video_Manager
             return new List<DirectoryEntry>();
         }
 
-        public void UpdateFiles(int progressBar)
+        public async Task UpdateFiles(IProgress<int> progress)
         {
-            progressBar = 0;
             List<FileEntry> existingFiles = LoadFiles(tabIndex);
             List<FileEntry> updatedFiles = existingFiles.ToList();
 
             List<DirectoryEntry> directories = LoadLibraries();
             HashSet<string> allFoundFiles = new HashSet<string>();
 
+            int totalFiles = 0;
+            int processedFiles = 0;
+
+            // 먼저 총 파일 수를 계산
             foreach (var directory in directories)
             {
-                DirectoryInfo dirInfo = new DirectoryInfo(directory.Path);
-                var fileInfos = dirInfo.GetFiles("*.*", SearchOption.AllDirectories)
-                    .Where(f => selectedExtensions.Contains(f.Extension.ToLower()));
-
-                foreach (var fileInfo in fileInfos)
-                {
-                    allFoundFiles.Add(fileInfo.FullName);
-                    var existingFile = existingFiles.FirstOrDefault(fe => fe.Fullpath == fileInfo.FullName);
-
-                    if (existingFile == null)
-                    {
-                        updatedFiles.Add(new FileEntry
-                        {
-                            Filename = fileInfo.Name,
-                            Lasttime = "",
-                            Addtime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                            Fullpath = fileInfo.FullName,
-                            Eval = "",
-                            Desc = ""
-                        });
-                    }
-                    progressBar++;
-                }
+                totalFiles += Directory.GetFiles(directory.Path, "*.*", SearchOption.AllDirectories)
+                    .Count(f => selectedExtensions.Contains(Path.GetExtension(f).ToLower()));
             }
+
+            await Task.Run(() =>
+            {
+                foreach (var directory in directories)
+                {
+                    DirectoryInfo dirInfo = new DirectoryInfo(directory.Path);
+                    var fileInfos = dirInfo.GetFiles("*.*", SearchOption.AllDirectories)
+                        .Where(f => selectedExtensions.Contains(f.Extension.ToLower()));
+
+                    foreach (var fileInfo in fileInfos)
+                    {
+                        allFoundFiles.Add(fileInfo.FullName);
+                        var existingFile = existingFiles.FirstOrDefault(fe => fe.Fullpath == fileInfo.FullName);
+
+                        if (existingFile == null)
+                        {
+                            updatedFiles.Add(new FileEntry
+                            {
+                                Filename = fileInfo.Name,
+                                Lasttime = "",
+                                Addtime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                Fullpath = fileInfo.FullName,
+                                Eval = "",
+                                Desc = ""
+                            });
+                        }
+
+                        processedFiles++;
+                        if (processedFiles % 10 == 0 || processedFiles == totalFiles)
+                        {
+                            progress.Report((int)((float)processedFiles / totalFiles * 100));
+                        }
+                    }
+                }
+            });
 
             updatedFiles = updatedFiles.Where(fe => allFoundFiles.Contains(fe.Fullpath)).ToList();
 
@@ -100,6 +118,33 @@ namespace BaseBall_Video_Manager
             string filePath = tabIndex == 0 ? media_FilesPath : file_FilesPath;
             string json = JsonConvert.SerializeObject(files, Formatting.Indented);
             File.WriteAllText(filePath, json);
+        }
+
+        // 빈 폴더 제거 메서드
+        public List<FileEntry> RemoveEmptyFolders(List<FileEntry> files)
+        {
+            HashSet<string> allDirectories = new HashSet<string>(files.Select(f => Path.GetDirectoryName(f.Fullpath)));
+            List<string> emptyDirectories = new List<string>();
+
+            foreach (string dir in allDirectories)
+            {
+                if (Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
+                {
+                    emptyDirectories.Add(dir);
+                    try
+                    {
+                        Directory.Delete(dir, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // 폴더 삭제 실패 로깅 또는 처리
+                        Console.WriteLine($"Failed to delete directory: {dir}. Error: {ex.Message}");
+                    }
+                }
+            }
+
+            // 삭제된 폴더에 있던 파일들을 목록에서 제거
+            return files.Where(f => !emptyDirectories.Contains(Path.GetDirectoryName(f.Fullpath))).ToList();
         }
     }
 
