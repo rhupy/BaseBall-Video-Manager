@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Video Manager</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 헤더 -->
+        <header class="header">
+            <h1>Baseball Video Manager</h1>
+            <div class="header-controls">
+                <button id="refresh-btn" class="btn btn-primary">새로고침</button>
+                <button id="library-btn" class="btn btn-secondary">라이브러리 관리</button>
+                <button id="cleanup-btn" class="btn btn-warning">정리</button>
+            </div>
+        </header>
+
+        <!-- 검색 바 -->
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="파일명으로 검색..." class="search-input">
+            <div class="file-stats">
+                <span id="file-count">0</span> 개 파일
+            </div>
+        </div>
+
+        <!-- 탭 메뉴 -->
+        <div class="tab-container">
+            <button class="tab-btn active" data-tab="video">비디오 파일</button>
+            <button class="tab-btn" data-tab="file">기타 파일</button>
+        </div>
+
+        <!-- 진행률 표시 -->
+        <div id="progress-container" class="progress-container hidden">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <span id="progress-text" class="progress-text">처리 중...</span>
+        </div>
+
+        <!-- 파일 리스트 -->
+        <div class="content">
+            <div class="virtual-scroll-container">
+                <div id="file-list" class="file-list">
+                    <div id="virtual-scroller" class="virtual-scroller">
+                        <!-- 가상 스크롤링으로 동적 생성 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상태 바 -->
+        <footer class="status-bar">
+            <span id="status-text">준비됨</span>
+            <span id="extension-list">확장자: .avi, .mp4, .mov, .wmv, .mkv, .flv, .ts</span>
+        </footer>
+    </div>
+
+    <!-- 라이브러리 관리 모달 -->
+    <div id="library-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>라이브러리 관리</h2>
+                <button id="close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="library-controls">
+                    <button id="add-library" class="btn btn-primary">폴더 추가</button>
+                    <button id="remove-library" class="btn btn-danger">선택 삭제</button>
+                </div>
+                <div id="library-list" class="library-list">
+                    <!-- 동적 생성 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-library" class="btn btn-primary">저장</button>
+                <button id="cancel-library" class="btn btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/file-manager.js"></script>
+    <script src="js/virtual-scroll.js"></script>
+    <script src="js/search-engine.js"></script>
+    <script src="js/library-manager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
