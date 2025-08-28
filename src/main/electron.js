@@ -53,7 +53,13 @@ function createWindow() {
 
 // IPC 핸들러들
 ipcMain.handle('get-data-path', () => {
-  return path.join(__dirname, '../../../data');
+  // 개발 모드와 배포 모드에 따라 경로 설정
+  if (isDev) {
+    return path.join(__dirname, '../../../data');
+  } else {
+    // 배포 모드: exe 파일이 있는 경로의 data 폴더
+    return path.join(process.resourcesPath, '../data');
+  }
 });
 
 ipcMain.handle('load-json-file', async (event, filePath) => {
