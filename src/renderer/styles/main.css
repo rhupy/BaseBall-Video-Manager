@@ -232,6 +232,12 @@ body {
   background: #f8f9fa;
 }
 
+.file-item:hover .file-times,
+.file-item:hover .file-rating,
+.file-item:hover .file-description {
+  color: #333;
+}
+
 .file-item:last-child {
   border-bottom: none;
 }
