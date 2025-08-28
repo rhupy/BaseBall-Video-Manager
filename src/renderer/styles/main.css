@@ -329,6 +329,15 @@ body {
   color: #ffd700;
 }
 
+.file-item:hover .star {
+  color: #999;
+}
+
+.file-item:hover .star:hover,
+.file-item:hover .star.active {
+  color: #ffd700;
+}
+
 .file-times {
   display: flex;
   gap: 15px;
