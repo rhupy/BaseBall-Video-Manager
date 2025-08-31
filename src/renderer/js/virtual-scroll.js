@@ -1,6 +1,6 @@
 // 가상 스크롤링 구현 - 대용량 데이터 성능 최적화
 class VirtualScroll {
-  constructor(container, itemHeight = 50) {
+  constructor(container, itemHeight = 45) {
     this.container = container;
     this.itemHeight = itemHeight;
     this.data = [];
@@ -138,20 +138,20 @@ class VirtualScroll {
         <div class="file-main">
           <div class="file-name" title="${fileName}">${fileName}</div>
           <div class="file-actions">
+            <div class="file-times">
+              <span class="add-time" title="추가 시간">${addTime}</span>
+              ${
+                lastTime
+                  ? `<span class="last-time" title="마지막 실행 시간">${lastTime}</span>`
+                  : ""
+              }
+            </div>
             <button class="btn-action btn-play" title="실행">▶</button>
             <button class="btn-action btn-folder" title="폴더 열기">📁</button>
             <button class="btn-action btn-delete" title="삭제">🗑</button>
             <div class="file-rating" data-fullpath="${file.Fullpath}">
               ${rating}
             </div>
-          </div>
-        </div>
-        <div class="file-details">
-          <div class="file-times">
-            <span class="add-time">추가: ${addTime}</span>
-            ${
-              lastTime ? `<span class="last-time">실행: ${lastTime}</span>` : ""
-            }
           </div>
         </div>
         ${

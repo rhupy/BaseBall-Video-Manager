@@ -251,7 +251,7 @@ body {
 
 /* 파일 아이템 스타일 */
 .file-item {
-  padding: 10px 20px;
+  padding: 8px 20px;
   border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -275,7 +275,7 @@ body {
 .file-item-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .file-main {
@@ -304,6 +304,23 @@ body {
 
 .file-actions .file-rating {
   opacity: 1; /* 별점은 항상 표시 */
+}
+
+.file-actions .file-times {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 10px;
+  color: #666;
+  margin-right: 8px;
+  min-width: 80px;
+}
+
+.file-actions .file-times .add-time,
+.file-actions .file-times .last-time {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-action {
@@ -340,14 +357,6 @@ body {
   color: #f44336;
 }
 
-.file-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #666;
-}
-
 .file-rating {
   display: flex;
   gap: 1px;
@@ -378,6 +387,12 @@ body {
 }
 
 .file-times {
+  display: flex;
+  gap: 15px;
+  font-size: 11px;
+}
+
+.file-details .file-times {
   display: flex;
   gap: 15px;
   font-size: 11px;
@@ -605,5 +620,14 @@ body {
   .file-actions {
     opacity: 1;
     justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .file-actions .file-times {
+    order: -1;
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 5px;
+    font-size: 9px;
   }
 }
