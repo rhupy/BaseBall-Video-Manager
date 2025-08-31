@@ -8,45 +8,51 @@ class VirtualScroll {
     this.visibleEnd = 0;
     this.scrollTop = 0;
     this.containerHeight = 0;
-    
+
     // DOM 요소들
     this.viewport = null;
     this.content = null;
-    
+
     this.init();
   }
 
   init() {
     // 가상 스크롤 컨테이너 설정
-    this.container.style.position = 'relative';
-    this.container.style.overflow = 'auto';
-    this.container.style.height = '100%';
+    this.container.style.position = "relative";
+    this.container.style.overflow = "auto";
+    this.container.style.height = "100%";
 
     // 뷰포트 생성
-    this.viewport = document.createElement('div');
-    this.viewport.style.position = 'relative';
-    this.viewport.style.overflow = 'hidden';
-    this.viewport.style.height = '100%';
+    this.viewport = document.createElement("div");
+    this.viewport.style.position = "relative";
+    this.viewport.style.overflow = "hidden";
+    this.viewport.style.height = "100%";
 
     // 콘텐츠 컨테이너 생성
-    this.content = document.createElement('div');
-    this.content.style.position = 'absolute';
-    this.content.style.top = '0';
-    this.content.style.left = '0';
-    this.content.style.right = '0';
+    this.content = document.createElement("div");
+    this.content.style.position = "absolute";
+    this.content.style.top = "0";
+    this.content.style.left = "0";
+    this.content.style.right = "0";
 
     this.viewport.appendChild(this.content);
     this.container.appendChild(this.viewport);
 
     // 스크롤 이벤트 리스너
-    this.container.addEventListener('scroll', Utils.throttle(() => {
-      this.handleScroll();
-    }, CONSTANTS.SCROLL_THROTTLE));
+    this.container.addEventListener(
+      "scroll",
+      Utils.throttle(() => {
+        this.handleScroll();
+      }, CONSTANTS.SCROLL_THROTTLE)
+    );
 
     // 리사이즈 이벤트 리스너
-    window.addEventListener('resize', Utils.debounce(() => {
-      this.updateLayout();
-    }, 100));
+    window.addEventListener(
+      "resize",
+      Utils.debounce(() => {
+        this.updateLayout();
+      }, 100)
+    );
 
     this.updateLayout();
   }
@@ -61,10 +67,14 @@ class VirtualScroll {
   // 레이아웃 업데이트
   updateLayout() {
     this.containerHeight = this.container.clientHeight;
-    const visibleItemCount = Math.ceil(this.containerHeight / this.itemHeight) + 5; // 버퍼 추가
-    
-    this.visibleEnd = Math.min(this.visibleStart + visibleItemCount, this.data.length);
-    
+    const visibleItemCount =
+      Math.ceil(this.containerHeight / this.itemHeight) + 5; // 버퍼 추가
+
+    this.visibleEnd = Math.min(
+      this.visibleStart + visibleItemCount,
+      this.data.length
+    );
+
     // 전체 높이 설정
     const totalHeight = this.data.length * this.itemHeight;
     this.viewport.style.height = `${totalHeight}px`;
@@ -74,7 +84,7 @@ class VirtualScroll {
   handleScroll() {
     this.scrollTop = this.container.scrollTop;
     const newVisibleStart = Math.floor(this.scrollTop / this.itemHeight);
-    
+
     if (newVisibleStart !== this.visibleStart) {
       this.visibleStart = newVisibleStart;
       this.updateLayout();
@@ -90,27 +100,29 @@ class VirtualScroll {
     }
 
     const fragment = document.createDocumentFragment();
-    
+
     // 상단 오프셋 설정
-    this.content.style.transform = `translateY(${this.visibleStart * this.itemHeight}px)`;
+    this.content.style.transform = `translateY(${
+      this.visibleStart * this.itemHeight
+    }px)`;
 
     // 보이는 항목들만 렌더링
     for (let i = this.visibleStart; i < this.visibleEnd; i++) {
       if (i >= this.data.length) break;
-      
+
       const item = this.data[i];
       const element = this.createItemElement(item, i);
       fragment.appendChild(element);
     }
 
-    this.content.innerHTML = '';
+    this.content.innerHTML = "";
     this.content.appendChild(fragment);
   }
 
   // 개별 아이템 엘리먼트 생성
   createItemElement(file, index) {
-    const item = document.createElement('div');
-    item.className = 'file-item';
+    const item = document.createElement("div");
+    item.className = "file-item";
     item.style.height = `${this.itemHeight}px`;
     item.dataset.index = index;
     item.dataset.fullpath = file.Fullpath;
@@ -119,7 +131,7 @@ class VirtualScroll {
     const lastTime = Utils.formatDate(file.Lasttime);
     const addTime = Utils.formatDate(file.Addtime);
     const rating = Utils.generateStarRating(file.Eval);
-    const description = Utils.escapeHtml(file.Desc || '');
+    const description = Utils.escapeHtml(file.Desc || "");
 
     item.innerHTML = `
       <div class="file-item-content">
@@ -129,18 +141,24 @@ class VirtualScroll {
             <button class="btn-action btn-play" title="실행">▶</button>
             <button class="btn-action btn-folder" title="폴더 열기">📁</button>
             <button class="btn-action btn-delete" title="삭제">🗑</button>
+            <div class="file-rating" data-fullpath="${file.Fullpath}">
+              ${rating}
+            </div>
           </div>
         </div>
         <div class="file-details">
-          <div class="file-rating" data-fullpath="${file.Fullpath}">
-            ${rating}
-          </div>
           <div class="file-times">
             <span class="add-time">추가: ${addTime}</span>
-            ${lastTime ? `<span class="last-time">실행: ${lastTime}</span>` : ''}
+            ${
+              lastTime ? `<span class="last-time">실행: ${lastTime}</span>` : ""
+            }
           </div>
         </div>
-        ${description ? `<div class="file-description">${description}</div>` : ''}
+        ${
+          description
+            ? `<div class="file-description">${description}</div>`
+            : ""
+        }
       </div>
     `;
 
@@ -153,47 +171,60 @@ class VirtualScroll {
   // 아이템 이벤트 리스너 추가
   attachItemEventListeners(item, file) {
     // 실행 버튼
-    const playBtn = item.querySelector('.btn-play');
-    playBtn.addEventListener('click', (e) => {
+    const playBtn = item.querySelector(".btn-play");
+    playBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       window.fileManager.executeFile(file.Fullpath);
     });
 
     // 폴더 열기 버튼
-    const folderBtn = item.querySelector('.btn-folder');
-    folderBtn.addEventListener('click', (e) => {
+    const folderBtn = item.querySelector(".btn-folder");
+    folderBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       window.fileManager.openFolder(file.Fullpath);
     });
 
     // 삭제 버튼 (실제 파일 삭제)
-    const deleteBtn = item.querySelector('.btn-delete');
-    deleteBtn.addEventListener('click', (e) => {
+    const deleteBtn = item.querySelector(".btn-delete");
+    deleteBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      
-      if (confirm('파일을 삭제하시겠습니까?\n\n⚠️ 실제 파일이 완전히 삭제됩니다.')) {
+
+      if (
+        confirm("파일을 삭제하시겠습니까?\n\n⚠️ 실제 파일이 완전히 삭제됩니다.")
+      ) {
         this.deleteFile(file.Fullpath);
       }
     });
 
     // 별점 클릭 이벤트
-    const stars = item.querySelectorAll('.star');
+    const stars = item.querySelectorAll(".star");
     stars.forEach((star, index) => {
-      star.addEventListener('click', (e) => {
+      star.addEventListener("click", (e) => {
         e.stopPropagation();
-        const rating = index + 1;
-        window.fileManager.updateRating(file.Fullpath, rating);
-        this.updateStarRating(item, rating);
+        const clickedRating = index + 1;
+
+        // 현재 활성화된 별의 개수로 현재 평점 확인
+        const activeStars = item.querySelectorAll(".star.active");
+        const currentRating = activeStars.length;
+
+        // 현재 평점과 클릭한 평점이 같으면 0점으로 설정, 다르면 클릭한 평점으로 설정
+        const newRating = currentRating === clickedRating ? 0 : clickedRating;
+
+        // 파일 객체의 Eval 값도 업데이트
+        file.Eval = newRating > 0 ? "★".repeat(newRating) : "";
+
+        window.fileManager.updateRating(file.Fullpath, newRating);
+        this.updateStarRating(item, newRating);
       });
     });
 
     // 더블클릭으로 실행
-    item.addEventListener('dblclick', () => {
+    item.addEventListener("dblclick", () => {
       window.fileManager.executeFile(file.Fullpath);
     });
 
     // 우클릭 컨텍스트 메뉴 (향후 구현)
-    item.addEventListener('contextmenu', (e) => {
+    item.addEventListener("contextmenu", (e) => {
       e.preventDefault();
       // 컨텍스트 메뉴 표시 로직
     });
@@ -201,12 +232,12 @@ class VirtualScroll {
 
   // 별점 업데이트
   updateStarRating(item, rating) {
-    const stars = item.querySelectorAll('.star');
+    const stars = item.querySelectorAll(".star");
     stars.forEach((star, index) => {
       if (index < rating) {
-        star.classList.add('active');
+        star.classList.add("active");
       } else {
-        star.classList.remove('active');
+        star.classList.remove("active");
       }
     });
   }
@@ -215,39 +246,45 @@ class VirtualScroll {
   async deleteFile(fullpath) {
     try {
       // 실제 파일 시스템에서 삭제
-      const deleteResult = await window.electronAPI.invoke('delete-file', fullpath);
+      const deleteResult = await window.electronAPI.invoke(
+        "delete-file",
+        fullpath
+      );
       if (!deleteResult.success) {
-        alert('파일 삭제 실패: ' + deleteResult.error);
+        alert("파일 삭제 실패: " + deleteResult.error);
         return;
       }
-      
-      Utils.updateStatus('파일이 삭제되었습니다.');
-      
+
+      Utils.updateStatus("파일이 삭제되었습니다.");
+
       // JSON 데이터에서도 즉시 제거
-      for (const type of ['video', 'file']) {
-        const index = window.fileManager.allFiles[type].findIndex(f => f.Fullpath === fullpath);
+      for (const type of ["video", "file"]) {
+        const index = window.fileManager.allFiles[type].findIndex(
+          (f) => f.Fullpath === fullpath
+        );
         if (index !== -1) {
           window.fileManager.allFiles[type].splice(index, 1);
           window.fileManager.saveFileData(type);
           break;
         }
       }
-      
+
       // 필터링된 데이터에서도 제거
-      for (const type of ['video', 'file']) {
-        const index = window.fileManager.filteredFiles[type].findIndex(f => f.Fullpath === fullpath);
+      for (const type of ["video", "file"]) {
+        const index = window.fileManager.filteredFiles[type].findIndex(
+          (f) => f.Fullpath === fullpath
+        );
         if (index !== -1) {
           window.fileManager.filteredFiles[type].splice(index, 1);
           break;
         }
       }
-      
+
       // UI 업데이트
       window.fileManager.updateUI();
-      
     } catch (error) {
-      console.error('파일 삭제 실패:', error);
-      alert('파일 삭제에 실패했습니다.');
+      console.error("파일 삭제 실패:", error);
+      alert("파일 삭제에 실패했습니다.");
     }
   }
 
@@ -262,14 +299,14 @@ class VirtualScroll {
     return {
       start: this.visibleStart,
       end: this.visibleEnd,
-      total: this.data.length
+      total: this.data.length,
     };
   }
 
   // 리소스 정리
   destroy() {
     if (this.container) {
-      this.container.innerHTML = '';
+      this.container.innerHTML = "";
     }
   }
 }
