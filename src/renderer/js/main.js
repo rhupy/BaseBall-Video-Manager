@@ -235,7 +235,6 @@ class App {
   // 정렬 타입 한글명 반환
   getSortTypeName(sortType) {
     const sortNames = {
-      default: "기본 순서",
       name: "이름순",
       lasttime: "실행시간순",
       rating: "평점순",
