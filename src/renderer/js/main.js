@@ -7,6 +7,7 @@ class App {
     this.searchEngine = null;
     this.currentTab = "video";
     this.isInitialized = false;
+    this.lastExecutedFile = null; // 마지막으로 실행한 파일 경로
   }
 
   // 앱 초기화

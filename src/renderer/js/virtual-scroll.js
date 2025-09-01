@@ -117,6 +117,9 @@ class VirtualScroll {
 
     this.content.innerHTML = "";
     this.content.appendChild(fragment);
+    
+    // 최근 실행 파일 강조 효과 업데이트
+    this.updateRecentlyExecutedHighlight();
   }
 
   // 개별 아이템 엘리먼트 생성
@@ -126,6 +129,11 @@ class VirtualScroll {
     item.style.height = `${this.itemHeight}px`;
     item.dataset.index = index;
     item.dataset.fullpath = file.Fullpath;
+
+    // 마지막 실행 파일 강조 표시
+    if (window.app && window.app.lastExecutedFile === file.Fullpath) {
+      item.classList.add("recently-executed");
+    }
 
     const fileName = Utils.escapeHtml(file.Filename);
     const lastTime = Utils.formatDate(file.Lasttime);
@@ -139,10 +147,10 @@ class VirtualScroll {
           <div class="file-name" title="${fileName}">${fileName}</div>
           <div class="file-actions">
             <div class="file-times">
-              <span class="add-time" title="추가 시간">${addTime}</span>
+              <span class="add-time" title="추가 시각">추가시각: ${addTime}</span>
               ${
                 lastTime
-                  ? `<span class="last-time" title="마지막 실행 시간">${lastTime}</span>`
+                  ? `<span class="last-time" title="마지막 실행 시각"><strong>실행시각: ${lastTime}</strong></span>`
                   : ""
               }
             </div>
@@ -172,9 +180,27 @@ class VirtualScroll {
   attachItemEventListeners(item, file) {
     // 실행 버튼
     const playBtn = item.querySelector(".btn-play");
-    playBtn.addEventListener("click", (e) => {
+    playBtn.addEventListener("click", async (e) => {
       e.stopPropagation();
-      window.fileManager.executeFile(file.Fullpath);
+      
+      // 이전에 강조된 파일 제거
+      this.clearRecentlyExecuted();
+      
+      // 현재 파일을 마지막 실행 파일로 설정
+      if (window.app) {
+        window.app.lastExecutedFile = file.Fullpath;
+      }
+      
+      // 현재 항목에 강조 표시
+      item.classList.add("recently-executed");
+      
+      // 파일 실행
+      await window.fileManager.executeFile(file.Fullpath);
+      
+      // 실행 시간 업데이트를 위해 UI 새로고침 (실시간)
+      setTimeout(() => {
+        this.updateFileTimeDisplay(file.Fullpath);
+      }, 100);
     });
 
     // 폴더 열기 버튼
@@ -301,6 +327,91 @@ class VirtualScroll {
       end: this.visibleEnd,
       total: this.data.length,
     };
+  }
+
+  // 이전에 강조된 파일 제거
+  clearRecentlyExecuted() {
+    const previouslyExecuted = this.container.querySelectorAll('.recently-executed');
+    previouslyExecuted.forEach(item => {
+      item.classList.remove('recently-executed');
+    });
+  }
+
+  // 특정 파일의 실행 시간 표시 업데이트
+  updateFileTimeDisplay(filePath) {
+    try {
+      // 현재 보이는 파일 항목들에서 해당 파일 찾기
+      const fileItems = this.container.querySelectorAll('.file-item');
+      
+      for (const item of fileItems) {
+        if (item.dataset.fullpath === filePath) {
+          // 파일 매니저에서 최신 데이터 가져오기
+          const updatedFile = this.findFileInManager(filePath);
+          if (updatedFile && updatedFile.Lasttime) {
+            const lastTimeSpan = item.querySelector('.last-time');
+            const timesContainer = item.querySelector('.file-times');
+            
+            const formattedTime = Utils.formatDate(updatedFile.Lasttime);
+            
+            if (lastTimeSpan) {
+              // 기존 실행시각 업데이트
+              lastTimeSpan.innerHTML = `<strong>실행시각: ${formattedTime}</strong>`;
+            } else {
+              // 새로운 실행시각 추가
+              const newLastTimeSpan = document.createElement('span');
+              newLastTimeSpan.className = 'last-time';
+              newLastTimeSpan.title = '마지막 실행 시각';
+              newLastTimeSpan.innerHTML = `<strong>실행시각: ${formattedTime}</strong>`;
+              timesContainer.appendChild(newLastTimeSpan);
+            }
+            
+            // 업데이트 애니메이션 효과
+            const timeElement = item.querySelector('.last-time');
+            if (timeElement) {
+              timeElement.classList.add('updating');
+              
+              setTimeout(() => {
+                timeElement.classList.remove('updating');
+              }, 1500);
+            }
+          }
+          break;
+        }
+      }
+    } catch (error) {
+      console.warn('실행 시간 표시 업데이트 실패:', error);
+    }
+  }
+
+  // 파일 매니저에서 파일 정보 찾기
+  findFileInManager(filePath) {
+    try {
+      const allFiles = [
+        ...window.fileManager.allFiles.video,
+        ...window.fileManager.allFiles.file
+      ];
+      
+      return allFiles.find(file => file.Fullpath === filePath);
+    } catch (error) {
+      console.warn('파일 정보 조회 실패:', error);
+      return null;
+    }
+  }
+
+  // 최근 실행 파일 강조 효과 업데이트
+  updateRecentlyExecutedHighlight() {
+    if (window.app && window.app.lastExecutedFile) {
+      const lastExecutedPath = window.app.lastExecutedFile;
+      const fileItems = this.container.querySelectorAll('.file-item');
+      
+      fileItems.forEach(item => {
+        if (item.dataset.fullpath === lastExecutedPath) {
+          item.classList.add('recently-executed');
+        } else {
+          item.classList.remove('recently-executed');
+        }
+      });
+    }
   }
 
   // 리소스 정리
