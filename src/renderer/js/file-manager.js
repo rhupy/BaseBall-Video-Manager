@@ -1012,41 +1012,46 @@ class FileManager {
     }
   }
 
-  // 파일 정렬
-  sortFiles(sortType) {
+  // 파일 정렬 (방향 지원)
+  sortFiles(sortType, isDescending = true) {
     const currentFiles = this.filteredFiles[this.currentTab];
 
     switch (sortType) {
       case "name":
-        currentFiles.sort((a, b) => a.Filename.localeCompare(b.Filename, "ko"));
+        currentFiles.sort((a, b) => {
+          const result = a.Filename.localeCompare(b.Filename, "ko");
+          return isDescending ? -result : result;
+        });
         break;
       case "lasttime":
         currentFiles.sort((a, b) => {
           const timeA = a.Lasttime ? new Date(a.Lasttime).getTime() : 0;
           const timeB = b.Lasttime ? new Date(b.Lasttime).getTime() : 0;
-          return timeB - timeA; // 최신순
+          const result = timeB - timeA;
+          return isDescending ? result : -result;
         });
         break;
       case "rating":
         currentFiles.sort((a, b) => {
           const ratingA = a.Eval ? a.Eval.length : 0;
           const ratingB = b.Eval ? b.Eval.length : 0;
-          return ratingB - ratingA; // 높은 평점순
+          const result = ratingB - ratingA;
+          return isDescending ? result : -result;
         });
         break;
       case "addtime":
         currentFiles.sort((a, b) => {
           const timeA = a.Addtime ? new Date(a.Addtime).getTime() : 0;
           const timeB = b.Addtime ? new Date(b.Addtime).getTime() : 0;
-          return timeB - timeA; // 최신순
+          const result = timeB - timeA;
+          return isDescending ? result : -result;
         });
         break;
       case "default":
       default:
-        // 기본 정렬 (원본 순서 복원)
-        this.filteredFiles[this.currentTab] = [
-          ...this.allFiles[this.currentTab],
-        ];
+        // 기본 정렬 (원본 순서)
+        const originalFiles = [...this.allFiles[this.currentTab]];
+        this.filteredFiles[this.currentTab] = isDescending ? originalFiles : originalFiles.reverse();
         break;
     }
 

@@ -8,6 +8,8 @@ class App {
     this.currentTab = "video";
     this.isInitialized = false;
     this.lastExecutedFile = null; // 마지막으로 실행한 파일 경로
+    this.currentSort = "default"; // 현재 정렬 타입
+    this.isDescending = true; // 정렬 방향 (true: 내림차순, false: 오름차순)
   }
 
   // 앱 초기화
@@ -113,6 +115,11 @@ class App {
       });
     });
 
+    // 정렬 방향 토글
+    document.getElementById("sort-direction-toggle").addEventListener("change", (e) => {
+      this.handleSortDirectionChange(e.target.checked);
+    });
+
     // 키보드 단축키
     document.addEventListener("keydown", (e) => {
       this.handleKeyboardShortcuts(e);
@@ -168,18 +175,40 @@ class App {
 
   // 정렬 처리
   handleSort(sortType) {
+    this.currentSort = sortType;
+    
     // 정렬 버튼 상태 업데이트
     document.querySelectorAll(".sort-btn").forEach((btn) => {
       btn.classList.remove("active");
     });
     document.querySelector(`[data-sort="${sortType}"]`).classList.add("active");
 
-    // 파일 매니저에 정렬 요청
+    // 파일 매니저에 정렬 요청 (방향 포함)
     if (this.fileManager) {
-      this.fileManager.sortFiles(sortType);
+      this.fileManager.sortFiles(sortType, this.isDescending);
     }
 
-    Utils.updateStatus(`${this.getSortTypeName(sortType)}으로 정렬됨`);
+    const directionText = this.isDescending ? "내림차순" : "오름차순";
+    Utils.updateStatus(`${this.getSortTypeName(sortType)} ${directionText}으로 정렬됨`);
+  }
+
+  // 정렬 방향 변경 처리
+  handleSortDirectionChange(isDescending) {
+    this.isDescending = isDescending;
+    
+    // 라벨 업데이트
+    const label = document.querySelector(".sort-direction-label");
+    if (label) {
+      label.textContent = isDescending ? "내림차순" : "오름차순";
+    }
+    
+    // 현재 정렬이 기본이 아니면 재정렬
+    if (this.currentSort !== "default" && this.fileManager) {
+      this.fileManager.sortFiles(this.currentSort, this.isDescending);
+      
+      const directionText = this.isDescending ? "내림차순" : "오름차순";
+      Utils.updateStatus(`${this.getSortTypeName(this.currentSort)} ${directionText}으로 재정렬됨`);
+    }
   }
 
   // 정렬 타입 한글명 반환

@@ -108,6 +108,108 @@ body {
 /* 정렬 컨트롤 */
 .sort-controls {
   display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.sort-direction-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 토글 스위치 스타일 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #667eea;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px;
+}
+
+.toggle-slider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+}
+
+/* 체크됨 상태 (내림차순) */
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(0);
+}
+
+/* 체크 안됨 상태 (오름차순) */
+.toggle-switch input:not(:checked) + .toggle-slider {
+  background: #28a745;
+}
+
+.toggle-switch input:not(:checked) + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+.toggle-label {
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.toggle-label.desc {
+  margin-left: 2px;
+}
+
+.toggle-label.asc {
+  margin-right: 2px;
+}
+
+/* 활성 라벨 강조 */
+.toggle-switch input:checked + .toggle-slider .toggle-label.desc {
+  opacity: 1;
+}
+
+.toggle-switch input:not(:checked) + .toggle-slider .toggle-label.asc {
+  opacity: 1;
+}
+
+.sort-direction-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  min-width: 50px;
+}
+
+.sort-buttons {
+  display: flex;
   gap: 5px;
 }
 
@@ -661,6 +763,22 @@ body {
   .sort-controls {
     justify-content: center;
     flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .sort-direction-toggle {
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .sort-direction-label {
+    font-size: 11px;
+    min-width: auto;
+  }
+
+  .sort-buttons {
+    gap: 3px;
   }
 
   .sort-btn {
