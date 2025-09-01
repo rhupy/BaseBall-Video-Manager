@@ -8,7 +8,7 @@
 
 ![Baseball Video Manager](./screenshots/main-interface.png)
 
-_SUIT 폰트가 적용된 깔끔한 한국어 인터페이스와 직관적인 파일 관리 화면_
+_직관적인 파일 관리 화면_
 
 ### 🎯 **주요 UI 요소**
 
