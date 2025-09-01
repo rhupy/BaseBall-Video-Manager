@@ -53,8 +53,8 @@ function createWindow() {
   });
 }
 
-// IPC 핸들러들
-ipcMain.handle('get-data-path', () => {
+// 데이터 폴더 경로 함수
+function getDataPath() {
   // 개발 모드와 배포 모드에 따라 경로 설정
   if (isDev) {
     return path.join(__dirname, '../../../data');
@@ -62,6 +62,11 @@ ipcMain.handle('get-data-path', () => {
     // 배포 모드: exe 파일이 있는 경로의 data 폴더
     return path.join(process.resourcesPath, '../data');
   }
+}
+
+// IPC 핸들러들
+ipcMain.handle('get-data-path', () => {
+  return getDataPath();
 });
 
 ipcMain.handle('load-json-file', async (event, filePath) => {
@@ -538,7 +543,7 @@ async function removeEmptyFoldersRecursive(rootPath) {
 // 데이터 폴더 백업
 ipcMain.handle('backup-data', async (event) => {
   try {
-    const dataPath = path.join(__dirname, '../data');
+    const dataPath = getDataPath();
     
     // data 폴더 존재 확인
     if (!await fs.pathExists(dataPath)) {

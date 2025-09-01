@@ -242,6 +242,11 @@ class VirtualScroll {
         window.fileManager.updateRating(file.Fullpath, newRating);
         this.updateStarRating(item, newRating);
       });
+
+      // 별점에서 더블클릭 이벤트 전파 차단
+      star.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+      });
     });
 
     // 더블클릭으로 실행
