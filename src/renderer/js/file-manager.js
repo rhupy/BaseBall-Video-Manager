@@ -1,4 +1,4 @@
-// 고성능 파일 매니저 클래스
+// 고성능 파일 매니저 클래스 (Windows Search + 실시간 감시 통합)
 class FileManager {
   constructor() {
     this.currentTab = "video";
@@ -12,12 +12,29 @@ class FileManager {
     };
     this.searchIndex = new Map();
     this.isLoading = false;
+    this.useHybridSystem = true; // 새로운 하이브리드 시스템 사용 여부
+    this.isHybridInitialized = false; // 하이브리드 시스템 초기화 상태
   }
 
   // 초기화
   async init() {
     try {
       this.dataPath = await window.electronAPI.invoke("get-data-path");
+      
+      if (this.useHybridSystem) {
+        // 하이브리드 시스템 우선 시도
+        const success = await this.initHybridSystem();
+        if (success) {
+          this.isHybridInitialized = true;
+          Utils.updateStatus("고성능 시스템으로 파일 로딩 완료");
+          return;
+        } else {
+          console.warn("하이브리드 시스템 초기화 실패, 기존 시스템으로 폴백");
+          this.useHybridSystem = false;
+        }
+      }
+      
+      // 기존 시스템으로 폴백
       await this.loadAllFiles();
       this.buildSearchIndex();
       Utils.updateStatus("파일 로딩 완료");
@@ -25,6 +42,238 @@ class FileManager {
       console.error("FileManager 초기화 실패:", error);
       Utils.updateStatus("초기화 실패");
     }
+  }
+
+  // 하이브리드 시스템 초기화 (Windows Search + 실시간 감시)
+  async initHybridSystem() {
+    try {
+      this.isLoading = true;
+      Utils.updateStatus("고성능 시스템으로 파일 스캔 중...");
+
+      // 라이브러리 경로 로드
+      const libraryResult = await window.electronAPI.invoke(
+        "load-json-file",
+        `${this.dataPath}/lib.json`
+      );
+      if (!libraryResult.success) {
+        throw new Error("라이브러리 파일을 읽을 수 없습니다.");
+      }
+
+      const libraries = libraryResult.data || [];
+      const libraryPaths = libraries.map(lib => lib.path);
+
+      if (libraryPaths.length === 0) {
+        throw new Error("라이브러리 경로가 설정되지 않았습니다.");
+      }
+
+      // 하이브리드 파일 감시 시스템 초기화
+      const result = await window.electronAPI.invoke("hybrid-system-init", libraryPaths);
+      
+      if (!result.success) {
+        throw new Error(result.error || "하이브리드 시스템 초기화 실패");
+      }
+
+      // 데이터를 기존 형식으로 변환하여 호환성 유지
+      this.allFiles.video = result.data.video || [];
+      this.allFiles.file = result.data.file || [];
+      this.filteredFiles.video = [...this.allFiles.video];
+      this.filteredFiles.file = [...this.allFiles.file];
+
+      // 검색 인덱스 구축 (하이브리드 시스템에서도 빠른 검색을 위해)
+      this.buildSearchIndex();
+
+      // 실시간 업데이트 이벤트 리스너 등록
+      this.setupHybridEventListeners();
+
+      // JSON 파일과 동기화 (백업 목적)
+      await this.syncWithJsonFiles();
+
+      this.updateUI();
+
+      console.log(`하이브리드 시스템 초기화 완료: 비디오 ${this.allFiles.video.length}개, 압축 ${this.allFiles.file.length}개`);
+      console.log(`스캔 소요 시간: ${result.stats?.scanDuration || 0}ms`);
+
+      return true;
+    } catch (error) {
+      console.error("하이브리드 시스템 초기화 실패:", error);
+      return false;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  // 하이브리드 시스템 실시간 이벤트 리스너 설정
+  setupHybridEventListeners() {
+    // 파일 추가 이벤트
+    window.electronAPI.on('hybrid-file-added', (event, data) => {
+      console.log('파일 추가됨:', data.file.Filename);
+      
+      this.allFiles[data.type].unshift(data.file); // 최신 파일을 맨 앞에 추가
+      
+      // 현재 필터에 맞으면 표시 목록에도 추가
+      if (this.passesCurrentFilter(data.file)) {
+        this.filteredFiles[data.type].unshift(data.file);
+      }
+      
+      // 검색 인덱스 업데이트
+      this.addToSearchIndex(data.file, data.type);
+      
+      // UI 업데이트
+      if (data.type === this.currentTab) {
+        this.updateUI();
+      }
+    });
+
+    // 파일 삭제 이벤트
+    window.electronAPI.on('hybrid-file-deleted', (event, data) => {
+      console.log('파일 삭제됨:', data.file.Filename);
+      
+      // 전체 목록에서 제거
+      const allIndex = this.allFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (allIndex !== -1) {
+        this.allFiles[data.type].splice(allIndex, 1);
+      }
+      
+      // 필터된 목록에서 제거
+      const filteredIndex = this.filteredFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (filteredIndex !== -1) {
+        this.filteredFiles[data.type].splice(filteredIndex, 1);
+      }
+      
+      // 검색 인덱스에서 제거
+      this.removeFromSearchIndex(data.file, data.type);
+      
+      // UI 업데이트
+      if (data.type === this.currentTab) {
+        this.updateUI();
+      }
+    });
+
+    // 파일 변경 이벤트
+    window.electronAPI.on('hybrid-file-changed', (event, data) => {
+      console.log('파일 변경됨:', data.file.Filename);
+      
+      // 전체 목록 업데이트
+      const allIndex = this.allFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (allIndex !== -1) {
+        this.allFiles[data.type][allIndex] = data.file;
+      }
+      
+      // 필터된 목록 업데이트
+      const filteredIndex = this.filteredFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (filteredIndex !== -1) {
+        this.filteredFiles[data.type][filteredIndex] = data.file;
+      }
+      
+      // UI 업데이트
+      if (data.type === this.currentTab) {
+        this.updateUI();
+      }
+    });
+
+    // 메타데이터 업데이트 이벤트
+    window.electronAPI.on('hybrid-metadata-updated', (event, data) => {
+      console.log('메타데이터 업데이트됨:', data.file.Filename);
+      
+      // 메타데이터만 업데이트하므로 파일 변경과 같은 처리
+      const allIndex = this.allFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (allIndex !== -1) {
+        this.allFiles[data.type][allIndex] = { ...this.allFiles[data.type][allIndex], ...data.file };
+      }
+      
+      const filteredIndex = this.filteredFiles[data.type].findIndex(f => f.Fullpath === data.file.Fullpath);
+      if (filteredIndex !== -1) {
+        this.filteredFiles[data.type][filteredIndex] = { ...this.filteredFiles[data.type][filteredIndex], ...data.file };
+      }
+      
+      // UI 업데이트
+      if (data.type === this.currentTab) {
+        this.updateUI();
+      }
+    });
+  }
+
+  // JSON 파일과 동기화 (백업 목적)
+  async syncWithJsonFiles() {
+    try {
+      // 비디오 파일 JSON 저장
+      const mediaFilePath = `${this.dataPath}/media/files.json`;
+      await window.electronAPI.invoke("save-json-file", mediaFilePath, this.allFiles.video);
+
+      // 압축 파일 JSON 저장
+      const fileFilePath = `${this.dataPath}/file/files.json`;
+      await window.electronAPI.invoke("save-json-file", fileFilePath, this.allFiles.file);
+
+      console.log("JSON 파일 동기화 완료");
+    } catch (error) {
+      console.warn("JSON 파일 동기화 실패:", error.message);
+    }
+  }
+
+  // 현재 필터 조건을 통과하는지 확인
+  passesCurrentFilter(file) {
+    // 현재 검색어가 있으면 검색어 조건 확인
+    const searchInput = document.getElementById('search-input');
+    if (searchInput && searchInput.value.trim()) {
+      const searchLower = searchInput.value.toLowerCase();
+      if (!file.Filename.toLowerCase().includes(searchLower)) {
+        return false;
+      }
+    }
+    
+    // 다른 필터 조건들도 여기에 추가 가능
+    return true;
+  }
+
+  // 검색 인덱스에 파일 추가
+  addToSearchIndex(file, type) {
+    const words = file.Filename.toLowerCase()
+      .split(/\W+/)
+      .filter((word) => word.length > 0);
+      
+    words.forEach((word) => {
+      if (!this.searchIndex.has(word)) {
+        this.searchIndex.set(word, { video: [], file: [] });
+      }
+      
+      // 중복 방지를 위해 기존에 없는 경우만 추가
+      const typeArray = this.searchIndex.get(word)[type];
+      const existingIndex = typeArray.findIndex(idx => 
+        this.allFiles[type][idx]?.Fullpath === file.Fullpath
+      );
+      
+      if (existingIndex === -1) {
+        const newIndex = this.allFiles[type].findIndex(f => f.Fullpath === file.Fullpath);
+        if (newIndex !== -1) {
+          typeArray.push(newIndex);
+        }
+      }
+    });
+  }
+
+  // 검색 인덱스에서 파일 제거
+  removeFromSearchIndex(file, type) {
+    const words = file.Filename.toLowerCase()
+      .split(/\W+/)
+      .filter((word) => word.length > 0);
+      
+    words.forEach((word) => {
+      if (this.searchIndex.has(word)) {
+        const typeArray = this.searchIndex.get(word)[type];
+        const removeIndex = typeArray.findIndex(idx => 
+          this.allFiles[type][idx]?.Fullpath === file.Fullpath
+        );
+        
+        if (removeIndex !== -1) {
+          typeArray.splice(removeIndex, 1);
+        }
+        
+        // 해당 단어에 대한 파일이 더 이상 없으면 단어 자체 제거
+        if (typeArray.length === 0 && this.searchIndex.get(word).video.length === 0) {
+          this.searchIndex.delete(word);
+        }
+      }
+    });
   }
 
   // 모든 파일 로드 (청크 단위로 처리)
@@ -150,14 +399,59 @@ class FileManager {
     this.updateUI();
   }
 
+  // 하이브리드 시스템 새로고침 (증분 업데이트)
+  async hybridRefresh(isAutoSync = false) {
+    try {
+      this.isLoading = true;
+      const statusText = isAutoSync ? "자동 동기화 중..." : "빠른 새로고침 중...";
+      Utils.updateStatus(statusText);
+
+      const result = await window.electronAPI.invoke("hybrid-incremental-scan");
+      
+      if (result.success) {
+        // 변경된 파일이 있으면 UI 업데이트는 이벤트 리스너가 자동 처리
+        const changeCount = result.addedCount + result.removedCount + result.changedCount;
+        
+        if (changeCount > 0) {
+          console.log(`증분 스캔 완료: ${result.addedCount}개 추가, ${result.removedCount}개 제거, ${result.changedCount}개 변경`);
+          Utils.updateStatus(`새로고침 완료 - ${changeCount}개 변경사항 발견`);
+        } else {
+          Utils.updateStatus("새로고침 완료 - 변경사항 없음");
+        }
+
+        // JSON 파일과 동기화
+        await this.syncWithJsonFiles();
+      } else {
+        throw new Error(result.error || "증분 스캔 실패");
+      }
+
+    } catch (error) {
+      console.error("하이브리드 새로고침 실패:", error);
+      Utils.updateStatus("새로고침 실패");
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
   // 자동 동기화 (앱 시작시)
   async autoSync() {
-    return await this.refreshFiles(true);
+    if (this.isHybridInitialized) {
+      // 하이브리드 시스템에서는 실시간 감시가 있으므로 별도의 동기화 불필요
+      Utils.updateStatus("실시간 동기화 활성화됨");
+      return true;
+    } else {
+      return await this.refreshFiles(true);
+    }
   }
 
   // 파일 새로고침 (디렉토리 스캔)
   async refreshFiles(isAutoSync = false) {
     if (this.isLoading) return;
+
+    if (this.isHybridInitialized) {
+      // 하이브리드 시스템: 증분 스캔으로 변경된 파일만 업데이트
+      return await this.hybridRefresh(isAutoSync);
+    }
 
     this.isLoading = true;
     const statusText = isAutoSync
@@ -335,7 +629,13 @@ class FileManager {
     const result = await window.electronAPI.invoke("open-file", filePath);
     if (result.success) {
       // 마지막 실행 시간 업데이트
-      this.updateLastAccessTime(filePath);
+      if (this.isHybridInitialized) {
+        // 하이브리드 시스템: Windows 메타데이터 + 캐시 업데이트
+        await window.electronAPI.invoke("hybrid-execute-file", filePath);
+      } else {
+        // 기존 시스템
+        this.updateLastAccessTime(filePath);
+      }
     } else {
       alert("파일을 열 수 없습니다: " + result.error);
     }
@@ -379,45 +679,68 @@ class FileManager {
   }
 
   // 평점 업데이트
-  updateRating(filePath, rating) {
-    const ratingStr = rating > 0 ? "★".repeat(rating) : "";
+  async updateRating(filePath, rating) {
+    if (this.isHybridInitialized) {
+      // 하이브리드 시스템: Windows 메타데이터 + 캐시 자동 업데이트
+      const result = await window.electronAPI.invoke("hybrid-update-rating", filePath, rating);
+      if (result.success) {
+        // 메타데이터 업데이트 이벤트가 자동으로 UI를 업데이트할 것임
+        Utils.updateStatus(`평점이 업데이트되었습니다: ${'★'.repeat(rating)}`);
+      } else {
+        alert("평점 업데이트 실패: " + result.error);
+      }
+    } else {
+      // 기존 시스템
+      const ratingStr = rating > 0 ? "★".repeat(rating) : "";
 
-    for (const type of ["video", "file"]) {
-      const file = this.allFiles[type].find((f) => f.Fullpath === filePath);
-      if (file) {
-        file.Eval = ratingStr;
+      for (const type of ["video", "file"]) {
+        const file = this.allFiles[type].find((f) => f.Fullpath === filePath);
+        if (file) {
+          file.Eval = ratingStr;
 
-        // UI에도 반영
-        const filteredFile = this.filteredFiles[type].find(
-          (f) => f.Fullpath === filePath
-        );
-        if (filteredFile) {
-          filteredFile.Eval = ratingStr;
+          // UI에도 반영
+          const filteredFile = this.filteredFiles[type].find(
+            (f) => f.Fullpath === filePath
+          );
+          if (filteredFile) {
+            filteredFile.Eval = ratingStr;
+          }
+
+          this.saveFileData(type);
+          break;
         }
-
-        this.saveFileData(type);
-        break;
       }
     }
   }
 
   // 설명 업데이트
-  updateDescription(filePath, description) {
-    for (const type of ["video", "file"]) {
-      const file = this.allFiles[type].find((f) => f.Fullpath === filePath);
-      if (file) {
-        file.Desc = description;
+  async updateDescription(filePath, description) {
+    if (this.isHybridInitialized) {
+      // 하이브리드 시스템: Windows 메타데이터 + 캐시 자동 업데이트
+      const result = await window.electronAPI.invoke("hybrid-update-description", filePath, description);
+      if (result.success) {
+        Utils.updateStatus("설명이 업데이트되었습니다.");
+      } else {
+        alert("설명 업데이트 실패: " + result.error);
+      }
+    } else {
+      // 기존 시스템
+      for (const type of ["video", "file"]) {
+        const file = this.allFiles[type].find((f) => f.Fullpath === filePath);
+        if (file) {
+          file.Desc = description;
 
-        // UI에도 반영
-        const filteredFile = this.filteredFiles[type].find(
-          (f) => f.Fullpath === filePath
-        );
-        if (filteredFile) {
-          filteredFile.Desc = description;
+          // UI에도 반영
+          const filteredFile = this.filteredFiles[type].find(
+            (f) => f.Fullpath === filePath
+          );
+          if (filteredFile) {
+            filteredFile.Desc = description;
+          }
+
+          this.saveFileData(type);
+          break;
         }
-
-        this.saveFileData(type);
-        break;
       }
     }
   }

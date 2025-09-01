@@ -1,9 +1,11 @@
 const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
+const HybridFileWatcher = require('./hybrid-file-watcher');
 
 let mainWindow;
 let isDev = process.argv.includes('--dev');
+let hybridFileWatcher = null; // 하이브리드 파일 감시 시스템
 
 // 앱이 준비되면 실행
 app.whenReady().then(createWindow);
@@ -236,5 +238,162 @@ ipcMain.handle('remove-empty-folders', async (event, rootPath) => {
     };
   } catch (error) {
     return { success: false, error: error.message };
+  }
+});
+
+// =================== 하이브리드 파일 시스템 IPC 핸들러 ===================
+
+// 하이브리드 시스템 초기화
+ipcMain.handle('hybrid-system-init', async (event, libraryPaths) => {
+  try {
+    console.log('하이브리드 시스템 초기화 시작:', libraryPaths);
+    
+    if (hybridFileWatcher) {
+      // 기존 감시자 중지
+      hybridFileWatcher.stopWatching();
+    }
+
+    // 새 하이브리드 감시자 생성
+    hybridFileWatcher = new HybridFileWatcher({
+      libraryPaths: libraryPaths,
+      videoExtensions: ['.avi', '.mp4', '.mov', '.wmv', '.avchd', '.flv', '.f4v', '.swf', '.mkv', '.mpeg2', '.ts', '.tp', '.webm'],
+      archiveExtensions: ['.zip', '.7z', '.ezc', '.alzip', '.001', '.zpaq', '.rar']
+    });
+
+    // 이벤트 리스너 설정 (렌더러에 전달)
+    hybridFileWatcher.on('file-added', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('hybrid-file-added', data);
+      }
+    });
+
+    hybridFileWatcher.on('file-deleted', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('hybrid-file-deleted', data);
+      }
+    });
+
+    hybridFileWatcher.on('file-changed', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('hybrid-file-changed', data);
+      }
+    });
+
+    hybridFileWatcher.on('metadata-updated', (data) => {
+      if (mainWindow) {
+        mainWindow.webContents.send('hybrid-metadata-updated', data);
+      }
+    });
+
+    // 초기화 실행
+    const result = await hybridFileWatcher.initialize();
+    const stats = hybridFileWatcher.getStats();
+
+    return {
+      success: true,
+      data: result,
+      stats: stats
+    };
+
+  } catch (error) {
+    console.error('하이브리드 시스템 초기화 실패:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+// 파일 실행 및 메타데이터 업데이트
+ipcMain.handle('hybrid-execute-file', async (event, filePath) => {
+  try {
+    if (!hybridFileWatcher) {
+      throw new Error('하이브리드 시스템이 초기화되지 않았습니다.');
+    }
+
+    const result = await hybridFileWatcher.executeFile(filePath);
+    return { success: result };
+  } catch (error) {
+    console.error('파일 실행 기록 실패:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 평점 업데이트
+ipcMain.handle('hybrid-update-rating', async (event, filePath, rating) => {
+  try {
+    if (!hybridFileWatcher) {
+      throw new Error('하이브리드 시스템이 초기화되지 않았습니다.');
+    }
+
+    const result = await hybridFileWatcher.updateFileMetadata(filePath, { rating });
+    return { success: result };
+  } catch (error) {
+    console.error('평점 업데이트 실패:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 설명 업데이트
+ipcMain.handle('hybrid-update-description', async (event, filePath, description) => {
+  try {
+    if (!hybridFileWatcher) {
+      throw new Error('하이브리드 시스템이 초기화되지 않았습니다.');
+    }
+
+    const result = await hybridFileWatcher.updateFileMetadata(filePath, { description });
+    return { success: result };
+  } catch (error) {
+    console.error('설명 업데이트 실패:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 증분 스캔 (변경된 파일만 확인)
+ipcMain.handle('hybrid-incremental-scan', async (event) => {
+  try {
+    if (!hybridFileWatcher) {
+      throw new Error('하이브리드 시스템이 초기화되지 않았습니다.');
+    }
+
+    // 하이브리드 시스템에서는 실시간 감시로 자동 업데이트되므로
+    // 캐시 상태만 반환
+    const stats = hybridFileWatcher.getStats();
+    
+    return {
+      success: true,
+      addedCount: 0,
+      removedCount: 0,
+      changedCount: 0,
+      message: '실시간 감시 활성화됨',
+      stats: stats
+    };
+  } catch (error) {
+    console.error('증분 스캔 실패:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 하이브리드 시스템 통계 조회
+ipcMain.handle('hybrid-get-stats', async (event) => {
+  try {
+    if (!hybridFileWatcher) {
+      return { success: false, error: '하이브리드 시스템이 초기화되지 않았습니다.' };
+    }
+
+    const stats = hybridFileWatcher.getStats();
+    return { success: true, stats };
+  } catch (error) {
+    console.error('통계 조회 실패:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 앱 종료 시 하이브리드 시스템 정리
+app.on('before-quit', () => {
+  if (hybridFileWatcher) {
+    console.log('하이브리드 시스템 종료 중...');
+    hybridFileWatcher.stopWatching();
+    hybridFileWatcher = null;
   }
 });
