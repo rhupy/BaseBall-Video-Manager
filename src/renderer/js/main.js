@@ -56,6 +56,9 @@ class App {
 
   // 매니저들 초기화
   async initManagers() {
+    // 확장자 매니저 초기화
+    await window.extensionManager.init();
+
     // 파일 매니저 초기화
     this.fileManager = new FileManager();
     window.fileManager = this.fileManager;
@@ -100,6 +103,11 @@ class App {
 
   // 이벤트 리스너 설정
   initEventListeners() {
+    // 백업 버튼
+    document.getElementById("backup-btn").addEventListener("click", () => {
+      this.backupData();
+    });
+
     // 새로고침 버튼
     document.getElementById("refresh-btn").addEventListener("click", () => {
       this.refreshFiles();
@@ -293,6 +301,36 @@ class App {
         console.error("파일 정리 실패:", error);
         this.showErrorMessage(window.i18n ? window.i18n.t('cleanupFailed') : "파일 정리에 실패했습니다.");
       }
+    }
+  }
+
+  // 데이터 백업
+  async backupData() {
+    const confirmed = confirm(
+      window.i18n ? window.i18n.t('backupConfirm') : 
+      "Data 폴더를 백업하시겠습니까?\n현재 시간으로 파일명이 생성됩니다."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      Utils.updateStatus(window.i18n ? window.i18n.t('backupInProgress') : "데이터를 백업하는 중...");
+      
+      const result = await window.electronAPI.invoke('backup-data');
+      
+      if (result.success) {
+        Utils.updateStatus(window.i18n ? window.i18n.t('backupComplete') : "백업 완료");
+        alert(result.message);
+      } else {
+        Utils.updateStatus(window.i18n ? window.i18n.t('backupFailed') : "백업 실패");
+        if (result.message !== '사용자가 취소했습니다.') {
+          this.showErrorMessage(result.message);
+        }
+      }
+    } catch (error) {
+      console.error("백업 실패:", error);
+      Utils.updateStatus(window.i18n ? window.i18n.t('backupFailed') : "백업 실패");
+      this.showErrorMessage(window.i18n ? window.i18n.t('backupFailed') : "백업에 실패했습니다.");
     }
   }
 

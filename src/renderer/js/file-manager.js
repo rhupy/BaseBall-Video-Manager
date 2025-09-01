@@ -482,9 +482,17 @@ class FileManager {
       }
 
       const libraries = libraryResult.data || [];
+      
+      // 확장자 매니저에서 현재 설정된 확장자 가져오기
+      const currentExtensions = window.extensionManager ? 
+        window.extensionManager.getExtensions() : {
+          video: CONSTANTS.EXTENSIONS.VIDEO,
+          file: CONSTANTS.EXTENSIONS.FILE
+        };
+      
       const extensions = {
-        video: CONSTANTS.EXTENSIONS.VIDEO,
-        file: CONSTANTS.EXTENSIONS.FILE,
+        video: currentExtensions.video,
+        file: currentExtensions.other, // 'other'를 'file'로 매핑
       };
 
       // 접속 불가능한 라이브러리 추적
@@ -790,12 +798,20 @@ class FileManager {
     }
 
     // 확장자 목록 업데이트
+    const currentExtensions = window.extensionManager ? 
+      window.extensionManager.getExtensions() : {
+        video: CONSTANTS.EXTENSIONS.VIDEO,
+        file: CONSTANTS.EXTENSIONS.FILE
+      };
+      
     const extensions =
       this.currentTab === "video"
-        ? CONSTANTS.EXTENSIONS.VIDEO
-        : CONSTANTS.EXTENSIONS.FILE;
+        ? currentExtensions.video
+        : currentExtensions.other;
+        
     const extensionList = document.getElementById("extension-list");
-    extensionList.textContent = `확장자: ${extensions.join(", ")}`;
+    const prefix = window.i18n ? window.i18n.t('extensions').split(':')[0] + ':' : '확장자:';
+    extensionList.textContent = `${prefix} ${extensions.join(", ")}`;
   }
 
   // 빈 폴더 제거
@@ -1059,6 +1075,59 @@ class FileManager {
     }
 
     this.updateUI();
+  }
+
+  // 확장자 설정 변경 처리
+  onExtensionsChanged() {
+    console.log('확장자 설정이 변경되어 파일 분류를 다시 수행합니다.');
+    
+    // 기존 파일들을 새로운 확장자 설정으로 재분류
+    this.reclassifyFiles();
+    
+    // UI 업데이트
+    this.updateUI();
+    
+    Utils.updateStatus('확장자 설정 변경으로 파일 분류가 업데이트되었습니다.');
+  }
+
+  // 파일 재분류
+  reclassifyFiles() {
+    if (!this.allFiles.video && !this.allFiles.file) return;
+    
+    // 모든 파일을 하나의 배열로 통합
+    const allFilesList = [...(this.allFiles.video || []), ...(this.allFiles.file || [])];
+    
+    // 새로운 분류 객체 생성
+    const newClassification = {
+      video: [],
+      file: []
+    };
+    
+    // 각 파일을 새로운 확장자 설정으로 분류
+    allFilesList.forEach(fileInfo => {
+      const filePath = fileInfo.Path || fileInfo.FilePath;
+      if (!filePath) return;
+      
+      const extension = this.getFileExtension(filePath);
+      
+      if (window.extensionManager && window.extensionManager.isVideoExtension(extension)) {
+        newClassification.video.push(fileInfo);
+      } else {
+        newClassification.file.push(fileInfo);
+      }
+    });
+    
+    // 새 분류로 교체
+    this.allFiles = newClassification;
+    
+    console.log(`파일 재분류 완료: 비디오 ${newClassification.video.length}개, 기타 ${newClassification.file.length}개`);
+  }
+
+  // 파일 확장자 추출
+  getFileExtension(filePath) {
+    const lastDot = filePath.lastIndexOf('.');
+    if (lastDot === -1) return '';
+    return filePath.substring(lastDot).toLowerCase();
   }
 }
 

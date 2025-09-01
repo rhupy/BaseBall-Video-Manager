@@ -7,6 +7,8 @@ class I18n {
       ko: {
         // 앱 제목 및 헤더
         appTitle: 'Baseball Video Manager',
+        dataBackup: '데이터 백업',
+        extensionManagement: '확장자 관리',
         refresh: '새로고침',
         libraryManagement: '라이브러리 관리',
         cleanup: '정리',
@@ -73,6 +75,28 @@ class I18n {
         // 정리 확인 메시지
         cleanupConfirm: '다음 작업을 수행합니다:\n• 중복 파일 항목 제거\n• 빈폴더 제거\n• 존재하지 않는 파일 정리\n\n계속하시겠습니까?',
         
+        // 백업 관련 메시지
+        backupInProgress: '데이터를 백업하는 중...',
+        backupComplete: '백업 완료',
+        backupFailed: '백업에 실패했습니다.',
+        backupConfirm: 'Data 폴더를 백업하시겠습니까?\n현재 시간으로 파일명이 생성됩니다.',
+        
+        // 확장자 관리 관련
+        extensionManagementTitle: '확장자 관리',
+        videoExtensions: '비디오 파일 확장자',
+        otherExtensions: '기타 파일 확장자',
+        add: '추가',
+        remove: '삭제',
+        resetToDefault: '기본값으로 초기화',
+        extensionExists: '이미 존재하는 확장자입니다.',
+        invalidExtension: '올바른 확장자 형식이 아닙니다. (예: .mp4)',
+        extensionAdded: '확장자가 추가되었습니다.',
+        extensionRemoved: '확장자가 제거되었습니다.',
+        extensionsReset: '확장자 설정이 기본값으로 초기화되었습니다.',
+        extensionsSaved: '확장자 설정이 저장되었습니다.',
+        extensionSaveFailed: '확장자 설정 저장에 실패했습니다.',
+        resetExtensionsConfirm: '확장자 설정을 기본값으로 초기화하시겠습니까?\n현재 설정은 모두 삭제됩니다.',
+        
         // 에러 메시지
         initError: '애플리케이션 초기화에 실패했습니다: ',
         errorOccurred: '오류 발생',
@@ -84,6 +108,8 @@ class I18n {
       en: {
         // App title and header
         appTitle: 'Baseball Video Manager',
+        dataBackup: 'Data Backup',
+        extensionManagement: 'Extension Management',
         refresh: 'Refresh',
         libraryManagement: 'Library Management',
         cleanup: 'Cleanup',
@@ -149,6 +175,28 @@ class I18n {
         
         // Cleanup confirmation
         cleanupConfirm: 'The following actions will be performed:\n• Remove duplicate file entries\n• Remove empty folders\n• Clean non-existent files\n\nDo you want to continue?',
+        
+        // Backup related messages
+        backupInProgress: 'Backing up data...',
+        backupComplete: 'Backup complete',
+        backupFailed: 'Backup failed.',
+        backupConfirm: 'Do you want to backup the Data folder?\nFilename will be generated with current timestamp.',
+        
+        // Extension management related
+        extensionManagementTitle: 'Extension Management',
+        videoExtensions: 'Video File Extensions',
+        otherExtensions: 'Other File Extensions',
+        add: 'Add',
+        remove: 'Remove',
+        resetToDefault: 'Reset to Default',
+        extensionExists: 'Extension already exists.',
+        invalidExtension: 'Invalid extension format. (e.g., .mp4)',
+        extensionAdded: 'Extension has been added.',
+        extensionRemoved: 'Extension has been removed.',
+        extensionsReset: 'Extension settings have been reset to default.',
+        extensionsSaved: 'Extension settings have been saved.',
+        extensionSaveFailed: 'Failed to save extension settings.',
+        resetExtensionsConfirm: 'Do you want to reset extension settings to default?\nAll current settings will be deleted.',
         
         // Error messages
         initError: 'Failed to initialize application: ',

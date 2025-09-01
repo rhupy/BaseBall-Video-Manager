@@ -23,6 +23,8 @@
           <h1 data-i18n="appTitle">Baseball Video Manager</h1>
         </div>
         <div class="header-controls">
+          <button id="backup-btn" class="btn btn-info" data-i18n="dataBackup">데이터 백업</button>
+          <button id="extensions-btn" class="btn btn-success" data-i18n="extensionManagement">확장자 관리</button>
           <button id="refresh-btn" class="btn btn-primary" data-i18n="refresh">새로고침</button>
           <button id="library-btn" class="btn btn-secondary" data-i18n="libraryManagement">
             라이브러리 관리
@@ -95,6 +97,47 @@
       </footer>
     </div>
 
+    <!-- 확장자 관리 모달 -->
+    <div id="extensions-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 data-i18n="extensionManagementTitle">확장자 관리</h2>
+          <button id="close-extensions-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="extensions-section">
+            <h3 data-i18n="videoExtensions">비디오 파일 확장자</h3>
+            <div class="extensions-controls">
+              <input type="text" id="video-extension-input" placeholder=".mp4" maxlength="10">
+              <button id="add-video-extension" class="btn btn-sm btn-primary" data-i18n="add">추가</button>
+            </div>
+            <div id="video-extensions-list" class="extensions-list">
+              <!-- 동적 생성 -->
+            </div>
+          </div>
+          
+          <div class="extensions-section">
+            <h3 data-i18n="otherExtensions">기타 파일 확장자</h3>
+            <div class="extensions-controls">
+              <input type="text" id="other-extension-input" placeholder=".zip" maxlength="10">
+              <button id="add-other-extension" class="btn btn-sm btn-primary" data-i18n="add">추가</button>
+            </div>
+            <div id="other-extensions-list" class="extensions-list">
+              <!-- 동적 생성 -->
+            </div>
+          </div>
+          
+          <div class="extensions-actions">
+            <button id="reset-extensions" class="btn btn-secondary" data-i18n="resetToDefault">기본값으로 초기화</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="save-extensions" class="btn btn-primary" data-i18n="save">저장</button>
+          <button id="cancel-extensions" class="btn btn-secondary" data-i18n="cancel">취소</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 라이브러리 관리 모달 -->
     <div id="library-modal" class="modal hidden">
       <div class="modal-content">
@@ -131,6 +174,7 @@
 
     <script src="js/utils.js"></script>
     <script src="js/i18n.js"></script>
+    <script src="js/extension-manager.js"></script>
     <script src="js/file-manager.js"></script>
     <script src="js/virtual-scroll.js"></script>
     <script src="js/search-engine.js"></script>

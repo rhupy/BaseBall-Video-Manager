@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "archiver": "^7.0.1"
   },
   "build": {
     "appId": "com.baseball-video-manager.app",

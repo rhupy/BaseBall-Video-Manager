@@ -535,6 +535,71 @@ async function removeEmptyFoldersRecursive(rootPath) {
   return removedFolders;
 }
 
+// 데이터 폴더 백업
+ipcMain.handle('backup-data', async (event) => {
+  try {
+    const dataPath = path.join(__dirname, '../data');
+    
+    // data 폴더 존재 확인
+    if (!await fs.pathExists(dataPath)) {
+      throw new Error('Data 폴더를 찾을 수 없습니다.');
+    }
+
+    // 현재 시간으로 백업 파일명 생성
+    const now = new Date();
+    const timestamp = now.toISOString()
+      .replace(/:/g, '-')
+      .replace(/\./g, '-')
+      .substring(0, 19);
+    const backupFileName = `data_${timestamp}.zip`;
+    
+    // 백업 저장 위치 선택 다이얼로그
+    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: '데이터 백업 저장 위치 선택',
+      defaultPath: backupFileName,
+      filters: [
+        { name: 'ZIP 파일', extensions: ['zip'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, message: '사용자가 취소했습니다.' };
+    }
+
+    // archiver 모듈을 사용하여 ZIP 압축
+    const archiver = require('archiver');
+    const output = fs.createWriteStream(filePath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    return new Promise((resolve, reject) => {
+      output.on('close', () => {
+        const size = (archive.pointer() / 1024 / 1024).toFixed(2);
+        resolve({
+          success: true,
+          message: `백업이 완료되었습니다.\n파일: ${path.basename(filePath)}\n크기: ${size}MB`,
+          filePath: filePath,
+          size: size
+        });
+      });
+
+      archive.on('error', (err) => {
+        reject(err);
+      });
+
+      archive.pipe(output);
+      archive.directory(dataPath, 'data');
+      archive.finalize();
+    });
+
+  } catch (error) {
+    console.error('백업 실패:', error);
+    return {
+      success: false,
+      message: '백업에 실패했습니다: ' + error.message
+    };
+  }
+});
+
 // 앱 종료 시 하이브리드 시스템 정리
 app.on('before-quit', () => {
   if (hybridFileWatcher) {

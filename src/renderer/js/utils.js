@@ -200,7 +200,8 @@ const CONSTANTS = {
   PATHS: {
     MEDIA_FILES: 'data/media/files.json',
     OTHER_FILES: 'data/file/files.json',
-    LIBRARY: 'data/lib.json'
+    LIBRARY: 'data/lib.json',
+    EXTENSIONS: 'data/extensions.json'
   }
 };
 
