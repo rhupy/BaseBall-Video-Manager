@@ -8,7 +8,7 @@ class App {
     this.currentTab = "video";
     this.isInitialized = false;
     this.lastExecutedFile = null; // 마지막으로 실행한 파일 경로
-    this.currentSort = "default"; // 현재 정렬 타입
+    this.currentSort = "addtime"; // 현재 정렬 타입 (기본: 추가시간순)
     this.isDescending = true; // 정렬 방향 (true: 내림차순, false: 오름차순)
   }
 
@@ -149,6 +149,9 @@ class App {
     // 앱 시작시 자동 동기화
     Utils.updateStatus("라이브러리와 동기화하는 중...");
     await this.fileManager.autoSync();
+    
+    // 기본 정렬 적용
+    this.applyDefaultSort();
   }
 
   // 탭 전환
@@ -166,6 +169,8 @@ class App {
     // 파일 매니저에 탭 변경 알림
     if (this.fileManager) {
       this.fileManager.switchTab(tabName);
+      // 탭 전환 후 현재 정렬 유지
+      this.fileManager.sortFiles(this.currentSort, this.isDescending);
     }
 
     Utils.updateStatus(
@@ -202,13 +207,29 @@ class App {
       label.textContent = isDescending ? "내림차순" : "오름차순";
     }
     
-    // 현재 정렬이 기본이 아니면 재정렬
-    if (this.currentSort !== "default" && this.fileManager) {
+    // 현재 정렬이 있으면 재정렬
+    if (this.fileManager) {
       this.fileManager.sortFiles(this.currentSort, this.isDescending);
       
       const directionText = this.isDescending ? "내림차순" : "오름차순";
       Utils.updateStatus(`${this.getSortTypeName(this.currentSort)} ${directionText}으로 재정렬됨`);
     }
+  }
+
+  // 기본 정렬 적용 (앱 초기화 시)
+  applyDefaultSort() {
+    // UI 버튼 상태 업데이트
+    document.querySelectorAll(".sort-btn").forEach((btn) => {
+      btn.classList.remove("active");
+    });
+    document.querySelector(`[data-sort="${this.currentSort}"]`).classList.add("active");
+    
+    // 기본 정렬 적용
+    if (this.fileManager) {
+      this.fileManager.sortFiles(this.currentSort, this.isDescending);
+    }
+    
+    console.log(`기본 정렬 적용: ${this.getSortTypeName(this.currentSort)} ${this.isDescending ? '내림차순' : '오름차순'}`);
   }
 
   // 정렬 타입 한글명 반환
