@@ -94,20 +94,44 @@ class Utils {
     return new Map();
   }
 
-  // 프로그레스 바 업데이트
+  // 프로그레스 바 표시 (수동 작업 시에만)
+  static showProgress(text = '처리 중...') {
+    const progressContainer = document.getElementById('progress-container');
+    const progressText = document.getElementById('progress-text');
+    
+    if (progressContainer && progressText) {
+      progressContainer.classList.remove('hidden');
+      progressText.textContent = text;
+      this.resetProgressBar();
+    }
+  }
+
+  // 프로그레스 바 숨기기
+  static hideProgress() {
+    const progressContainer = document.getElementById('progress-container');
+    if (progressContainer) {
+      progressContainer.classList.add('hidden');
+    }
+  }
+
+  // 프로그레스 바 업데이트 (기존 호환성 유지)
   static updateProgress(current, total, text = '') {
     const percentage = Math.round((current / total) * 100);
     const progressContainer = document.getElementById('progress-container');
     const progressFill = document.getElementById('progress-fill');
     const progressText = document.getElementById('progress-text');
     
-    if (current === 0) {
+    if (!progressContainer || !progressFill || !progressText) return;
+    
+    // 첫 번째 호출 시에만 표시 (백그라운드 작업 제외)
+    if (current === 0 && total > 0) {
       progressContainer.classList.remove('hidden');
     }
     
     progressFill.style.width = `${percentage}%`;
     progressText.textContent = text || `${current}/${total} (${percentage}%)`;
     
+    // 완료 시 잠깐 보여주고 숨김
     if (current >= total) {
       setTimeout(() => {
         progressContainer.classList.add('hidden');
@@ -115,10 +139,40 @@ class Utils {
     }
   }
 
-  // 상태 메시지 업데이트
+  // 진행률 바 리셋
+  static resetProgressBar() {
+    const progressFill = document.getElementById('progress-fill');
+    if (progressFill) {
+      progressFill.style.width = '0%';
+    }
+  }
+
+  // 상태 메시지 업데이트 (하이브리드 시스템 고려)
   static updateStatus(message) {
     const statusText = document.getElementById('status-text');
-    statusText.textContent = message;
+    if (statusText) {
+      statusText.textContent = message;
+    }
+    
+    // 백그라운드 작업 메시지는 프로그래스바를 표시하지 않음
+    const isBackgroundWork = message.includes('스캔 중') || message.includes('감시') || message.includes('실시간');
+    
+    // 수동 작업만 프로그래스바 표시 여부 결정
+    if (!isBackgroundWork && (
+      message.includes('정리') ||
+      message.includes('새로고침') ||
+      message.includes('로딩') ||
+      message.includes('스캔')
+    )) {
+      // 작업 시작
+      if (message.includes('중') || message.includes('로딩')) {
+        this.showProgress(message);
+      }
+      // 작업 완료
+      else if (message.includes('완료') || message.includes('실패')) {
+        setTimeout(() => this.hideProgress(), 1000);
+      }
+    }
   }
 
   // 파일 카운트 업데이트

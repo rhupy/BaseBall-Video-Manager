@@ -38,6 +38,9 @@ class App {
 
       this.isInitialized = true;
       Utils.updateStatus("준비됨");
+      
+      // 초기화 완료 후 프로그래스바 숨김 (하이브리드 시스템의 경우 실시간 감시만 활성)
+      Utils.hideProgress();
 
       console.log("Baseball Video Manager 초기화 완료");
     } catch (error) {

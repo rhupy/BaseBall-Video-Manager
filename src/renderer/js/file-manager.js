@@ -92,6 +92,9 @@ class FileManager {
 
       console.log(`하이브리드 시스템 초기화 완료: 비디오 ${this.allFiles.video.length}개, 압축 ${this.allFiles.file.length}개`);
       console.log(`스캔 소요 시간: ${result.stats?.scanDuration || 0}ms`);
+      
+      // 프로그래스바 숨기기 (하이브리드 시스템에서는 백그라운드 실시간 감시)
+      Utils.hideProgress();
 
       return true;
     } catch (error) {
@@ -404,6 +407,11 @@ class FileManager {
     try {
       this.isLoading = true;
       const statusText = isAutoSync ? "자동 동기화 중..." : "빠른 새로고침 중...";
+      
+      // 수동 새로고침만 프로그래스바 표시
+      if (!isAutoSync) {
+        Utils.showProgress(statusText);
+      }
       Utils.updateStatus(statusText);
 
       const result = await window.electronAPI.invoke("hybrid-incremental-scan");
@@ -430,6 +438,10 @@ class FileManager {
       Utils.updateStatus("새로고침 실패");
     } finally {
       this.isLoading = false;
+      // 수동 새로고침 완료 시 프로그래스바 숨김
+      if (!isAutoSync) {
+        setTimeout(() => Utils.hideProgress(), 1000);
+      }
     }
   }
 
@@ -437,7 +449,7 @@ class FileManager {
   async autoSync() {
     if (this.isHybridInitialized) {
       // 하이브리드 시스템에서는 실시간 감시가 있으므로 별도의 동기화 불필요
-      Utils.updateStatus("실시간 동기화 활성화됨");
+      Utils.updateStatus("실시간 감시 활성화됨");
       return true;
     } else {
       return await this.refreshFiles(true);
@@ -834,6 +846,7 @@ class FileManager {
     if (this.isLoading) return;
 
     this.isLoading = true;
+    Utils.showProgress("중복 제거 및 정리 중...");
     Utils.updateStatus("중복 제거 및 정리 중...");
 
     try {
@@ -921,6 +934,8 @@ class FileManager {
       Utils.updateStatus("정리 실패");
     } finally {
       this.isLoading = false;
+      // 정리 완료 후 프로그래스바 숨김
+      setTimeout(() => Utils.hideProgress(), 1000);
     }
   }
 
