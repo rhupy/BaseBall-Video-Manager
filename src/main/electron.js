@@ -389,6 +389,152 @@ ipcMain.handle('hybrid-get-stats', async (event) => {
   }
 });
 
+// 하이브리드 시스템 고급 정리
+ipcMain.handle('hybrid-advanced-cleanup', async (event) => {
+  try {
+    if (!hybridFileWatcher) {
+      throw new Error('하이브리드 시스템이 초기화되지 않았습니다.');
+    }
+
+    console.log('하이브리드 고급 정리 시작...');
+    const startTime = Date.now();
+    
+    let totalDuplicatesRemoved = 0;
+    let totalInvalidFilesRemoved = 0;
+    let totalEmptyFoldersRemoved = 0;
+
+    // 1. 캐시에서 무효한 파일 제거
+    const cache = hybridFileWatcher.cache;
+    const invalidFiles = [];
+    
+    for (const [cacheKey, fileInfo] of cache.entries()) {
+      try {
+        const exists = await fs.pathExists(fileInfo.Fullpath);
+        if (!exists) {
+          invalidFiles.push({ key: cacheKey, info: fileInfo });
+        }
+      } catch (error) {
+        // 접근 불가능한 파일도 무효 파일로 처리
+        invalidFiles.push({ key: cacheKey, info: fileInfo });
+      }
+    }
+
+    // 무효 파일 제거
+    for (const invalid of invalidFiles) {
+      cache.delete(invalid.key);
+      totalInvalidFilesRemoved++;
+      console.log(`무효 파일 제거: ${invalid.info.Filename}`);
+    }
+
+    // 2. 중복 파일 제거 (Fullpath 기준)
+    const seenPaths = new Set();
+    const duplicateKeys = [];
+
+    for (const [cacheKey, fileInfo] of cache.entries()) {
+      if (seenPaths.has(fileInfo.Fullpath)) {
+        duplicateKeys.push(cacheKey);
+        totalDuplicatesRemoved++;
+        console.log(`중복 파일 제거: ${fileInfo.Filename}`);
+      } else {
+        seenPaths.add(fileInfo.Fullpath);
+      }
+    }
+
+    // 중복 파일 제거
+    for (const key of duplicateKeys) {
+      cache.delete(key);
+    }
+
+    // 3. 빈 폴더 제거
+    const libraries = hybridFileWatcher.libraryPaths;
+    
+    for (const libraryPath of libraries) {
+      try {
+        const exists = await fs.pathExists(libraryPath);
+        if (exists) {
+          const result = await removeEmptyFoldersRecursive(libraryPath);
+          totalEmptyFoldersRemoved += result.length;
+          console.log(`${libraryPath}에서 ${result.length}개 빈 폴더 제거`);
+        }
+      } catch (error) {
+        console.warn(`빈 폴더 제거 실패 (${libraryPath}):`, error.message);
+      }
+    }
+
+    // 4. 결과 데이터 정리
+    const result = hybridFileWatcher.getFilesFromCache();
+    const duration = Date.now() - startTime;
+
+    // 통계 업데이트
+    hybridFileWatcher.stats.totalFiles = cache.size;
+    hybridFileWatcher.stats.lastScanTime = new Date();
+
+    console.log(`하이브리드 고급 정리 완료: ${duration}ms`);
+    console.log(`- 무효 파일 ${totalInvalidFilesRemoved}개 제거`);
+    console.log(`- 중복 파일 ${totalDuplicatesRemoved}개 제거`);
+    console.log(`- 빈 폴더 ${totalEmptyFoldersRemoved}개 제거`);
+
+    return {
+      success: true,
+      data: result,
+      stats: {
+        duration,
+        duplicatesRemoved: totalDuplicatesRemoved,
+        invalidFilesRemoved: totalInvalidFilesRemoved,
+        emptyFoldersRemoved: totalEmptyFoldersRemoved,
+        totalFiles: cache.size
+      }
+    };
+
+  } catch (error) {
+    console.error('하이브리드 고급 정리 실패:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+});
+
+// 빈 폴더 재귀 제거 함수 (향상된 버전)
+async function removeEmptyFoldersRecursive(rootPath) {
+  const removedFolders = [];
+  
+  async function removeEmptyFoldersInDir(dirPath) {
+    try {
+      if (!await fs.pathExists(dirPath)) {
+        return;
+      }
+      
+      const entries = await fs.readdir(dirPath, { withFileTypes: true });
+      const subdirs = entries.filter(entry => entry.isDirectory());
+      
+      // 하위 디렉토리들 먼저 처리
+      for (const subdir of subdirs) {
+        const subdirPath = path.join(dirPath, subdir.name);
+        await removeEmptyFoldersInDir(subdirPath);
+      }
+      
+      // 현재 디렉토리가 비어있는지 다시 확인
+      const currentEntries = await fs.readdir(dirPath);
+      if (currentEntries.length === 0) {
+        try {
+          await fs.rmdir(dirPath);
+          removedFolders.push(dirPath);
+          console.log(`빈 폴더 제거: ${dirPath}`);
+        } catch (error) {
+          console.warn(`폴더 삭제 실패: ${dirPath}`, error.message);
+        }
+      }
+    } catch (error) {
+      // 접근 불가능한 폴더는 건너뛰기
+      console.warn(`폴더 접근 실패: ${dirPath}`, error.message);
+    }
+  }
+  
+  await removeEmptyFoldersInDir(rootPath);
+  return removedFolders;
+}
+
 // 앱 종료 시 하이브리드 시스템 정리
 app.on('before-quit', () => {
   if (hybridFileWatcher) {

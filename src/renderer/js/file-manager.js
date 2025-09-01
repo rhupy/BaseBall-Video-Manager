@@ -829,7 +829,7 @@ class FileManager {
     this.updateUI();
   }
 
-  // 중복 제거 및 정리
+  // 중복 제거 및 정리 (빈 폴더 삭제 포함)
   async cleanup() {
     if (this.isLoading) return;
 
@@ -837,34 +837,163 @@ class FileManager {
     Utils.updateStatus("중복 제거 및 정리 중...");
 
     try {
-      for (const type of ["video", "file"]) {
-        // 중복 제거 (Fullpath 기준)
-        const uniqueFiles = [];
-        const seenPaths = new Set();
+      let totalDuplicatesRemoved = 0;
+      let totalInvalidFilesRemoved = 0;
+      let totalEmptyFoldersRemoved = 0;
 
-        for (const file of this.allFiles[type]) {
-          if (!seenPaths.has(file.Fullpath)) {
-            seenPaths.add(file.Fullpath);
-            uniqueFiles.push(file);
+      if (this.isHybridInitialized) {
+        // 하이브리드 시스템: 고급 정리 기능
+        await this.hybridCleanup();
+      } else {
+        // 기존 시스템: 표준 정리
+        for (const type of ["video", "file"]) {
+          Utils.updateStatus(`${type === "video" ? "비디오" : "압축"} 파일 정리 중...`);
+          
+          // 1. 존재하지 않는 파일 제거
+          const validFiles = [];
+          for (const file of this.allFiles[type]) {
+            const exists = await window.electronAPI.invoke("path-exists", file.Fullpath);
+            if (exists) {
+              validFiles.push(file);
+            } else {
+              totalInvalidFilesRemoved++;
+              console.log(`존재하지 않는 파일 제거: ${file.Filename}`);
+            }
           }
+
+          // 2. 중복 제거 (Fullpath 기준)
+          const uniqueFiles = [];
+          const seenPaths = new Set();
+
+          for (const file of validFiles) {
+            if (!seenPaths.has(file.Fullpath)) {
+              seenPaths.add(file.Fullpath);
+              uniqueFiles.push(file);
+            } else {
+              totalDuplicatesRemoved++;
+              console.log(`중복 파일 제거: ${file.Filename}`);
+            }
+          }
+
+          // 3. 추가 시간 역순 정렬
+          uniqueFiles.sort((a, b) => new Date(b.Addtime) - new Date(a.Addtime));
+
+          this.allFiles[type] = uniqueFiles;
+          await this.saveFileData(type);
         }
 
-        this.allFiles[type] = uniqueFiles;
-        await this.saveFileData(type);
+        // 4. 빈 폴더 제거
+        Utils.updateStatus("빈 폴더 제거 중...");
+        totalEmptyFoldersRemoved = await this.removeAllEmptyFolders();
       }
 
+      // 필터된 파일들 업데이트
       this.filteredFiles.video = [...this.allFiles.video];
       this.filteredFiles.file = [...this.allFiles.file];
 
+      // 검색 인덱스 재구축
       this.buildSearchIndex();
       this.updateUI();
 
-      Utils.updateStatus("정리 완료");
+      // 결과 메시지
+      let message = "정리 완료";
+      const results = [];
+      
+      if (totalDuplicatesRemoved > 0) {
+        results.push(`중복 ${totalDuplicatesRemoved}개 제거`);
+      }
+      if (totalInvalidFilesRemoved > 0) {
+        results.push(`무효 파일 ${totalInvalidFilesRemoved}개 제거`);
+      }
+      if (totalEmptyFoldersRemoved > 0) {
+        results.push(`빈 폴더 ${totalEmptyFoldersRemoved}개 제거`);
+      }
+      
+      if (results.length > 0) {
+        message += ` - ${results.join(", ")}`;
+      }
+
+      Utils.updateStatus(message);
+      console.log(`정리 완료: 비디오 ${this.allFiles.video.length}개, 압축 ${this.allFiles.file.length}개`);
+
     } catch (error) {
       console.error("정리 실패:", error);
       Utils.updateStatus("정리 실패");
     } finally {
       this.isLoading = false;
+    }
+  }
+
+  // 하이브리드 시스템 정리
+  async hybridCleanup() {
+    try {
+      Utils.updateStatus("고급 정리 시스템 실행 중...");
+      
+      const result = await window.electronAPI.invoke("hybrid-advanced-cleanup");
+      
+      if (result.success) {
+        // 결과를 기존 형식으로 변환
+        this.allFiles.video = result.data.video || [];
+        this.allFiles.file = result.data.file || [];
+        
+        // JSON 파일과 동기화
+        await this.syncWithJsonFiles();
+        
+        console.log(`하이브리드 정리 완료:`, result.stats);
+        
+        return result.stats;
+      } else {
+        throw new Error(result.error || "하이브리드 정리 실패");
+      }
+    } catch (error) {
+      console.warn("하이브리드 정리 실패, 기존 방식으로 폴백:", error.message);
+      throw error; // 기존 시스템으로 폴백하도록 에러 재발생
+    }
+  }
+
+  // 모든 라이브러리 경로의 빈 폴더 제거
+  async removeAllEmptyFolders() {
+    try {
+      // 라이브러리 경로들 로드
+      const libraryResult = await window.electronAPI.invoke(
+        "load-json-file",
+        `${this.dataPath}/lib.json`
+      );
+      
+      if (!libraryResult.success) {
+        console.warn("라이브러리 파일을 읽을 수 없습니다.");
+        return 0;
+      }
+
+      const libraries = libraryResult.data || [];
+      let totalRemoved = 0;
+
+      // 각 라이브러리 경로에서 빈 폴더 제거
+      for (const library of libraries) {
+        try {
+          const exists = await window.electronAPI.invoke("path-exists", library.path);
+          if (exists) {
+            const result = await window.electronAPI.invoke(
+              "remove-empty-folders",
+              library.path
+            );
+            
+            if (result.success) {
+              totalRemoved += result.count || 0;
+              console.log(`${library.path}에서 ${result.count}개 빈 폴더 제거`);
+            }
+          } else {
+            console.warn(`라이브러리 경로 접근 불가: ${library.path}`);
+          }
+        } catch (error) {
+          console.warn(`빈 폴더 제거 실패 (${library.path}):`, error.message);
+        }
+      }
+
+      return totalRemoved;
+    } catch (error) {
+      console.error("빈 폴더 제거 실패:", error);
+      return 0;
     }
   }
 
