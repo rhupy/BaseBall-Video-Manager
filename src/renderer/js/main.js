@@ -93,6 +93,9 @@ class App {
 
     // 검색 엔진 초기화
     this.searchEngine.init();
+
+    // 다국어 시스템 초기화
+    this.initI18n();
   }
 
   // 이벤트 리스너 설정
@@ -173,9 +176,10 @@ class App {
       this.fileManager.sortFiles(this.currentSort, this.isDescending);
     }
 
-    Utils.updateStatus(
-      `${tabName === "video" ? "비디오" : "기타"} 파일 모드로 전환`
-    );
+    const message = tabName === "video" ? 
+      (window.i18n ? window.i18n.t('switchedToVideo') : "비디오 파일 모드로 전환") :
+      (window.i18n ? window.i18n.t('switchedToOther') : "기타 파일 모드로 전환");
+    Utils.updateStatus(message);
   }
 
   // 정렬 처리
@@ -193,8 +197,13 @@ class App {
       this.fileManager.sortFiles(sortType, this.isDescending);
     }
 
-    const directionText = this.isDescending ? "내림차순" : "오름차순";
-    Utils.updateStatus(`${this.getSortTypeName(sortType)} ${directionText}으로 정렬됨`);
+    const directionText = this.isDescending ? 
+      (window.i18n ? window.i18n.t('descending') : "내림차순") : 
+      (window.i18n ? window.i18n.t('ascending') : "오름차순");
+    const sortedText = this.isDescending ?
+      (window.i18n ? window.i18n.t('sortedDesc') : "으로 정렬됨") :
+      (window.i18n ? window.i18n.t('sortedAsc') : "으로 정렬됨");
+    Utils.updateStatus(`${this.getSortTypeName(sortType)} ${sortedText}`);
   }
 
   // 정렬 방향 변경 처리
@@ -204,15 +213,20 @@ class App {
     // 라벨 업데이트
     const label = document.querySelector(".sort-direction-label");
     if (label) {
-      label.textContent = isDescending ? "내림차순" : "오름차순";
+      const labelText = isDescending ? 
+        (window.i18n ? window.i18n.t('descending') : "내림차순") : 
+        (window.i18n ? window.i18n.t('ascending') : "오름차순");
+      label.textContent = labelText;
     }
     
     // 현재 정렬이 있으면 재정렬
     if (this.fileManager) {
       this.fileManager.sortFiles(this.currentSort, this.isDescending);
       
-      const directionText = this.isDescending ? "내림차순" : "오름차순";
-      Utils.updateStatus(`${this.getSortTypeName(this.currentSort)} ${directionText}으로 재정렬됨`);
+      const resortedText = this.isDescending ?
+        (window.i18n ? window.i18n.t('resortedDesc') : "내림차순으로 재정렬됨") :
+        (window.i18n ? window.i18n.t('resortedAsc') : "오름차순으로 재정렬됨");
+      Utils.updateStatus(`${this.getSortTypeName(this.currentSort)} ${resortedText}`);
     }
   }
 
@@ -229,18 +243,21 @@ class App {
       this.fileManager.sortFiles(this.currentSort, this.isDescending);
     }
     
-    console.log(`기본 정렬 적용: ${this.getSortTypeName(this.currentSort)} ${this.isDescending ? '내림차순' : '오름차순'}`);
+    const directionLog = this.isDescending ? 
+      (window.i18n ? window.i18n.t('descending') : '내림차순') : 
+      (window.i18n ? window.i18n.t('ascending') : '오름차순');
+    console.log(`기본 정렬 적용: ${this.getSortTypeName(this.currentSort)} ${directionLog}`);
   }
 
   // 정렬 타입 한글명 반환
   getSortTypeName(sortType) {
     const sortNames = {
-      name: "이름순",
-      lasttime: "실행시간순",
-      rating: "평점순",
-      addtime: "추가시간순",
+      name: window.i18n ? window.i18n.t('sortedByName') : "이름순",
+      lasttime: window.i18n ? window.i18n.t('sortedByLastTime') : "실행시간순", 
+      rating: window.i18n ? window.i18n.t('sortedByRating') : "평점순",
+      addtime: window.i18n ? window.i18n.t('sortedByAddTime') : "추가시간순",
     };
-    return sortNames[sortType] || "알 수 없는 정렬";
+    return sortNames[sortType] || (window.i18n ? window.i18n.t('unknownSort') : "알 수 없는 정렬");
   }
 
   // 파일 새로고침
@@ -248,11 +265,11 @@ class App {
     if (!this.fileManager || this.fileManager.isLoading) return;
 
     try {
-      Utils.updateStatus("파일을 새로고침하는 중...");
+      Utils.updateStatus(window.i18n ? window.i18n.t('refreshingFiles') : "파일을 새로고침하는 중...");
       await this.fileManager.refreshFiles();
     } catch (error) {
       console.error("파일 새로고침 실패:", error);
-      this.showErrorMessage("파일 새로고침에 실패했습니다.");
+      this.showErrorMessage(window.i18n ? window.i18n.t('refreshFailed') : "파일 새로고침에 실패했습니다.");
     }
   }
 
@@ -261,6 +278,7 @@ class App {
     if (!this.fileManager || this.fileManager.isLoading) return;
 
     const confirmed = confirm(
+      window.i18n ? window.i18n.t('cleanupConfirm') : 
       "다음 작업을 수행합니다:\n" +
         "• 중복 파일 항목 제거\n" +
         "• 빈폴더 제거\n" +
@@ -273,7 +291,7 @@ class App {
         await this.fileManager.cleanup();
       } catch (error) {
         console.error("파일 정리 실패:", error);
-        this.showErrorMessage("파일 정리에 실패했습니다.");
+        this.showErrorMessage(window.i18n ? window.i18n.t('cleanupFailed') : "파일 정리에 실패했습니다.");
       }
     }
   }
@@ -328,7 +346,7 @@ class App {
   showErrorMessage(message) {
     // 간단한 에러 표시 (향후 토스트 알림으로 개선 가능)
     alert(message);
-    Utils.updateStatus("오류 발생");
+    Utils.updateStatus(window.i18n ? window.i18n.t('errorOccurred') : "오류 발생");
   }
 
   // 정보 메시지 표시
@@ -365,6 +383,37 @@ class App {
     }
 
     console.log("앱 리소스 정리 완료");
+  }
+
+  // 다국어 시스템 초기화
+  initI18n() {
+    if (window.i18n) {
+      // 언어 토글 버튼 이벤트 리스너
+      const languageToggle = document.getElementById('language-toggle');
+      if (languageToggle) {
+        // 현재 언어에 따라 토글 상태 설정
+        languageToggle.checked = window.i18n.getCurrentLanguage() === 'en';
+        
+        languageToggle.addEventListener('change', (e) => {
+          const newLang = e.target.checked ? 'en' : 'ko';
+          window.i18n.setLanguage(newLang);
+        });
+      }
+
+      // 언어 변경 시 정렬 방향 라벨 업데이트
+      window.i18n.addListener(() => {
+        const label = document.querySelector(".sort-direction-label");
+        if (label) {
+          const labelText = this.isDescending ? 
+            window.i18n.t('descending') : 
+            window.i18n.t('ascending');
+          label.textContent = labelText;
+        }
+      });
+
+      // 초기화
+      window.i18n.init();
+    }
   }
 
   // 디버그 정보 출력

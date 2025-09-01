@@ -29,6 +29,12 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .header h1 {
   font-size: 1.5rem;
   font-weight: 300;
@@ -37,6 +43,84 @@ body {
 .header-controls {
   display: flex;
   gap: 10px;
+}
+
+/* 언어 토글 스타일 */
+.language-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.language-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.language-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.language-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 20px;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+}
+
+.language-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  z-index: 2;
+}
+
+.language-switch input:checked + .language-slider:before {
+  transform: translateX(32px);
+}
+
+.language-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+  transition: color 0.3s;
+}
+
+.language-switch input:checked + .language-slider .language-label.ko {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.language-switch input:not(:checked) + .language-slider .language-label.ko {
+  color: #333;
+}
+
+.language-switch input:checked + .language-slider .language-label.en {
+  color: #333;
+}
+
+.language-switch input:not(:checked) + .language-slider .language-label.en {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* 버튼 스타일 */

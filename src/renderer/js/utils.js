@@ -155,21 +155,23 @@ class Utils {
     }
     
     // 백그라운드 작업 메시지는 프로그래스바를 표시하지 않음
-    const isBackgroundWork = message.includes('스캔 중') || message.includes('감시') || message.includes('실시간');
+    const isBackgroundWork = message.includes('스캔 중') || message.includes('Scanning') || 
+                             message.includes('감시') || message.includes('monitoring') ||
+                             message.includes('실시간') || message.includes('real-time');
     
     // 수동 작업만 프로그래스바 표시 여부 결정
     if (!isBackgroundWork && (
-      message.includes('정리') ||
-      message.includes('새로고침') ||
-      message.includes('로딩') ||
-      message.includes('스캔')
+      message.includes('정리') || message.includes('Cleaning') ||
+      message.includes('새로고침') || message.includes('Refreshing') ||
+      message.includes('로딩') || message.includes('Loading') ||
+      message.includes('스캔') || message.includes('Scanning')
     )) {
       // 작업 시작
-      if (message.includes('중') || message.includes('로딩')) {
+      if (message.includes('중') || message.includes('로딩') || message.includes('ing') || message.includes('Loading')) {
         this.showProgress(message);
       }
       // 작업 완료
-      else if (message.includes('완료') || message.includes('실패')) {
+      else if (message.includes('완료') || message.includes('실패') || message.includes('complete') || message.includes('failed')) {
         setTimeout(() => this.hideProgress(), 1000);
       }
     }

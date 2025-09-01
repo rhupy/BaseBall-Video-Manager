@@ -10,13 +10,24 @@
     <div id="app">
       <!-- 헤더 -->
       <header class="header">
-        <h1>Baseball Video Manager</h1>
+        <div class="header-left">
+          <div class="language-toggle">
+            <label class="language-switch" title="언어 변경 / Language Toggle">
+              <input type="checkbox" id="language-toggle">
+              <span class="language-slider">
+                <span class="language-label ko">한</span>
+                <span class="language-label en">EN</span>
+              </span>
+            </label>
+          </div>
+          <h1 data-i18n="appTitle">Baseball Video Manager</h1>
+        </div>
         <div class="header-controls">
-          <button id="refresh-btn" class="btn btn-primary">새로고침</button>
-          <button id="library-btn" class="btn btn-secondary">
+          <button id="refresh-btn" class="btn btn-primary" data-i18n="refresh">새로고침</button>
+          <button id="library-btn" class="btn btn-secondary" data-i18n="libraryManagement">
             라이브러리 관리
           </button>
-          <button id="cleanup-btn" class="btn btn-warning">정리</button>
+          <button id="cleanup-btn" class="btn btn-warning" data-i18n="cleanup">정리</button>
         </div>
       </header>
 
@@ -31,28 +42,29 @@
                 <span class="toggle-label asc">↑</span>
               </span>
             </label>
-            <span class="sort-direction-label">내림차순</span>
+            <span class="sort-direction-label" data-i18n="descending">내림차순</span>
           </div>
           <div class="sort-buttons">
-            <button class="sort-btn active" data-sort="addtime">추가시간순</button>
-            <button class="sort-btn" data-sort="lasttime">실행시간순</button>
-            <button class="sort-btn" data-sort="rating">평점순</button>
-            <button class="sort-btn" data-sort="name">이름순</button>
+            <button class="sort-btn active" data-sort="addtime" data-i18n="sortAddTime">추가시간순</button>
+            <button class="sort-btn" data-sort="lasttime" data-i18n="sortLastTime">실행시간순</button>
+            <button class="sort-btn" data-sort="rating" data-i18n="sortRating">평점순</button>
+            <button class="sort-btn" data-sort="name" data-i18n="sortName">이름순</button>
           </div>
         </div>
         <input
           type="text"
           id="search-input"
           placeholder="파일명으로 검색..."
+          data-i18n="searchPlaceholder"
           class="search-input"
         />
-        <div class="file-stats"><span id="file-count">0</span> 개 파일</div>
+        <div class="file-stats"><span id="file-count">0</span> <span data-i18n="filesCount">개 파일</span></div>
       </div>
 
       <!-- 탭 메뉴 -->
       <div class="tab-container">
-        <button class="tab-btn active" data-tab="video">비디오 파일</button>
-        <button class="tab-btn" data-tab="file">기타 파일</button>
+        <button class="tab-btn active" data-tab="video" data-i18n="videoFiles">비디오 파일</button>
+        <button class="tab-btn" data-tab="file" data-i18n="otherFiles">기타 파일</button>
       </div>
 
       <!-- 진행률 표시 -->
@@ -60,7 +72,7 @@
         <div class="progress-bar">
           <div id="progress-fill" class="progress-fill"></div>
         </div>
-        <span id="progress-text" class="progress-text">처리 중...</span>
+        <span id="progress-text" class="progress-text" data-i18n="processing">처리 중...</span>
       </div>
 
       <!-- 파일 리스트 -->
@@ -76,8 +88,8 @@
 
       <!-- 상태 바 -->
       <footer class="status-bar">
-        <span id="status-text">준비됨</span>
-        <span id="extension-list"
+        <span id="status-text" data-i18n="ready">준비됨</span>
+        <span id="extension-list" data-i18n="extensions"
           >확장자: .avi, .mp4, .mov, .wmv, .mkv, .flv, .ts</span
         >
       </footer>
@@ -87,18 +99,20 @@
     <div id="library-modal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>라이브러리 관리</h2>
+          <h2 data-i18n="libraryManagementTitle">라이브러리 관리</h2>
           <button id="close-modal" class="btn-close">&times;</button>
         </div>
         <div class="modal-body">
           <div class="library-controls">
-            <button id="add-library" class="btn btn-primary">폴더 추가</button>
-            <button id="remove-library" class="btn btn-danger">
+            <button id="add-library" class="btn btn-primary" data-i18n="addFolder">폴더 추가</button>
+            <button id="remove-library" class="btn btn-danger" data-i18n="removeSelected">
               선택 삭제
             </button>
             <button
               id="open-data-folder"
               class="btn btn-secondary"
+              data-i18n="openDataFolder"
+              data-i18n-title="openDataFolderTooltip"
               title="데이터 폴더(/data)를 파일 탐색기에서 열기"
             >
               데이터 폴더 열기
@@ -109,13 +123,14 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button id="save-library" class="btn btn-primary">저장</button>
-          <button id="cancel-library" class="btn btn-secondary">취소</button>
+          <button id="save-library" class="btn btn-primary" data-i18n="save">저장</button>
+          <button id="cancel-library" class="btn btn-secondary" data-i18n="cancel">취소</button>
         </div>
       </div>
     </div>
 
     <script src="js/utils.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/file-manager.js"></script>
     <script src="js/virtual-scroll.js"></script>
     <script src="js/search-engine.js"></script>

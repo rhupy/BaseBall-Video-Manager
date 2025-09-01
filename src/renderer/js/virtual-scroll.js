@@ -147,10 +147,10 @@ class VirtualScroll {
           <div class="file-name" title="${fileName}">${fileName}</div>
           <div class="file-actions">
             <div class="file-times">
-              <span class="add-time" title="추가 시각">추가시각: ${addTime}</span>
+              <span class="add-time" title="${window.i18n ? window.i18n.t('addTime') : '추가 시각'}">${window.i18n ? window.i18n.t('addTime') : '추가시각:'} ${addTime}</span>
               ${
                 lastTime
-                  ? `<span class="last-time" title="마지막 실행 시각"><strong>실행시각: ${lastTime}</strong></span>`
+                  ? `<span class="last-time" title="${window.i18n ? window.i18n.t('lastTime') : '마지막 실행 시각'}"><strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${lastTime}</strong></span>`
                   : ""
               }
             </div>
@@ -355,13 +355,13 @@ class VirtualScroll {
             
             if (lastTimeSpan) {
               // 기존 실행시각 업데이트
-              lastTimeSpan.innerHTML = `<strong>실행시각: ${formattedTime}</strong>`;
+              lastTimeSpan.innerHTML = `<strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${formattedTime}</strong>`;
             } else {
               // 새로운 실행시각 추가
               const newLastTimeSpan = document.createElement('span');
               newLastTimeSpan.className = 'last-time';
               newLastTimeSpan.title = '마지막 실행 시각';
-              newLastTimeSpan.innerHTML = `<strong>실행시각: ${formattedTime}</strong>`;
+              newLastTimeSpan.innerHTML = `<strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${formattedTime}</strong>`;
               timesContainer.appendChild(newLastTimeSpan);
             }
             
