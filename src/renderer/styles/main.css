@@ -627,6 +627,11 @@ body {
   color: #f44336;
 }
 
+.btn-lada:hover {
+  background: #fce4ec;
+  color: #e94560;
+}
+
 .file-rating {
   display: flex;
   gap: 1px;

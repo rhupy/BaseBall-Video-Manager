@@ -155,6 +155,7 @@ class VirtualScroll {
               }
             </div>
             <button class="btn-action btn-play" title="실행">▶</button>
+            <button class="btn-action btn-lada" title="Lada GUI로 보내기">🔓</button>
             <button class="btn-action btn-folder" title="폴더 열기">📁</button>
             <button class="btn-action btn-delete" title="삭제">🗑</button>
             <div class="file-rating" data-fullpath="${file.Fullpath}">
@@ -208,6 +209,13 @@ class VirtualScroll {
     folderBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       window.fileManager.openFolder(file.Fullpath);
+    });
+
+    // Lada GUI로 보내기 버튼
+    const ladaBtn = item.querySelector(".btn-lada");
+    ladaBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.sendToLada(file.Fullpath);
     });
 
     // 삭제 버튼 (실제 파일 삭제)
@@ -271,6 +279,11 @@ class VirtualScroll {
         star.classList.remove("active");
       }
     });
+  }
+
+  // Lada GUI로 파일 보내기
+  sendToLada(fullpath) {
+    window.electronAPI.invoke("send-to-lada", fullpath);
   }
 
   // 파일 삭제 (실제 파일 + JSON 동시 삭제)

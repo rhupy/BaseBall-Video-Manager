@@ -167,6 +167,32 @@ ipcMain.handle("delete-file", async (event, filePath) => {
   }
 });
 
+// Lada GUI로 파일 보내기
+ipcMain.handle("send-to-lada", async (event, filePath) => {
+  try {
+    const { exec } = require("child_process");
+    // Lada GUI 설치 경로 (기본 경로)
+    const ladaExePaths = [
+      path.join(process.env.LOCALAPPDATA || "", "Lada GUI", "Lada GUI.exe"),
+      path.join(process.env.PROGRAMFILES || "", "Lada GUI", "Lada GUI.exe"),
+    ];
+    let ladaExe = null;
+    for (const p of ladaExePaths) {
+      if (await fs.pathExists(p)) {
+        ladaExe = p;
+        break;
+      }
+    }
+    if (!ladaExe) {
+      return { success: false, error: "Lada GUI를 찾을 수 없습니다. 설치되어 있는지 확인하세요." };
+    }
+    exec(`"${ladaExe}" "${filePath}"`);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 // 경로 존재 확인
 ipcMain.handle("path-exists", async (event, filePath) => {
   try {
