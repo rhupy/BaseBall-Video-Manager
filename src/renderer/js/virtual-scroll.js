@@ -157,17 +157,14 @@ class VirtualScroll {
             <button class="btn-action btn-play" title="실행">▶</button>
             <button class="btn-action btn-lada" title="Lada GUI로 보내기">🔓</button>
             <button class="btn-action btn-folder" title="폴더 열기">📁</button>
+            <button class="btn-action btn-memo" title="${window.i18n ? window.i18n.t('memo') : '메모'}">📝</button>
             <button class="btn-action btn-delete" title="삭제">🗑</button>
             <div class="file-rating" data-fullpath="${file.Fullpath}">
               ${rating}
             </div>
           </div>
         </div>
-        ${
-          description
-            ? `<div class="file-description">${description}</div>`
-            : ""
-        }
+        <div class="file-description ${description ? '' : 'empty'}" data-fullpath="${file.Fullpath}">${description || ''}</div>
       </div>
     `;
 
@@ -216,6 +213,20 @@ class VirtualScroll {
     ladaBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       this.sendToLada(file.Fullpath);
+    });
+
+    // 메모 버튼
+    const memoBtn = item.querySelector(".btn-memo");
+    memoBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.editDescription(item, file);
+    });
+
+    // 메모 텍스트 클릭으로도 편집
+    const descEl = item.querySelector(".file-description");
+    descEl.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.editDescription(item, file);
     });
 
     // 삭제 버튼 (실제 파일 삭제)
@@ -279,6 +290,64 @@ class VirtualScroll {
         star.classList.remove("active");
       }
     });
+  }
+
+  // 메모 편집
+  editDescription(item, file) {
+    const descEl = item.querySelector(".file-description");
+
+    // 이미 편집 중이면 무시
+    if (descEl.querySelector(".desc-edit-input")) return;
+
+    const currentDesc = file.Desc || "";
+    const originalHTML = descEl.innerHTML;
+
+    descEl.innerHTML = "";
+    descEl.classList.remove("empty");
+    descEl.classList.add("editing");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "desc-edit-input";
+    input.value = currentDesc;
+    input.placeholder = window.i18n ? window.i18n.t("memoPlaceholder") : "메모 입력...";
+
+    const save = async () => {
+      const newDesc = input.value.trim();
+      descEl.classList.remove("editing");
+
+      file.Desc = newDesc;
+      descEl.textContent = newDesc;
+      descEl.className = `file-description ${newDesc ? "" : "empty"}`;
+
+      await window.fileManager.updateDescription(file.Fullpath, newDesc);
+    };
+
+    const cancel = () => {
+      descEl.classList.remove("editing");
+      descEl.innerHTML = originalHTML;
+      descEl.className = `file-description ${currentDesc ? "" : "empty"}`;
+    };
+
+    input.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+      if (e.key === "Enter") {
+        save();
+      } else if (e.key === "Escape") {
+        cancel();
+      }
+    });
+
+    input.addEventListener("blur", () => {
+      save();
+    });
+
+    input.addEventListener("click", (e) => e.stopPropagation());
+    input.addEventListener("dblclick", (e) => e.stopPropagation());
+
+    descEl.appendChild(input);
+    input.focus();
+    input.select();
   }
 
   // Lada GUI로 파일 보내기

@@ -65,8 +65,29 @@ async function initDataSync() {
   }
 }
 
+// data 폴더 초기 구조 생성 (없을 때만)
+async function ensureDataFolder() {
+  const dataPath = getDataPath();
+  const defaults = {
+    "lib.json": [],
+    "extensions.json": null,
+    "media/files.json": [],
+    "file/files.json": [],
+  };
+
+  for (const [file, defaultData] of Object.entries(defaults)) {
+    const filePath = path.join(dataPath, file);
+    if (!(await fs.pathExists(filePath))) {
+      if (defaultData !== null) {
+        await fs.outputJson(filePath, defaultData, { spaces: 2 });
+      }
+    }
+  }
+}
+
 // 앱이 준비되면 실행
 app.whenReady().then(async () => {
+  await ensureDataFolder();
   createWindow();
   await initDataSync();
 });

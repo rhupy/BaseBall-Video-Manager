@@ -8,6 +8,7 @@
     "dev": "electron . --dev",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
+    "build:win-setup": "electron-builder --win nsis",
     "build:win-portable": "electron-builder --win portable",
     "dist": "electron-builder --publish=never",
     "pack": "electron-builder --dir"
@@ -37,17 +38,20 @@
       "package.json"
     ],
     "win": {
-      "target": "portable",
+      "target": ["nsis", "portable"],
       "icon": "assets/icons/icon.ico",
       "compression": "maximum",
-      "extraResources": [
-        {
-          "from": "data",
-          "to": "data",
-          "filter": ["**/*"]
-        }
-      ],
       "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icons/icon.ico",
+      "uninstallerIcon": "assets/icons/icon.ico",
+      "installerHeaderIcon": "assets/icons/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Baseball Video Manager"
     },
     "mac": {
       "target": "dmg",

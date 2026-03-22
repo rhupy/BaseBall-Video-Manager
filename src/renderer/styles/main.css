@@ -678,6 +678,38 @@ body {
   color: #666;
   font-style: italic;
   margin-top: 4px;
+  cursor: pointer;
+  min-height: 18px;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.file-description.empty {
+  display: none;
+}
+
+.file-item:hover .file-description.empty {
+  display: block;
+}
+
+.file-description.editing {
+  display: block;
+}
+
+.desc-edit-input {
+  width: 100%;
+  padding: 2px 6px;
+  border: 1px solid #667eea;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: inherit;
+  font-style: italic;
+  outline: none;
+  background: #fff;
+}
+
+.btn-memo {
+  font-size: 12px;
 }
 
 /* 상태 바 */
