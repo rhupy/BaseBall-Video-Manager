@@ -126,3 +126,7 @@ Thumbs.db
 *.tmp
 *.temp
 /dist
+
+# Data sync
+.data-sync/
+data/sync-settings.json

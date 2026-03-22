@@ -2,17 +2,74 @@ const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs-extra");
 const HybridFileWatcher = require("./hybrid-file-watcher");
+const DataSync = require("./data-sync");
 
 let mainWindow;
 let isDev = process.argv.includes("--dev");
 let hybridFileWatcher = null; // 하이브리드 파일 감시 시스템
+let dataSync = null; // 데이터 자동 백업 싱크
 
 // Windows GPU 렌더링 깜빡임 방지
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch("disable-gpu-compositing");
 
+// 싱크 설정 파일 경로
+function getSyncSettingsPath() {
+  return path.join(getDataPath(), "sync-settings.json");
+}
+
+// 싱크 설정 로드
+async function loadSyncSettings() {
+  try {
+    const settingsPath = getSyncSettingsPath();
+    if (await fs.pathExists(settingsPath)) {
+      return await fs.readJson(settingsPath);
+    }
+  } catch (e) {
+    console.warn("[DataSync] 설정 로드 실패:", e.message);
+  }
+  return null;
+}
+
+// 싱크 설정 저장
+async function saveSyncSettings(settings) {
+  const settingsPath = getSyncSettingsPath();
+  await fs.outputJson(settingsPath, settings, { spaces: 2 });
+}
+
+// 데이터 자동 싱크 초기화
+async function initDataSync() {
+  try {
+    const settings = await loadSyncSettings();
+    if (!settings || !settings.token || !settings.repoUrl) {
+      console.log("[DataSync] 싱크 설정 없음, 자동 싱크 비활성화");
+      return;
+    }
+
+    const dataPath = getDataPath();
+    const syncDir = isDev
+      ? path.join(__dirname, "../../.data-sync")
+      : path.join(path.dirname(process.execPath), ".data-sync");
+
+    dataSync = new DataSync({
+      dataPath,
+      repoUrl: settings.repoUrl,
+      token: settings.token,
+      syncDir,
+      debounceMs: 30000,
+    });
+
+    await dataSync.init();
+  } catch (error) {
+    console.error("[DataSync] 초기화 실패:", error.message);
+  }
+}
+
 // 앱이 준비되면 실행
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  createWindow();
+  await initDataSync();
+});
 
 // 모든 윈도우가 닫혔을 때
 app.on("window-all-closed", () => {
@@ -86,6 +143,8 @@ ipcMain.handle("load-json-file", async (event, filePath) => {
 ipcMain.handle("save-json-file", async (event, filePath, data) => {
   try {
     await fs.outputJson(filePath, data, { spaces: 2 });
+    // 데이터 저장 시 자동 싱크 트리거
+    if (dataSync) dataSync.requestSync();
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -666,11 +725,100 @@ ipcMain.handle("backup-data", async (event) => {
   }
 });
 
-// 앱 종료 시 하이브리드 시스템 정리
-app.on("before-quit", () => {
+// =================== 동기화 설정 IPC 핸들러 ===================
+
+// 싱크 설정 로드
+ipcMain.handle("sync-load-settings", async () => {
+  const settings = await loadSyncSettings();
+  // 토큰은 마스킹해서 반환
+  if (settings && settings.token) {
+    return {
+      ...settings,
+      tokenMasked: settings.token.substring(0, 7) + "..." + settings.token.slice(-4),
+      hasToken: true,
+    };
+  }
+  return settings || { repoUrl: "", hasToken: false };
+});
+
+// 싱크 설정 저장 & 재초기화
+ipcMain.handle("sync-save-settings", async (event, { repoUrl, token }) => {
+  try {
+    await saveSyncSettings({ repoUrl, token });
+
+    // 기존 싱크 중지
+    if (dataSync) {
+      dataSync.destroy();
+      dataSync = null;
+    }
+
+    // 새 설정으로 재초기화
+    await initDataSync();
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 싱크 연결 해제
+ipcMain.handle("sync-disconnect", async () => {
+  try {
+    if (dataSync) {
+      dataSync.destroy();
+      dataSync = null;
+    }
+    // 설정 파일 삭제
+    const settingsPath = getSyncSettingsPath();
+    if (await fs.pathExists(settingsPath)) {
+      await fs.remove(settingsPath);
+    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 싱크 연결 테스트
+ipcMain.handle("sync-test", async (event, { repoUrl, token }) => {
+  try {
+    const { execFile } = require("child_process");
+    const authUrl = repoUrl.replace("https://", `https://${token}@`);
+
+    return new Promise((resolve) => {
+      execFile("git", ["ls-remote", authUrl], { timeout: 15000 }, (error) => {
+        if (error) {
+          resolve({ success: false, error: "인증 실패 또는 저장소를 찾을 수 없습니다." });
+        } else {
+          resolve({ success: true });
+        }
+      });
+    });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 싱크 상태 확인
+ipcMain.handle("sync-get-status", async () => {
+  return {
+    isActive: dataSync !== null && dataSync.isInitialized,
+    isSyncing: dataSync ? dataSync.isSyncing : false,
+  };
+});
+
+// 앱 종료 시 정리
+app.on("before-quit", async () => {
   if (hybridFileWatcher) {
     console.log("하이브리드 시스템 종료 중...");
     hybridFileWatcher.stopWatching();
     hybridFileWatcher = null;
+  }
+  if (dataSync) {
+    console.log("데이터 싱크 종료 중...");
+    // 종료 전 마지막 싱크
+    await dataSync.syncNow();
+    dataSync.destroy();
+    dataSync = null;
   }
 });

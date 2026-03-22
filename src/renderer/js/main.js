@@ -40,9 +40,12 @@ class App {
 
       this.isInitialized = true;
       Utils.updateStatus("준비됨");
-      
+
       // 초기화 완료 후 프로그래스바 숨김 (하이브리드 시스템의 경우 실시간 감시만 활성)
       Utils.hideProgress();
+
+      // 싱크 버튼 상태 초기화
+      await this.initSyncButtonState();
 
       console.log("Baseball Video Manager 초기화 완료");
     } catch (error) {
@@ -103,6 +106,11 @@ class App {
 
   // 이벤트 리스너 설정
   initEventListeners() {
+    // 동기화 설정 버튼
+    document.getElementById("sync-settings-btn").addEventListener("click", () => {
+      this.openSyncSettings();
+    });
+
     // 백업 버튼
     document.getElementById("backup-btn").addEventListener("click", () => {
       this.backupData();
@@ -482,6 +490,168 @@ class App {
     }
 
     console.groupEnd();
+  }
+
+  // =================== 동기화 설정 ===================
+
+  async openSyncSettings() {
+    const modal = document.getElementById("sync-modal");
+    const repoInput = document.getElementById("sync-repo-input");
+    const tokenInput = document.getElementById("sync-token-input");
+    const statusEl = document.getElementById("sync-status");
+    const disconnectBtn = document.getElementById("sync-disconnect-btn");
+
+    // 기존 설정 로드
+    const settings = await window.electronAPI.invoke("sync-load-settings");
+    const syncStatus = await window.electronAPI.invoke("sync-get-status");
+
+    repoInput.value = settings.repoUrl || "";
+    tokenInput.value = "";
+    tokenInput.placeholder = settings.hasToken ? settings.tokenMasked : "ghp_xxxxxxxxxxxx";
+
+    // 상태 표시
+    if (syncStatus.isActive) {
+      statusEl.className = "sync-status connected";
+      statusEl.textContent = window.i18n ? window.i18n.t("syncConnected") : "동기화 연결됨 - 자동 백업 활성";
+      disconnectBtn.style.display = "";
+    } else if (settings.hasToken) {
+      statusEl.className = "sync-status error";
+      statusEl.textContent = window.i18n ? window.i18n.t("syncError") : "설정은 있지만 연결 실패";
+      disconnectBtn.style.display = "";
+    } else {
+      statusEl.className = "sync-status disconnected";
+      statusEl.textContent = window.i18n ? window.i18n.t("syncNotConfigured") : "동기화가 설정되지 않았습니다";
+      disconnectBtn.style.display = "none";
+    }
+
+    modal.classList.remove("hidden");
+
+    // 이벤트 리스너 (중복 방지를 위해 clone)
+    this.setupSyncModalEvents();
+  }
+
+  setupSyncModalEvents() {
+    const modal = document.getElementById("sync-modal");
+    const closeBtn = document.getElementById("close-sync-modal");
+    const cancelBtn = document.getElementById("sync-cancel-btn");
+    const saveBtn = document.getElementById("sync-save-btn");
+    const testBtn = document.getElementById("sync-test-btn");
+    const disconnectBtn = document.getElementById("sync-disconnect-btn");
+    const tokenToggle = document.getElementById("sync-token-toggle");
+    const tokenInput = document.getElementById("sync-token-input");
+
+    const closeModal = () => modal.classList.add("hidden");
+
+    // 기존 리스너 제거를 위해 새 리스너로 교체
+    closeBtn.onclick = closeModal;
+    cancelBtn.onclick = closeModal;
+
+    // 토큰 보기/숨기기
+    tokenToggle.onclick = () => {
+      tokenInput.type = tokenInput.type === "password" ? "text" : "password";
+    };
+
+    // 연결 테스트
+    testBtn.onclick = async () => {
+      const repoUrl = document.getElementById("sync-repo-input").value.trim();
+      const token = tokenInput.value.trim();
+      const statusEl = document.getElementById("sync-status");
+
+      if (!repoUrl || !token) {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncFillAll") : "저장소 URL과 토큰을 모두 입력하세요";
+        return;
+      }
+
+      statusEl.className = "sync-status testing";
+      statusEl.textContent = window.i18n ? window.i18n.t("syncTesting") : "연결 테스트 중...";
+
+      const result = await window.electronAPI.invoke("sync-test", { repoUrl, token });
+
+      if (result.success) {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncTestSuccess") : "연결 성공! 저장을 눌러 적용하세요.";
+      } else {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = result.error;
+      }
+    };
+
+    // 저장
+    saveBtn.onclick = async () => {
+      const repoUrl = document.getElementById("sync-repo-input").value.trim();
+      const token = tokenInput.value.trim();
+      const statusEl = document.getElementById("sync-status");
+
+      if (!repoUrl) {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncNeedRepo") : "저장소 URL을 입력하세요";
+        return;
+      }
+
+      // 토큰이 비어있으면 기존 토큰 유지
+      if (!token) {
+        const existing = await window.electronAPI.invoke("sync-load-settings");
+        if (!existing.hasToken) {
+          statusEl.className = "sync-status error";
+          statusEl.textContent = window.i18n ? window.i18n.t("syncNeedToken") : "토큰을 입력하세요";
+          return;
+        }
+        // 기존 토큰으로 레포 URL만 업데이트
+        // 이 경우 기존 설정 파일을 직접 수정해야 하므로 풀 토큰 필요
+        statusEl.className = "sync-status error";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncNeedToken") : "새 설정 저장 시 토큰을 다시 입력하세요";
+        return;
+      }
+
+      const result = await window.electronAPI.invoke("sync-save-settings", { repoUrl, token });
+
+      if (result.success) {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncSaved") : "저장 완료! 자동 동기화가 활성화되었습니다.";
+        this.updateSyncButton(true);
+        Utils.updateStatus(window.i18n ? window.i18n.t("syncActivated") : "Git 동기화 활성화됨");
+      } else {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = result.error;
+      }
+    };
+
+    // 연결 해제
+    disconnectBtn.onclick = async () => {
+      if (!confirm(window.i18n ? window.i18n.t("syncDisconnectConfirm") : "동기화 연결을 해제하시겠습니까?\n원격 저장소의 백업은 유지됩니다.")) {
+        return;
+      }
+
+      const result = await window.electronAPI.invoke("sync-disconnect");
+      if (result.success) {
+        const statusEl = document.getElementById("sync-status");
+        statusEl.className = "sync-status disconnected";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncDisconnected") : "동기화 연결이 해제되었습니다";
+        document.getElementById("sync-repo-input").value = "";
+        tokenInput.value = "";
+        tokenInput.placeholder = "ghp_xxxxxxxxxxxx";
+        disconnectBtn.style.display = "none";
+        this.updateSyncButton(false);
+        Utils.updateStatus(window.i18n ? window.i18n.t("syncDeactivated") : "Git 동기화 비활성화됨");
+      }
+    };
+  }
+
+  updateSyncButton(isActive) {
+    const btn = document.getElementById("sync-settings-btn");
+    if (isActive) {
+      btn.classList.add("synced");
+      btn.classList.remove("not-synced");
+    } else {
+      btn.classList.remove("synced");
+      btn.classList.add("not-synced");
+    }
+  }
+
+  async initSyncButtonState() {
+    const status = await window.electronAPI.invoke("sync-get-status");
+    this.updateSyncButton(status.isActive);
   }
 }
 

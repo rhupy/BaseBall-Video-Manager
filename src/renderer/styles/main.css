@@ -768,6 +768,111 @@ body {
   gap: 10px;
 }
 
+/* 동기화 설정 */
+.btn-sync {
+  background: #2ea44f;
+  color: white;
+}
+
+.btn-sync.synced {
+  background: #2ea44f;
+}
+
+.btn-sync.not-synced {
+  background: #6c757d;
+}
+
+.sync-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sync-label {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: 8px;
+}
+
+.sync-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.sync-input:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.sync-token-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.sync-token-wrapper .sync-input {
+  padding-right: 40px;
+}
+
+.btn-token-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+.sync-hint {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+.sync-status {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  display: none;
+}
+
+.sync-status.connected {
+  display: block;
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.sync-status.disconnected {
+  display: block;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.sync-status.error {
+  display: block;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.sync-status.testing {
+  display: block;
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
 /* 라이브러리 관리 */
 .library-controls {
   margin-bottom: 20px;

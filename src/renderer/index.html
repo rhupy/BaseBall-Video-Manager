@@ -29,6 +29,7 @@
           <button id="library-btn" class="btn btn-secondary" data-i18n="libraryManagement">
             라이브러리 관리
           </button>
+          <button id="sync-settings-btn" class="btn btn-sync" data-i18n="syncSettings">동기화</button>
           <button id="cleanup-btn" class="btn btn-warning" data-i18n="cleanup">정리</button>
         </div>
       </header>
@@ -168,6 +169,35 @@
         <div class="modal-footer">
           <button id="save-library" class="btn btn-primary" data-i18n="save">저장</button>
           <button id="cancel-library" class="btn btn-secondary" data-i18n="cancel">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 동기화 설정 모달 -->
+    <div id="sync-modal" class="modal hidden">
+      <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-header">
+          <h2 data-i18n="syncSettingsTitle">Git 동기화 설정</h2>
+          <button id="close-sync-modal" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="sync-status" id="sync-status"></div>
+          <div class="sync-form">
+            <label class="sync-label" data-i18n="syncRepo">저장소 URL</label>
+            <input type="text" id="sync-repo-input" class="sync-input" placeholder="https://github.com/user/repo.git">
+            <label class="sync-label" data-i18n="syncToken">Personal Access Token</label>
+            <div class="sync-token-wrapper">
+              <input type="password" id="sync-token-input" class="sync-input" placeholder="ghp_xxxxxxxxxxxx">
+              <button id="sync-token-toggle" class="btn-token-toggle" title="토큰 보기/숨기기">👁</button>
+            </div>
+            <p class="sync-hint" data-i18n="syncHint">GitHub Settings > Developer settings > Personal access tokens에서 생성</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="sync-test-btn" class="btn btn-info" data-i18n="syncTest">연결 테스트</button>
+          <button id="sync-save-btn" class="btn btn-primary" data-i18n="save">저장</button>
+          <button id="sync-disconnect-btn" class="btn btn-danger" data-i18n="syncDisconnect">연결 해제</button>
+          <button id="sync-cancel-btn" class="btn btn-secondary" data-i18n="cancel">취소</button>
         </div>
       </div>
     </div>
