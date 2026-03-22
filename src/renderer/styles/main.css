@@ -507,52 +507,65 @@ body {
   border-bottom: none;
 }
 
+/* 그리드 컬럼 레이아웃 */
 .file-item-content {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.file-main {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  height: 100%;
 }
 
-.file-name {
+.file-col {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.file-col-name {
+  flex: 3;
   font-weight: 500;
   color: #333;
-  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-right: 15px;
 }
 
-.file-actions {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  opacity: 1; /* 모든 버튼이 항상 보이도록 변경 */
-  transition: opacity 0.2s ease;
+.file-col-desc {
+  flex: 2;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-height: 28px;
+  border: 1px dashed transparent;
 }
 
-.file-actions .file-rating {
-  opacity: 1; /* 별점은 항상 표시 */
+.file-col-desc:hover {
+  background: rgba(102, 126, 234, 0.06);
+  border-color: #ccc;
 }
 
-.file-actions .file-times {
+.file-desc-text {
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.file-col-times {
+  flex: 0 0 150px;
   display: flex;
   flex-direction: column;
   gap: 2px;
   font-size: 10px;
   color: #666;
-  margin-right: 8px;
-  min-width: 80px;
 }
 
-.file-actions .file-times .add-time,
-.file-actions .file-times .last-time {
+.file-col-times .add-time,
+.file-col-times .last-time {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -562,35 +575,44 @@ body {
   font-size: 10px;
   line-height: 1.4;
   border: 1px solid transparent;
-  transition: all 0.3s ease;
 }
 
-.file-actions .file-times .add-time {
+.file-col-times .add-time {
   color: #666;
   background: rgba(108, 117, 125, 0.1);
 }
 
-.file-actions .file-times .last-time {
+.file-col-times .last-time {
   color: #495057;
   background: rgba(40, 167, 69, 0.1);
   border-color: rgba(40, 167, 69, 0.2);
 }
 
-.file-actions .file-times .last-time strong {
+.file-col-times .last-time strong {
   font-weight: 600;
   color: #28a745;
 }
 
-.file-item.recently-executed .file-actions .file-times .last-time {
+.file-item.recently-executed .file-col-times .last-time {
   background: rgba(40, 167, 69, 0.2);
   border-color: rgba(40, 167, 69, 0.4);
   font-weight: 600;
 }
 
-/* 실행 시간 업데이트 애니메이션 */
-.file-actions .file-times .last-time.updating {
+.file-col-times .last-time.updating {
   background: rgba(40, 167, 69, 0.3);
   transform: scale(1.05);
+}
+
+.file-col-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.file-col-rating {
+  flex: 0 0 auto;
 }
 
 .btn-action {

@@ -835,6 +835,51 @@ ipcMain.handle("sync-get-status", async () => {
   };
 });
 
+// 원격 저장소에 데이터 있는지 확인
+ipcMain.handle("sync-check-remote", async (event, { repoUrl, token }) => {
+  try {
+    const tmpSync = new DataSync({
+      dataPath: getDataPath(),
+      repoUrl,
+      token,
+      syncDir: "",
+    });
+    const hasData = await tmpSync.checkRemoteHasData();
+    return { success: true, hasData };
+  } catch (error) {
+    return { success: false, hasData: false };
+  }
+});
+
+// 원격 데이터 복원
+ipcMain.handle("sync-restore", async (event, { repoUrl, token }) => {
+  try {
+    const dataPath = getDataPath();
+    const syncDir = isDev
+      ? path.join(__dirname, "../../.data-sync")
+      : path.join(path.dirname(process.execPath), ".data-sync");
+
+    const sync = new DataSync({ dataPath, repoUrl, token, syncDir });
+    const result = await sync.restoreFromRemote();
+
+    if (result.success) {
+      // 설정 저장
+      await saveSyncSettings({ repoUrl, token });
+
+      // 기존 싱크 중지 후 재초기화
+      if (dataSync) {
+        dataSync.destroy();
+        dataSync = null;
+      }
+      await initDataSync();
+    }
+
+    return result;
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 // 앱 종료 시 정리
 app.on("before-quit", async () => {
   if (hybridFileWatcher) {

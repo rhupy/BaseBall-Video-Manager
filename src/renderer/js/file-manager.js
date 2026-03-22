@@ -1063,6 +1063,17 @@ class FileManager {
           return isDescending ? result : -result;
         });
         break;
+      case "memo":
+        currentFiles.sort((a, b) => {
+          const descA = a.Desc || "";
+          const descB = b.Desc || "";
+          // 메모가 있는 항목을 우선, 그 다음 가나다순
+          if (descA && !descB) return isDescending ? -1 : 1;
+          if (!descA && descB) return isDescending ? 1 : -1;
+          const result = descA.localeCompare(descB, "ko");
+          return isDescending ? -result : result;
+        });
+        break;
       default:
         // 알 수 없는 정렬 타입인 경우 추가시간순으로 폴백
         currentFiles.sort((a, b) => {

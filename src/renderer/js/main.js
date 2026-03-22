@@ -589,7 +589,6 @@ class App {
         return;
       }
 
-      // 토큰이 비어있으면 기존 토큰 유지
       if (!token) {
         const existing = await window.electronAPI.invoke("sync-load-settings");
         if (!existing.hasToken) {
@@ -597,13 +596,48 @@ class App {
           statusEl.textContent = window.i18n ? window.i18n.t("syncNeedToken") : "토큰을 입력하세요";
           return;
         }
-        // 기존 토큰으로 레포 URL만 업데이트
-        // 이 경우 기존 설정 파일을 직접 수정해야 하므로 풀 토큰 필요
         statusEl.className = "sync-status error";
         statusEl.textContent = window.i18n ? window.i18n.t("syncNeedToken") : "새 설정 저장 시 토큰을 다시 입력하세요";
         return;
       }
 
+      // 원격에 기존 데이터가 있는지 확인
+      statusEl.className = "sync-status testing";
+      statusEl.textContent = window.i18n ? window.i18n.t("syncChecking") : "원격 저장소 확인 중...";
+
+      const remoteCheck = await window.electronAPI.invoke("sync-check-remote", { repoUrl, token });
+
+      if (remoteCheck.success && remoteCheck.hasData) {
+        // 원격에 데이터 있음 → 복원 여부 확인
+        const choice = confirm(
+          window.i18n ? window.i18n.t("syncRestoreConfirm") :
+          "원격 저장소에 기존 백업 데이터가 있습니다.\n\n[확인] 원격 데이터를 복원 (다운로드)\n[취소] 현재 로컬 데이터를 업로드"
+        );
+
+        if (choice) {
+          // 복원
+          statusEl.className = "sync-status testing";
+          statusEl.textContent = window.i18n ? window.i18n.t("syncRestoring") : "데이터 복원 중...";
+
+          const restoreResult = await window.electronAPI.invoke("sync-restore", { repoUrl, token });
+
+          if (restoreResult.success) {
+            statusEl.className = "sync-status connected";
+            statusEl.textContent = window.i18n ? window.i18n.t("syncRestoreSuccess") : "복원 완료! 앱을 새로고침합니다.";
+            this.updateSyncButton(true);
+            // 복원 후 앱 새로고침 (데이터 다시 로드)
+            setTimeout(() => location.reload(), 1500);
+            return;
+          } else {
+            statusEl.className = "sync-status error";
+            statusEl.textContent = restoreResult.error || "복원 실패";
+            return;
+          }
+        }
+        // 취소 → 업로드 모드로 진행
+      }
+
+      // 업로드 모드: 설정 저장 + 싱크 시작
       const result = await window.electronAPI.invoke("sync-save-settings", { repoUrl, token });
 
       if (result.success) {

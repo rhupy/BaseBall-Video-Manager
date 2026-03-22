@@ -143,28 +143,23 @@ class VirtualScroll {
 
     item.innerHTML = `
       <div class="file-item-content">
-        <div class="file-main">
-          <div class="file-name" title="${fileName}">${fileName}</div>
-          <div class="file-actions">
-            <div class="file-times">
-              <span class="add-time" title="${window.i18n ? window.i18n.t('addTime') : '추가 시각'}">${window.i18n ? window.i18n.t('addTime') : '추가시각:'} ${addTime}</span>
-              ${
-                lastTime
-                  ? `<span class="last-time" title="${window.i18n ? window.i18n.t('lastTime') : '마지막 실행 시각'}"><strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${lastTime}</strong></span>`
-                  : ""
-              }
-            </div>
-            <button class="btn-action btn-play" title="실행">▶</button>
-            <button class="btn-action btn-lada" title="Lada GUI로 보내기">🔓</button>
-            <button class="btn-action btn-folder" title="폴더 열기">📁</button>
-            <button class="btn-action btn-memo" title="${window.i18n ? window.i18n.t('memo') : '메모'}">📝</button>
-            <button class="btn-action btn-delete" title="삭제">🗑</button>
-            <div class="file-rating" data-fullpath="${file.Fullpath}">
-              ${rating}
-            </div>
-          </div>
+        <div class="file-col file-col-name" title="${fileName}">${fileName}</div>
+        <div class="file-col file-col-desc">
+          <span class="file-desc-text" title="${description}">${description || ''}</span>
         </div>
-        <div class="file-description ${description ? '' : 'empty'}" data-fullpath="${file.Fullpath}">${description || ''}</div>
+        <div class="file-col file-col-times">
+          <span class="add-time">${addTime}</span>
+          ${lastTime ? `<span class="last-time"><strong>${lastTime}</strong></span>` : '<span class="last-time">-</span>'}
+        </div>
+        <div class="file-col file-col-actions">
+          <button class="btn-action btn-play" title="실행">▶</button>
+          <button class="btn-action btn-lada" title="Lada GUI로 보내기">🔓</button>
+          <button class="btn-action btn-folder" title="폴더 열기">📁</button>
+          <button class="btn-action btn-delete" title="삭제">🗑</button>
+        </div>
+        <div class="file-col file-col-rating" data-fullpath="${file.Fullpath}">
+          ${rating}
+        </div>
       </div>
     `;
 
@@ -215,16 +210,9 @@ class VirtualScroll {
       this.sendToLada(file.Fullpath);
     });
 
-    // 메모 버튼
-    const memoBtn = item.querySelector(".btn-memo");
-    memoBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.editDescription(item, file);
-    });
-
-    // 메모 텍스트 클릭으로도 편집
-    const descEl = item.querySelector(".file-description");
-    descEl.addEventListener("click", (e) => {
+    // 메모 컬럼 클릭으로 편집
+    const descCol = item.querySelector(".file-col-desc");
+    descCol.addEventListener("click", (e) => {
       e.stopPropagation();
       this.editDescription(item, file);
     });
@@ -294,17 +282,14 @@ class VirtualScroll {
 
   // 메모 편집
   editDescription(item, file) {
-    const descEl = item.querySelector(".file-description");
+    const descCol = item.querySelector(".file-col-desc");
 
     // 이미 편집 중이면 무시
-    if (descEl.querySelector(".desc-edit-input")) return;
+    if (descCol.querySelector(".desc-edit-input")) return;
 
     const currentDesc = file.Desc || "";
-    const originalHTML = descEl.innerHTML;
 
-    descEl.innerHTML = "";
-    descEl.classList.remove("empty");
-    descEl.classList.add("editing");
+    descCol.innerHTML = "";
 
     const input = document.createElement("input");
     input.type = "text";
@@ -314,38 +299,26 @@ class VirtualScroll {
 
     const save = async () => {
       const newDesc = input.value.trim();
-      descEl.classList.remove("editing");
-
       file.Desc = newDesc;
-      descEl.textContent = newDesc;
-      descEl.className = `file-description ${newDesc ? "" : "empty"}`;
-
+      descCol.innerHTML = `<span class="file-desc-text" title="${Utils.escapeHtml(newDesc)}">${Utils.escapeHtml(newDesc)}</span>`;
       await window.fileManager.updateDescription(file.Fullpath, newDesc);
     };
 
     const cancel = () => {
-      descEl.classList.remove("editing");
-      descEl.innerHTML = originalHTML;
-      descEl.className = `file-description ${currentDesc ? "" : "empty"}`;
+      descCol.innerHTML = `<span class="file-desc-text" title="${Utils.escapeHtml(currentDesc)}">${Utils.escapeHtml(currentDesc)}</span>`;
     };
 
     input.addEventListener("keydown", (e) => {
       e.stopPropagation();
-      if (e.key === "Enter") {
-        save();
-      } else if (e.key === "Escape") {
-        cancel();
-      }
+      if (e.key === "Enter") save();
+      else if (e.key === "Escape") cancel();
     });
 
-    input.addEventListener("blur", () => {
-      save();
-    });
-
+    input.addEventListener("blur", () => save());
     input.addEventListener("click", (e) => e.stopPropagation());
     input.addEventListener("dblclick", (e) => e.stopPropagation());
 
-    descEl.appendChild(input);
+    descCol.appendChild(input);
     input.focus();
     input.select();
   }
