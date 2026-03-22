@@ -927,6 +927,41 @@ body {
   border: 1px solid #ffeeba;
 }
 
+.sync-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sync-auto-row {
+  display: flex;
+  align-items: center;
+}
+
+.sync-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.sync-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sync-manual-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.sync-manual-buttons .btn {
+  flex: 1;
+}
+
 /* 라이브러리 관리 */
 .library-controls {
   margin-bottom: 20px;

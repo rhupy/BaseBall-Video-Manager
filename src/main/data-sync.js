@@ -13,19 +13,20 @@ class DataSync {
     this.debounceTimer = null;
     this.isSyncing = false;
     this.isInitialized = false;
+    this.lastError = null;
   }
 
-  // 인증 URL 생성
   getAuthUrl() {
     return this.repoUrl.replace("https://", `https://${this.token}@`);
   }
 
-  // git 명령 실행
+  // git 명령 실행 (에러 메시지에서 토큰 제거)
   runGit(args, cwd) {
     return new Promise((resolve, reject) => {
       execFile("git", args, { cwd, timeout: 30000, windowsHide: true }, (error, stdout, stderr) => {
         if (error) {
-          reject(new Error(`git ${args.join(" ")} 실패: ${stderr || error.message}`));
+          const safeMsg = (stderr || error.message).replace(this.token, "***");
+          reject(new Error(`git ${args[0]}: ${safeMsg}`));
         } else {
           resolve(stdout.trim());
         }
@@ -33,36 +34,38 @@ class DataSync {
     });
   }
 
-  // git 사용 가능 여부 확인
   async isGitAvailable() {
     try {
       await this.runGit(["--version"], process.cwd());
       return true;
     } catch {
-      console.error("[DataSync] git이 설치되어 있지 않거나 PATH에 없습니다.");
       return false;
     }
   }
 
   // 초기화
   async init() {
+    this.lastError = null;
+
+    if (!this.token || !this.repoUrl) {
+      this.lastError = "토큰 또는 레포 URL 없음";
+      return false;
+    }
+
+    if (!(await this.isGitAvailable())) {
+      this.lastError = "git이 설치되어 있지 않거나 PATH에 없습니다";
+      return false;
+    }
+
     try {
-      if (!this.token || !this.repoUrl) {
-        console.log("[DataSync] 토큰 또는 레포 URL이 없어 동기화 비활성화");
-        return false;
-      }
-
-      if (!(await this.isGitAvailable())) {
-        return false;
-      }
-
-      // 싱크 디렉토리가 이미 존재하고 git repo인지 확인
+      // 싱크 디렉토리 준비
       const gitDir = path.join(this.syncDir, ".git");
       if (await fs.pathExists(gitDir)) {
         try {
           await this.runGit(["remote", "set-url", "origin", this.getAuthUrl()], this.syncDir);
           console.log("[DataSync] 기존 싱크 저장소 재사용");
         } catch (e) {
+          console.log("[DataSync] 기존 저장소 문제, 재생성:", e.message);
           await fs.remove(this.syncDir);
           await this.cloneRepo();
         }
@@ -70,59 +73,67 @@ class DataSync {
         await this.cloneRepo();
       }
 
-      // git user 설정 (커밋에 필요)
-      try {
-        await this.runGit(["config", "user.email", "auto-sync@baseball-app.local"], this.syncDir);
-        await this.runGit(["config", "user.name", "Baseball Auto Sync"], this.syncDir);
-      } catch (e) {
-        console.warn("[DataSync] git config 설정 실패:", e.message);
-      }
+      // git user 설정
+      await this.runGit(["config", "user.email", "auto-sync@baseball-app.local"], this.syncDir).catch(() => {});
+      await this.runGit(["config", "user.name", "Baseball Auto Sync"], this.syncDir).catch(() => {});
 
       this.isInitialized = true;
-      console.log("[DataSync] 초기화 완료");
+      console.log("[DataSync] 초기화 완료, dataPath:", this.dataPath);
+      console.log("[DataSync] syncDir:", this.syncDir);
 
-      // 초기화 직후 첫 싱크
-      await this.syncNow();
+      // autoSync가 켜져있을 때만 첫 싱크 자동 실행
+      if (this.autoSync) {
+        const syncResult = await this.syncNow();
+        if (syncResult && syncResult.error) {
+          this.lastError = syncResult.error;
+        }
+      }
 
       return true;
     } catch (error) {
+      this.lastError = error.message;
       console.error("[DataSync] 초기화 실패:", error.message);
       return false;
     }
   }
 
-  // 저장소 클론
   async cloneRepo() {
     await fs.ensureDir(path.dirname(this.syncDir));
+
+    // 이미 디렉토리가 있으면 제거
+    if (await fs.pathExists(this.syncDir)) {
+      await fs.remove(this.syncDir);
+    }
+
     try {
       await this.runGit(["clone", this.getAuthUrl(), this.syncDir], path.dirname(this.syncDir));
       console.log("[DataSync] 저장소 클론 완료");
     } catch (error) {
-      // 빈 저장소일 수 있음 — 로컬에서 init
+      // 빈 저장소 — 로컬 init
+      console.log("[DataSync] 빈 저장소, 로컬 init:", error.message);
       await fs.ensureDir(this.syncDir);
       await this.runGit(["init"], this.syncDir);
-      try {
-        await this.runGit(["remote", "add", "origin", this.getAuthUrl()], this.syncDir);
-      } catch (e) {
-        // remote가 이미 있을 수 있음
+      await this.runGit(["remote", "add", "origin", this.getAuthUrl()], this.syncDir).catch(async () => {
         await this.runGit(["remote", "set-url", "origin", this.getAuthUrl()], this.syncDir);
-      }
-      await this.runGit(["checkout", "-b", "main"], this.syncDir);
+      });
+      // 빈 초기 커밋 생성 (push를 위해 필요)
+      const readmePath = path.join(this.syncDir, ".gitkeep");
+      await fs.writeFile(readmePath, "");
+      await this.runGit(["add", ".gitkeep"], this.syncDir);
+      await this.runGit(["commit", "-m", "init"], this.syncDir);
       console.log("[DataSync] 빈 저장소 초기화 완료");
     }
   }
 
-  // 원격에 데이터가 있는지 확인 (설정 연결 시 판단용)
+  // 원격에 데이터가 있는지 확인
   async checkRemoteHasData() {
     try {
       if (!(await this.isGitAvailable())) return false;
-
-      // 임시로 ls-remote 확인
       const result = await this.runGit(
         ["ls-remote", "--heads", this.getAuthUrl()],
         process.cwd()
       );
-      return result.length > 0; // 브랜치가 있으면 데이터 있음
+      return result.length > 0;
     } catch {
       return false;
     }
@@ -135,14 +146,12 @@ class DataSync {
         return { success: false, error: "git이 설치되어 있지 않습니다." };
       }
 
-      // 싱크 디렉토리 초기화 (기존 것 제거 후 클론)
       if (await fs.pathExists(this.syncDir)) {
         await fs.remove(this.syncDir);
       }
       await this.cloneRepo();
 
-      // 클론한 데이터를 data 폴더로 복사
-      const exclude = [".git", "sync-settings.json"];
+      const exclude = [".git", ".gitkeep", "sync-settings.json"];
       const entries = await fs.readdir(this.syncDir);
       let restoredCount = 0;
 
@@ -162,7 +171,6 @@ class DataSync {
     }
   }
 
-  // 디바운스된 싱크 요청
   requestSync() {
     if (!this.isInitialized) return;
 
@@ -175,17 +183,15 @@ class DataSync {
     }, this.debounceMs);
   }
 
-  // data에 의미 있는 파일이 있는지 확인 (빈 데이터 덮어쓰기 방지)
+  // 빈 데이터 확인
   async isDataEmpty() {
     try {
-      // lib.json에 라이브러리 경로가 있으면 의미있는 데이터
       const libPath = path.join(this.dataPath, "lib.json");
       if (await fs.pathExists(libPath)) {
         const lib = await fs.readJson(libPath).catch(() => []);
         if (Array.isArray(lib) && lib.length > 0) return false;
       }
 
-      // files.json에 파일 목록이 있으면 의미있는 데이터
       const mediaPath = path.join(this.dataPath, "media", "files.json");
       if (await fs.pathExists(mediaPath)) {
         const media = await fs.readJson(mediaPath).catch(() => []);
@@ -204,58 +210,74 @@ class DataSync {
     }
   }
 
-  // 즉시 싱크 실행
-  async syncNow() {
-    if (!this.isInitialized || this.isSyncing) return;
+  // 싱크 실행 (force: 빈 데이터 체크 무시)
+  async syncNow(force = false) {
+    if (!this.isInitialized || this.isSyncing) return { error: "not ready" };
 
     this.isSyncing = true;
     try {
-      // 원격에 이미 데이터가 있는 경우에만 빈 데이터 체크
-      // (원격이 비어있으면 첫 데이터도 올려야 하므로)
-      const hasRemoteData = await this.hasRemoteCommits();
-      if (hasRemoteData && await this.isDataEmpty()) {
-        console.log("[DataSync] 데이터가 비어있어 싱크 스킵 (백업 보호)");
-        return;
+      // 강제가 아닌 경우에만 빈 데이터 보호
+      if (!force) {
+        const hasLocal = await this.hasLocalCommits();
+        if (hasLocal && await this.isDataEmpty()) {
+          console.log("[DataSync] 데이터가 비어있어 싱크 스킵 (백업 보호)");
+          return { skipped: true };
+        }
       }
 
-      // data 폴더 내용을 싱크 디렉토리로 복사
+      // data → syncDir 복사
+      console.log("[DataSync] 데이터 복사 중...", this.dataPath, "→", this.syncDir);
       await this.copyDataToSync();
 
       // 변경사항 확인
       const status = await this.runGit(["status", "--porcelain"], this.syncDir);
       if (!status) {
-        console.log("[DataSync] 변경사항 없음, 스킵");
-        return;
+        console.log("[DataSync] 변경사항 없음");
+        return { noChanges: true };
       }
 
-      // 커밋 & 푸시
+      console.log("[DataSync] 변경사항 감지, 커밋 중...");
       const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
       await this.runGit(["add", "-A"], this.syncDir);
       await this.runGit(["commit", "-m", `auto-sync: ${timestamp}`], this.syncDir);
 
-      try {
-        await this.runGit(["push", "origin", "HEAD"], this.syncDir);
-        console.log(`[DataSync] 푸시 완료: ${timestamp}`);
-      } catch (pushError) {
-        // 첫 푸시 또는 브랜치 불일치
+      // push 시도 (여러 방법)
+      const pushMethods = [
+        ["push", "origin", "HEAD"],
+        ["push", "-u", "origin", "main"],
+        ["push", "-u", "origin", "master"],
+      ];
+
+      let pushed = false;
+      for (const args of pushMethods) {
         try {
-          await this.runGit(["push", "-u", "origin", "main"], this.syncDir);
-          console.log(`[DataSync] 첫 푸시 완료: ${timestamp}`);
+          await this.runGit(args, this.syncDir);
+          console.log(`[DataSync] 푸시 성공 (${args.join(" ")}): ${timestamp}`);
+          pushed = true;
+          break;
         } catch (e) {
-          // master 브랜치일 수도 있음
-          await this.runGit(["push", "-u", "origin", "master"], this.syncDir);
-          console.log(`[DataSync] 첫 푸시 완료 (master): ${timestamp}`);
+          console.log(`[DataSync] ${args.join(" ")} 실패:`, e.message);
         }
       }
+
+      if (!pushed) {
+        const errMsg = "push 실패 - 저장소 권한 또는 브랜치를 확인하세요";
+        console.error("[DataSync]", errMsg);
+        return { error: errMsg };
+      }
+
+      this.lastError = null;
+      return { success: true };
     } catch (error) {
       console.error("[DataSync] 싱크 실패:", error.message);
+      this.lastError = error.message;
+      return { error: error.message };
     } finally {
       this.isSyncing = false;
     }
   }
 
-  // 원격에 커밋이 있는지 확인
-  async hasRemoteCommits() {
+  async hasLocalCommits() {
     try {
       await this.runGit(["log", "--oneline", "-1"], this.syncDir);
       return true;
@@ -264,7 +286,6 @@ class DataSync {
     }
   }
 
-  // data 폴더 → 싱크 디렉토리로 복사 (설정 파일 제외)
   async copyDataToSync() {
     const exclude = ["sync-settings.json"];
     const entries = await fs.readdir(this.dataPath);
@@ -277,7 +298,6 @@ class DataSync {
     }
   }
 
-  // 정리
   destroy() {
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);

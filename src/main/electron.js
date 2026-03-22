@@ -58,6 +58,8 @@ async function initDataSync() {
       syncDir,
       debounceMs: 30000,
     });
+    // autoSync는 설정 파일에 저장, 기본값 false (새 설치 시 해제)
+    dataSync.autoSync = settings.autoSync === true;
 
     await dataSync.init();
   } catch (error) {
@@ -171,8 +173,8 @@ ipcMain.handle("load-json-file", async (event, filePath) => {
 ipcMain.handle("save-json-file", async (event, filePath, data) => {
   try {
     await fs.outputJson(filePath, data, { spaces: 2 });
-    // 데이터 저장 시 자동 싱크 트리거
-    if (dataSync) dataSync.requestSync();
+    // 자동 싱크가 활성화된 경우에만 트리거
+    if (dataSync && dataSync.autoSync) dataSync.requestSync();
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -783,7 +785,14 @@ ipcMain.handle("sync-save-settings", async (event, { repoUrl, token }) => {
     // 새 설정으로 재초기화
     await initDataSync();
 
-    return { success: true };
+    if (dataSync && dataSync.isInitialized) {
+      if (dataSync.lastError) {
+        return { success: false, error: dataSync.lastError };
+      }
+      return { success: true };
+    } else {
+      return { success: false, error: dataSync ? dataSync.lastError || "초기화 실패" : "초기화 실패" };
+    }
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -829,10 +838,72 @@ ipcMain.handle("sync-test", async (event, { repoUrl, token }) => {
 
 // 싱크 상태 확인
 ipcMain.handle("sync-get-status", async () => {
+  const settings = await loadSyncSettings();
   return {
     isActive: dataSync !== null && dataSync.isInitialized,
     isSyncing: dataSync ? dataSync.isSyncing : false,
+    lastError: dataSync ? dataSync.lastError : null,
+    autoSync: settings ? settings.autoSync === true : false,
   };
+});
+
+// 자동 싱크 토글
+ipcMain.handle("sync-set-auto", async (event, enabled) => {
+  try {
+    const settings = await loadSyncSettings();
+    if (settings) {
+      settings.autoSync = enabled;
+      await saveSyncSettings(settings);
+      if (dataSync) {
+        dataSync.autoSync = enabled;
+      }
+    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 강제 업로드 (현재 데이터를 즉시 git에 push)
+ipcMain.handle("sync-force-upload", async () => {
+  try {
+    if (!dataSync || !dataSync.isInitialized) {
+      return { success: false, error: "동기화가 설정되지 않았습니다." };
+    }
+    const result = await dataSync.syncNow(true); // force = true
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 강제 다운로드 (git에서 데이터 가져와 덮어쓰기)
+ipcMain.handle("sync-force-download", async () => {
+  try {
+    if (!dataSync) {
+      const settings = await loadSyncSettings();
+      if (!settings || !settings.token || !settings.repoUrl) {
+        return { success: false, error: "동기화 설정이 없습니다." };
+      }
+      const dataPath = getDataPath();
+      const syncDir = isDev
+        ? path.join(__dirname, "../../.data-sync")
+        : path.join(path.dirname(process.execPath), ".data-sync");
+      const tmpSync = new DataSync({
+        dataPath,
+        repoUrl: settings.repoUrl,
+        token: settings.token,
+        syncDir,
+      });
+      return await tmpSync.restoreFromRemote();
+    }
+    return await dataSync.restoreFromRemote();
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 });
 
 // 원격 저장소에 데이터 있는지 확인

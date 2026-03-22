@@ -193,9 +193,22 @@
             </div>
             <p class="sync-hint" data-i18n="syncHint">GitHub Settings > Developer settings > Personal access tokens에서 생성</p>
           </div>
+          <hr style="margin: 16px 0; border: none; border-top: 1px solid #eee;">
+          <div class="sync-actions">
+            <div class="sync-auto-row">
+              <label class="sync-checkbox-label">
+                <input type="checkbox" id="sync-auto-checkbox">
+                <span data-i18n="syncAutoLabel">자동 동기화 (변경 시 자동 업로드)</span>
+              </label>
+            </div>
+            <div class="sync-manual-buttons">
+              <button id="sync-upload-btn" class="btn btn-primary btn-sm" data-i18n="syncUpload">현재 데이터 업로드</button>
+              <button id="sync-download-btn" class="btn btn-warning btn-sm" data-i18n="syncDownload">Git에서 데이터 가져오기</button>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
-          <button id="sync-test-btn" class="btn btn-info" data-i18n="syncTest">연결 테스트</button>
+          <button id="sync-open-data-btn" class="btn btn-secondary" data-i18n="openDataFolder">데이터 폴더 열기</button>
           <button id="sync-save-btn" class="btn btn-primary" data-i18n="save">저장</button>
           <button id="sync-disconnect-btn" class="btn btn-danger" data-i18n="syncDisconnect">연결 해제</button>
           <button id="sync-cancel-btn" class="btn btn-secondary" data-i18n="cancel">취소</button>

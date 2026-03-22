@@ -510,13 +510,18 @@ class App {
     tokenInput.placeholder = settings.hasToken ? settings.tokenMasked : "ghp_xxxxxxxxxxxx";
 
     // 상태 표시
-    if (syncStatus.isActive) {
+    if (syncStatus.isActive && !syncStatus.lastError) {
       statusEl.className = "sync-status connected";
       statusEl.textContent = window.i18n ? window.i18n.t("syncConnected") : "동기화 연결됨 - 자동 백업 활성";
       disconnectBtn.style.display = "";
+    } else if (syncStatus.isActive && syncStatus.lastError) {
+      statusEl.className = "sync-status error";
+      statusEl.textContent = `동기화 활성 (마지막 오류: ${syncStatus.lastError})`;
+      disconnectBtn.style.display = "";
     } else if (settings.hasToken) {
       statusEl.className = "sync-status error";
-      statusEl.textContent = window.i18n ? window.i18n.t("syncError") : "설정은 있지만 연결 실패";
+      const errDetail = syncStatus.lastError ? `: ${syncStatus.lastError}` : "";
+      statusEl.textContent = `연결 실패${errDetail}`;
       disconnectBtn.style.display = "";
     } else {
       statusEl.className = "sync-status disconnected";
@@ -524,9 +529,15 @@ class App {
       disconnectBtn.style.display = "none";
     }
 
+    // 자동 싱크 체크박스 초기값
+    document.getElementById("sync-auto-checkbox").checked = syncStatus.autoSync === true;
+
+    // 업로드/다운로드 버튼은 설정이 있을 때만 활성화
+    document.getElementById("sync-upload-btn").disabled = !settings.hasToken;
+    document.getElementById("sync-download-btn").disabled = !settings.hasToken;
+
     modal.classList.remove("hidden");
 
-    // 이벤트 리스너 (중복 방지를 위해 clone)
     this.setupSyncModalEvents();
   }
 
@@ -540,7 +551,15 @@ class App {
     const tokenToggle = document.getElementById("sync-token-toggle");
     const tokenInput = document.getElementById("sync-token-input");
 
+    const openDataBtn = document.getElementById("sync-open-data-btn");
+
     const closeModal = () => modal.classList.add("hidden");
+
+    // 데이터 폴더 열기
+    openDataBtn.onclick = async () => {
+      const dataPath = await window.electronAPI.invoke("get-data-path");
+      await window.electronAPI.invoke("open-file", dataPath);
+    };
 
     // 기존 리스너 제거를 위해 새 리스너로 교체
     closeBtn.onclick = closeModal;
@@ -601,48 +620,15 @@ class App {
         return;
       }
 
-      // 원격에 기존 데이터가 있는지 확인
+      // 설정 저장 (업로드/다운로드는 별도 버튼으로)
       statusEl.className = "sync-status testing";
-      statusEl.textContent = window.i18n ? window.i18n.t("syncChecking") : "원격 저장소 확인 중...";
+      statusEl.textContent = "설정 저장 중...";
 
-      const remoteCheck = await window.electronAPI.invoke("sync-check-remote", { repoUrl, token });
-
-      if (remoteCheck.success && remoteCheck.hasData) {
-        // 원격에 데이터 있음 → 복원 여부 확인
-        const choice = confirm(
-          window.i18n ? window.i18n.t("syncRestoreConfirm") :
-          "원격 저장소에 기존 백업 데이터가 있습니다.\n\n[확인] 원격 데이터를 복원 (다운로드)\n[취소] 현재 로컬 데이터를 업로드"
-        );
-
-        if (choice) {
-          // 복원
-          statusEl.className = "sync-status testing";
-          statusEl.textContent = window.i18n ? window.i18n.t("syncRestoring") : "데이터 복원 중...";
-
-          const restoreResult = await window.electronAPI.invoke("sync-restore", { repoUrl, token });
-
-          if (restoreResult.success) {
-            statusEl.className = "sync-status connected";
-            statusEl.textContent = window.i18n ? window.i18n.t("syncRestoreSuccess") : "복원 완료! 앱을 새로고침합니다.";
-            this.updateSyncButton(true);
-            // 복원 후 앱 새로고침 (데이터 다시 로드)
-            setTimeout(() => location.reload(), 1500);
-            return;
-          } else {
-            statusEl.className = "sync-status error";
-            statusEl.textContent = restoreResult.error || "복원 실패";
-            return;
-          }
-        }
-        // 취소 → 업로드 모드로 진행
-      }
-
-      // 업로드 모드: 설정 저장 + 싱크 시작
       const result = await window.electronAPI.invoke("sync-save-settings", { repoUrl, token });
 
       if (result.success) {
         statusEl.className = "sync-status connected";
-        statusEl.textContent = window.i18n ? window.i18n.t("syncSaved") : "저장 완료! 자동 동기화가 활성화되었습니다.";
+        statusEl.textContent = window.i18n ? window.i18n.t("syncSaved") : "저장 완료! 업로드/다운로드 버튼으로 동기화하세요.";
         this.updateSyncButton(true);
         Utils.updateStatus(window.i18n ? window.i18n.t("syncActivated") : "Git 동기화 활성화됨");
       } else {
@@ -666,8 +652,70 @@ class App {
         tokenInput.value = "";
         tokenInput.placeholder = "ghp_xxxxxxxxxxxx";
         disconnectBtn.style.display = "none";
+        document.getElementById("sync-auto-checkbox").checked = false;
         this.updateSyncButton(false);
         Utils.updateStatus(window.i18n ? window.i18n.t("syncDeactivated") : "Git 동기화 비활성화됨");
+      }
+    };
+
+    // 자동 싱크 체크박스
+    const autoCheckbox = document.getElementById("sync-auto-checkbox");
+    autoCheckbox.onchange = async () => {
+      await window.electronAPI.invoke("sync-set-auto", autoCheckbox.checked);
+      const statusEl = document.getElementById("sync-status");
+      if (autoCheckbox.checked) {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = "자동 동기화 활성화됨";
+      } else {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = "자동 동기화 비활성화 (수동 업로드/다운로드 가능)";
+      }
+    };
+
+    // 강제 업로드
+    const uploadBtn = document.getElementById("sync-upload-btn");
+    uploadBtn.onclick = async () => {
+      const statusEl = document.getElementById("sync-status");
+
+      if (!confirm("현재 로컬 데이터를 Git에 업로드합니다.\n원격 데이터가 덮어씌워집니다. 계속하시겠습니까?")) {
+        return;
+      }
+
+      statusEl.className = "sync-status testing";
+      statusEl.textContent = "업로드 중...";
+
+      const result = await window.electronAPI.invoke("sync-force-upload");
+
+      if (result.success) {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = "업로드 완료!";
+      } else {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = "업로드 실패: " + (result.error || "알 수 없는 오류");
+      }
+    };
+
+    // 강제 다운로드
+    const downloadBtn = document.getElementById("sync-download-btn");
+    downloadBtn.onclick = async () => {
+      const statusEl = document.getElementById("sync-status");
+
+      if (!confirm("Git에서 데이터를 가져와 로컬 데이터를 덮어씁니다.\n현재 로컬 데이터가 사라집니다. 계속하시겠습니까?")) {
+        return;
+      }
+
+      statusEl.className = "sync-status testing";
+      statusEl.textContent = "다운로드 중...";
+
+      const result = await window.electronAPI.invoke("sync-force-download");
+
+      if (result.success) {
+        statusEl.className = "sync-status connected";
+        statusEl.textContent = "다운로드 완료! 앱을 새로고침합니다.";
+        setTimeout(() => location.reload(), 1500);
+      } else {
+        statusEl.className = "sync-status error";
+        statusEl.textContent = "다운로드 실패: " + (result.error || "알 수 없는 오류");
       }
     };
   }
