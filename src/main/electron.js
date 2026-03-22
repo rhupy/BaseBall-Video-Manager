@@ -47,15 +47,11 @@ async function initDataSync() {
     }
 
     const dataPath = getDataPath();
-    const syncDir = isDev
-      ? path.join(__dirname, "../../.data-sync")
-      : path.join(path.dirname(process.execPath), ".data-sync");
-
     dataSync = new DataSync({
       dataPath,
       repoUrl: settings.repoUrl,
       token: settings.token,
-      syncDir,
+      syncDir: getSyncDir(),
       debounceMs: 30000,
     });
     // autoSync는 설정 파일에 저장, 기본값 false (새 설치 시 해제)
@@ -151,8 +147,17 @@ function getDataPath() {
   if (isDev) {
     return path.join(__dirname, "../../../data");
   } else {
-    // 배포 모드: exe가 설치된 경로의 data 폴더
-    return path.join(path.dirname(process.execPath), "data");
+    // 배포 모드: AppData에 저장 (설치/업데이트 시 삭제되지 않음)
+    return path.join(app.getPath("userData"), "data");
+  }
+}
+
+// 싱크 디렉토리 경로
+function getSyncDir() {
+  if (isDev) {
+    return path.join(__dirname, "../../.data-sync");
+  } else {
+    return path.join(app.getPath("userData"), ".data-sync");
   }
 }
 
@@ -889,9 +894,7 @@ ipcMain.handle("sync-force-download", async () => {
         return { success: false, error: "동기화 설정이 없습니다." };
       }
       const dataPath = getDataPath();
-      const syncDir = isDev
-        ? path.join(__dirname, "../../.data-sync")
-        : path.join(path.dirname(process.execPath), ".data-sync");
+      const syncDir = getSyncDir();
       const tmpSync = new DataSync({
         dataPath,
         repoUrl: settings.repoUrl,
@@ -926,9 +929,7 @@ ipcMain.handle("sync-check-remote", async (event, { repoUrl, token }) => {
 ipcMain.handle("sync-restore", async (event, { repoUrl, token }) => {
   try {
     const dataPath = getDataPath();
-    const syncDir = isDev
-      ? path.join(__dirname, "../../.data-sync")
-      : path.join(path.dirname(process.execPath), ".data-sync");
+    const syncDir = getSyncDir();
 
     const sync = new DataSync({ dataPath, repoUrl, token, syncDir });
     const result = await sync.restoreFromRemote();
