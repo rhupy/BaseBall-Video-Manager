@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs-extra");
 const HybridFileWatcher = require("./hybrid-file-watcher");
@@ -112,6 +112,9 @@ app.on("activate", () => {
 });
 
 function createWindow() {
+  // 기본 메뉴 제거
+  Menu.setApplicationMenu(null);
+
   // 메인 윈도우 생성
   mainWindow = new BrowserWindow({
     width: 1400,

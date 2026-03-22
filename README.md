@@ -1,275 +1,184 @@
 # Baseball Video Manager
 
-⚡ **고성능 비디오 및 파일 관리 도구** - Electron 기반
+**Windows 전용 고성능 비디오 파일 관리 도구**
 
-대용량 미디어 라이브러리를 효율적으로 관리하는 현대적이고 성능 최적화된 데스크톱 애플리케이션입니다.
+대용량 미디어 라이브러리를 한 화면에서 검색, 정렬, 평가, 메모하고 Git 기반으로 자동 백업하는 데스크톱 애플리케이션입니다.
 
-## 📸 스크린샷
+![Baseball Video Manager](./public/image/image.png)
 
-![Baseball Video Manager](./screenshots/main-interface.png)
+![Electron](https://img.shields.io/badge/Electron_28-191970?style=flat-square&logo=Electron&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-%23323330.svg?style=flat-square&logo=javascript&logoColor=%23F7DF1E)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
+![Version](https://img.shields.io/badge/Version-1.6.0-green?style=flat-square)
 
-_직관적인 파일 관리 화면_
+---
 
-### 🎯 **주요 UI 요소**
+## Features
 
-- **헤더**: 언어 토글, 데이터 백업, 확장자 관리, 새로고침, 라이브러리 관리, 정리 버튼
-- **검색 바**: 정렬 방향 토글, 정렬 버튼들 (추가시간순, 실행시간순, 평점순, 이름순)
-- **파일 리스트**: 가상 스크롤링으로 대용량 처리, 실시간 실행시각 표시, 별점 시스템
-- **상태 바**: 현재 지원 확장자 표시 (동적 업데이트)
+### File Management
+- **6,500+ 파일 관리** — 가상 스크롤링으로 대용량 목록도 60fps 유지
+- **27개 비디오 확장자** 기본 지원, 사용자 추가/삭제 가능
+- **듀얼 탭** — 비디오 파일 / 기타 파일(압축 등) 분리 관리
+- **다중 라이브러리** — 여러 드라이브의 폴더를 하나로 통합
 
-![Tech Stack](https://img.shields.io/badge/Electron-191970?style=for-the-badge&logo=Electron&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/css3-%23157CFB.svg?style=for-the-badge&logo=css3&logoColor=white)
+### Metadata & Rating
+- **5단계 별점** — 클릭으로 즉시 평가, NTFS ADS에 저장
+- **인라인 메모** — 메모 컬럼 클릭 → 바로 편집 (Enter 저장, Esc 취소)
+- **재생 이력** — 마지막 실행 시각, 재생 횟수 자동 기록
+- **추가 시각** — 라이브러리에 등록된 시점 추적
 
-## 🚀 주요 특징
+### Search & Sort
+- **실시간 검색** — 타이핑 즉시 필터링 + 검색어 하이라이트
+- **6가지 정렬** — 추가시간 / 실행시간 / 평점 / 이름 / 메모 + 오름차순/내림차순 토글
+- **정렬 유지** — 검색, 탭 전환, 파일 추가/삭제 후에도 현재 정렬 상태 유지
 
-### ⚡ **극한 성능 최적화**
+### Git Sync (Cloud Backup)
+- **원격 백업** — GitHub 등 Git 저장소에 메타데이터 자동/수동 업로드
+- **복원** — 새 PC에 설치 후 Git에서 데이터 다운로드
+- **자동 동기화** — 체크박스 활성화 시 변경사항 30초 디바운스 후 자동 push
+- **빈 데이터 보호** — 빈 상태로 원격을 덮어쓰지 않음
 
-- **Windows Search API 통합**: 시스템 레벨 고속 파일 검색
-- **하이브리드 파일 감시**: 실시간 모니터링 + 캐싱 시스템
-- **NTFS ADS 메타데이터**: Windows 파일 속성 직접 저장
-- **가상 스크롤링**: 수만 개 파일도 부드럽게 처리
-- **청크 기반 로딩**: 1000개씩 분할 처리로 메모리 효율성 극대화
+### Performance
+- **Windows Search API** — 시스템 인덱스 활용으로 10,000개 파일 500ms 이내 스캔
+- **하이브리드 파일 감시** — chokidar 실시간 감시 + Windows Search 병렬 처리
+- **NTFS ADS 메타데이터** — 별점/메모를 파일 자체에 저장 (이동해도 유지)
+- **GPU 깜빡임 방지** — 하드웨어 가속 비활성화로 스크롤 시 전체 화면 깜빡임 해결
 
-### 🔄 **완벽한 라이브러리 동기화**
+---
 
-- **100% 실시간 동기화**: 실제 파일 시스템과 완벽 일치
-- **자동 동기화**: 앱 시작시 자동으로 라이브러리와 동기화
-- **스마트 네트워크 처리**: 접속 불가능한 드라이브의 데이터는 보존
-- **빈 폴더 자동 정리**: 새로고침시 빈 디렉토리 자동 제거
+## Installation
 
-### 📁 **지능형 파일 관리**
+### Setup (권장)
+[Releases](../../releases)에서 `Baseball Video Manager Setup x.x.x.exe`를 다운로드하여 설치합니다.
 
-- **커스터마이징 가능한 확장자**: 비디오/기타 파일 확장자 자유 추가/삭제
-- **완전한 백업 시스템**: 데이터 + 설정 통합 ZIP 백업
-- **분류별 관리**: 비디오 파일과 기타 파일 자동 분류
-- **평점 시스템**: 5단계 별점 평가 (더블클릭 차단으로 오작동 방지)
-- **실행 이력**: 마지막 실행 시간 실시간 표시
-- **원클릭 실행**: 기본 프로그램으로 즉시 실행
+- 기본 설치 경로: `%LOCALAPPDATA%\Baseball Video Manager\`
+- 데이터 저장 경로: `%APPDATA%\Baseball Video Manager\data\`
+- **업데이트 시 데이터 유지** — Setup 재실행해도 메타데이터, 설정 보존
 
-### 🔍 **강력한 검색 엔진**
+### Portable
+`Baseball Video Manager x.x.x.exe` 단일 파일 실행. 설치 불필요.
 
-- **실시간 검색**: 타이핑과 동시에 결과 표시
-- **인덱싱 시스템**: 대용량 데이터도 즉시 검색
-- **하이라이팅**: 검색어 자동 강조 표시
-- **검색 기록**: 최근 검색어 자동 저장
-
-### 💻 **현대적 사용자 경험**
-
-- **다국어 지원**: 한국어/영어 토글 전환 (실시간 + 설정 저장)
-- **SUIT 폰트 적용**: 한국어 가독성 최적화된 전용 폰트
-- **반응형 UI**: 깔끔하고 직관적인 인터페이스
-- **스마트 진행 표시**: 수동/자동 작업 구분하는 지능형 프로그래스바
-- **키보드 단축키**: 빠른 탐색 및 제어
-- **실시간 피드백**: 모든 작업의 즉시 상태 표시
-
-## 📦 설치 및 실행
-
-### 개발 환경 설정
+### Build from Source
 
 ```bash
 # 의존성 설치
 npm install
 
-# 개발 모드 실행
+# 개발 모드
 npm run dev
-```
 
-### 배포용 빌드
+# Windows Setup 빌드
+npm run build:win-setup
 
-```bash
-# Windows용 Portable 실행파일 생성 (설치 불필요)
+# Windows Portable 빌드
 npm run build:win-portable
 
-# Windows용 인스톨러 생성
+# 둘 다 빌드
 npm run build:win
-
-# 모든 플랫폼용 빌드
-npm run build
 ```
 
-## 🎯 지원 파일 형식
+---
 
-### 📹 **비디오 파일** (확장 가능)
+## Usage
 
-**기본 지원**: `.avi`, `.mp4`, `.mov`, `.wmv`, `.avchd`, `.flv`, `.f4v`, `.swf`, `.mkv`, `.mpeg2`, `.ts`, `.tp`, `.3gp`, `.3g2`, `.asf`, `.dv`, `.m2v`, `.m4v`, `.mpg`, `.mpeg`, `.mpv`, `.qt`, `.rm`, `.rmvb`, `.vob`, `.webm`, `.ogv`
+### 시작하기
 
-**커스터마이징**: 확장자 관리 메뉴에서 원하는 비디오 형식 추가/삭제 가능
+1. 앱 실행 → **라이브러리 관리** → 비디오가 있는 폴더 추가
+2. 자동으로 파일 스캔 및 목록 표시
+3. 파일 클릭으로 재생, 별점/메모로 관리
 
-### 📦 **기타 파일** (확장 가능)
+### 파일 목록 컬럼
 
-**기본 지원**: `.zip`, `.7z`, `.ezc`, `.alzip`, `.001`, `.zpaq`, `.rar`, `.tar`, `.gz`, `.bz2`, `.xz`
+| 컬럼 | 설명 |
+|------|------|
+| 파일명 | 더블클릭으로 재생 |
+| 메모 | 클릭하여 인라인 편집 |
+| 추가시각 / 실행시각 | 등록일, 마지막 재생일 |
+| ▶ 🔓 📁 🗑 | 재생 / Lada 전송 / 폴더 열기 / 삭제 |
+| ★★★★★ | 클릭으로 별점 토글 (같은 별 클릭 시 해제) |
 
-**커스터마이징**: 필요한 파일 확장자를 자유롭게 추가/삭제하여 관리 범위 확장
+### Git 동기화
 
-## ⌨️ 키보드 단축키
+1. **동기화** 버튼 → 저장소 URL + Personal Access Token 입력 → **저장**
+2. **현재 데이터 업로드** — 로컬 데이터를 Git에 push
+3. **Git에서 데이터 가져오기** — 원격 데이터로 로컬 덮어쓰기 (새 설치 시)
+4. **자동 동기화** 체크 — 변경 시 자동 업로드 (기본 해제, 설정 저장됨)
 
-| 단축키         | 기능                    |
-| -------------- | ----------------------- |
-| `Ctrl/Cmd + F` | 검색 포커스             |
-| `Ctrl/Cmd + R` | 파일 새로고침           |
-| `Ctrl/Cmd + 1` | 비디오 탭               |
-| `Ctrl/Cmd + 2` | 압축 파일 탭            |
-| `Ctrl/Cmd + L` | 라이브러리 관리         |
-| `F5`           | 새로고침                |
-| `ESC`          | 검색 초기화 / 모달 닫기 |
+### 키보드 단축키
 
-## 🏗️ 프로젝트 구조
+| 단축키 | 기능 |
+|--------|------|
+| `Ctrl + F` | 검색 포커스 |
+| `Ctrl + R` / `F5` | 새로고침 |
+| `Ctrl + 1` | 비디오 탭 |
+| `Ctrl + 2` | 기타 파일 탭 |
+| `Ctrl + L` | 라이브러리 관리 |
+| `ESC` | 검색 초기화 / 모달 닫기 |
+
+---
+
+## Architecture
 
 ```
-BaseBall-Video-Manager/
-├── package.json                      # 프로젝트 설정 + archiver 종속성
-├── public/font/
-│   └── SUIT-Regular.ttf              # 한국어 최적화 전용 폰트
-├── src/
-│   ├── main/
-│   │   ├── electron.js               # Electron 메인 프로세스 + 백업 기능
-│   │   ├── windows-search-scanner.js # Windows Search API 통합
-│   │   ├── windows-metadata-manager.js # NTFS ADS 메타데이터 관리
-│   │   └── hybrid-file-watcher.js    # 하이브리드 파일 감시 시스템
-│   └── renderer/
-│       ├── index.html                # UI 레이아웃 + 다국어 지원
-│       ├── styles/
-│       │   └── main.css              # SUIT 폰트 적용 + 모던 스타일
-│       └── js/
-│           ├── main.js               # 앱 메인 로직 + 다국어
-│           ├── i18n.js               # 다국어 지원 시스템 ⭐ NEW
-│           ├── extension-manager.js  # 확장자 관리 시스템 ⭐ NEW
-│           ├── file-manager.js       # 하이브리드 파일 관리
-│           ├── virtual-scroll.js     # 가상 스크롤링 + 실시간 업데이트
-│           ├── search-engine.js      # 고성능 검색
-│           ├── library-manager.js    # 라이브러리 관리
-│           └── utils.js              # 유틸리티 함수
-├── data/                             # 완전 백업 가능한 데이터 저장소
-│   ├── lib.json                      # 라이브러리 경로 설정
-│   ├── extensions.json               # 커스텀 확장자 설정 ⭐ NEW
-│   ├── media/files.json              # 비디오 파일 메타데이터
-│   └── file/files.json               # 기타 파일 메타데이터
-└── assets/
-    └── icons/                        # 애플리케이션 아이콘
+src/
+├── main/                          # Electron 메인 프로세스
+│   ├── electron.js                # IPC 핸들러, 윈도우 관리
+│   ├── data-sync.js               # Git 동기화 모듈
+│   ├── hybrid-file-watcher.js     # 파일 감시 (chokidar + Windows Search)
+│   ├── windows-metadata-manager.js # NTFS ADS 메타데이터 R/W
+│   └── windows-search-scanner.js  # Windows Search API 쿼리
+└── renderer/                      # UI (Vanilla JS)
+    ├── index.html
+    ├── styles/main.css
+    └── js/
+        ├── main.js                # App 클래스, 이벤트, 정렬
+        ├── file-manager.js        # 파일 CRUD, 검색, 하이브리드 시스템
+        ├── virtual-scroll.js      # 가상 스크롤 + 인라인 메모 편집
+        ├── search-engine.js       # 검색 디바운싱, 하이라이트
+        ├── library-manager.js     # 라이브러리 경로 관리 모달
+        ├── extension-manager.js   # 확장자 관리 모달
+        ├── i18n.js                # 한국어/영어 전환
+        └── utils.js               # 포맷팅, 별점 생성
 ```
 
-## ⚙️ 설정
+### Data Storage
 
-### 라이브러리 경로 설정
+| 파일 | 위치 | 내용 |
+|------|------|------|
+| `lib.json` | data/ | 라이브러리 폴더 경로 목록 |
+| `media/files.json` | data/ | 비디오 파일 메타데이터 (별점, 메모, 재생이력) |
+| `file/files.json` | data/ | 기타 파일 메타데이터 |
+| `extensions.json` | data/ | 사용자 지정 확장자 설정 |
+| `sync-settings.json` | data/ | Git 동기화 설정 (gitignore) |
 
-`data/lib.json` 파일에서 관리할 디렉토리를 설정할 수 있습니다:
+---
 
-```json
-[
-  {
-    "idx": 1,
-    "path": "D:\\Movies"
-  },
-  {
-    "idx": 2,
-    "path": "E:\\Archive"
-  }
-]
-```
+## Supported Formats
 
-또는 앱 내에서 **라이브러리 관리** 버튼을 통해 GUI로 설정 가능합니다.
+### Video (기본 27종, 추가 가능)
+`.avi` `.mp4` `.mov` `.wmv` `.avchd` `.flv` `.f4v` `.swf` `.mkv` `.mpeg2` `.ts` `.tp` `.3gp` `.3g2` `.asf` `.dv` `.m2v` `.m4v` `.mpg` `.mpeg` `.mpv` `.qt` `.rm` `.rmvb` `.vob` `.webm` `.ogv`
 
-## 🔧 고급 기능
+### Archive (기본 7종, 추가 가능)
+`.zip` `.7z` `.ezc` `.alzip` `.001` `.zpaq` `.rar`
 
-### 🆕 **새로운 기능들**
+**확장자 관리** 버튼에서 자유롭게 추가/삭제할 수 있습니다.
 
-#### 🌍 **완전한 다국어 지원**
+---
 
-- 실시간 한국어/영어 전환 (헤더 좌측 토글)
-- 모든 UI 요소, 메시지, 버튼 다국어화
-- 언어 설정 자동 저장 (localStorage)
-- 앱 재시작시에도 언어 설정 유지
+## Tech Stack
 
-#### 🎛️ **확장자 관리 시스템**
+| 구성 | 기술 |
+|------|------|
+| Framework | Electron 28 |
+| Language | Vanilla JavaScript (프레임워크 없음) |
+| UI | HTML5 + CSS3 + SUIT 폰트 |
+| File Watch | chokidar + Windows Search API |
+| Metadata | NTFS Alternative Data Streams |
+| Backup | archiver (ZIP), Git push |
+| Build | electron-builder (NSIS + Portable) |
 
-- 비디오/기타 파일 확장자 완전 커스터마이징
-- 실시간 추가/삭제 with 태그 UI
-- 기본값 초기화 기능
-- data/extensions.json 자동 백업 포함
+---
 
-#### 💾 **통합 백업 시스템**
+## License
 
-- 원클릭 완전 백업 (data 폴더 → ZIP)
-- 현재 시간 기반 파일명 자동 생성 (`data_YYYY-MM-DD-HH-mm-ss.zip`)
-- 사용자 지정 백업 위치 선택
-- 라이브러리 설정 + 확장자 설정 + 모든 메타데이터 포함
-
-#### ⚡ **Windows 전용 성능 최적화**
-
-- Windows Search API 직접 연동으로 탐색기급 속도
-- NTFS Alternative Data Streams 메타데이터 저장
-- 하이브리드 파일 감시 (실시간 + 캐싱)
-- JSON 백업과의 이중화 시스템
-
-### 🔄 **고급 동기화 기능**
-
-- 하이브리드 시스템: Windows Search + JSON 백업
-- 새 파일 자동 감지 및 실시간 추가
-- 삭제된 파일 자동 제거
-- 접속 불가능한 네트워크 드라이브는 데이터 보존
-- 고급 정리: 중복 제거 + 빈 폴더 삭제
-
-### 📊 **성능 모니터링**
-
-개발 모드에서는 콘솔 명령어로 성능 정보 확인:
-
-```javascript
-debugApp(); // 앱 상태 정보
-refreshApp(); // 강제 새로고침
-cleanupApp(); // 데이터 정리
-```
-
-### 🗂️ **빈 폴더 관리**
-
-새로고침시 자동으로 빈 디렉토리를 재귀적으로 제거하여 라이브러리를 깔끔하게 유지합니다.
-
-## 🌟 성능 벤치마크
-
-| 항목              | 기존 성능               | **⚡ 하이브리드 시스템**  |
-| ----------------- | ----------------------- | ------------------------- |
-| **파일 스캔**     | 10,000개 파일 ~3초      | **10,000개 파일 < 500ms** |
-| **검색 속도**     | 실시간 (300ms 디바운싱) | **시스템급 즉시 검색**    |
-| **메모리 사용량** | 가상화로 50% 절약       | **캐싱으로 70% 절약**     |
-| **UI 반응성**     | 60fps 유지              | **백그라운드 처리**       |
-| **동기화 속도**   | 순차 처리               | **Windows API 병렬**      |
-
-## 🚨 문제 해결
-
-### 파일이 로딩되지 않는 경우
-
-1. `data/lib.json`의 경로가 올바른지 확인
-2. 네트워크 드라이브 연결 상태 확인
-3. 라이브러리 관리에서 유효하지 않은 경로 제거
-
-### 성능이 느린 경우
-
-1. 개발자 도구에서 메모리 사용량 확인
-2. 검색어를 더 구체적으로 입력
-3. 불필요한 라이브러리 경로 제거
-
-## ✨ **최신 업데이트 (v2.0)**
-
-### 🎉 **구현 완료된 주요 기능**
-
-- [x] 🌍 **다국어 지원** (한국어/영어) - 실시간 전환 + 설정 저장
-- [x] 🎛️ **확장자 관리 시스템** - 커스터마이징 가능한 파일 형식
-- [x] 💾 **통합 백업 시스템** - 원클릭 완전 백업
-- [x] 🎨 **SUIT 폰트** - 한국어 최적화 전용 폰트
-- [x] ⚡ **Windows 하이브리드 시스템** - Search API + NTFS ADS
-- [x] 🛡️ **별점 오작동 방지** - 더블클릭 차단 시스템
-- [x] 📊 **스마트 진행 표시** - 수동/자동 작업 구분
-
-### 🔮 **향후 계획**
-
-- [ ] 👁️ 비디오 썸네일 미리보기
-- [ ] 🏷️ 태그 시스템
-- [ ] 📈 사용 통계 대시보드
-- [ ] ☁️ 클라우드 동기화
-- [ ] 🔌 플러그인 시스템
-- [ ] 🌐 추가 언어 지원 (일본어, 중국어)
-
-## 📄 라이센스
-
-이 프로젝트는 MIT 라이센스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
+MIT
