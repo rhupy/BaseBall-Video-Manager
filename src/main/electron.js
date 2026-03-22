@@ -87,9 +87,17 @@ async function ensureDataFolder() {
 
 // 앱이 준비되면 실행
 app.whenReady().then(async () => {
-  await ensureDataFolder();
+  try {
+    await ensureDataFolder();
+  } catch (error) {
+    console.error("데이터 폴더 생성 실패:", error);
+  }
   createWindow();
-  await initDataSync();
+  try {
+    await initDataSync();
+  } catch (error) {
+    console.error("데이터 싱크 초기화 실패:", error);
+  }
 });
 
 // 모든 윈도우가 닫혔을 때
@@ -138,11 +146,10 @@ function createWindow() {
 
 // 데이터 폴더 경로 함수
 function getDataPath() {
-  // 개발 모드와 배포 모드에 따라 경로 설정
   if (isDev) {
     return path.join(__dirname, "../../../data");
   } else {
-    // 배포 모드: exe 파일이 있는 경로의 data 폴더
+    // 배포 모드: exe가 설치된 경로의 data 폴더
     return path.join(path.dirname(process.execPath), "data");
   }
 }
