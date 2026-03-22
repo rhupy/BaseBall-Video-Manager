@@ -628,9 +628,12 @@ class App {
 
       if (result.success) {
         statusEl.className = "sync-status connected";
-        statusEl.textContent = window.i18n ? window.i18n.t("syncSaved") : "저장 완료! 업로드/다운로드 버튼으로 동기화하세요.";
+        statusEl.textContent = "저장 완료! 업로드 또는 다운로드 버튼을 눌러 동기화하세요.";
         this.updateSyncButton(true);
-        Utils.updateStatus(window.i18n ? window.i18n.t("syncActivated") : "Git 동기화 활성화됨");
+        // 업로드/다운로드 버튼 즉시 활성화
+        document.getElementById("sync-upload-btn").disabled = false;
+        document.getElementById("sync-download-btn").disabled = false;
+        document.getElementById("sync-disconnect-btn").style.display = "";
       } else {
         statusEl.className = "sync-status error";
         statusEl.textContent = result.error;

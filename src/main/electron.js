@@ -776,28 +776,17 @@ ipcMain.handle("sync-load-settings", async () => {
   return settings || { repoUrl: "", hasToken: false };
 });
 
-// 싱크 설정 저장 & 재초기화
+// 싱크 설정 저장 (설정만 저장, git 초기화 안 함)
 ipcMain.handle("sync-save-settings", async (event, { repoUrl, token }) => {
   try {
-    await saveSyncSettings({ repoUrl, token });
-
-    // 기존 싱크 중지
-    if (dataSync) {
-      dataSync.destroy();
-      dataSync = null;
-    }
-
-    // 새 설정으로 재초기화
-    await initDataSync();
-
-    if (dataSync && dataSync.isInitialized) {
-      if (dataSync.lastError) {
-        return { success: false, error: dataSync.lastError };
-      }
-      return { success: true };
-    } else {
-      return { success: false, error: dataSync ? dataSync.lastError || "초기화 실패" : "초기화 실패" };
-    }
+    // 기존 설정 로드해서 autoSync 유지
+    const existing = await loadSyncSettings();
+    await saveSyncSettings({
+      repoUrl,
+      token,
+      autoSync: existing ? existing.autoSync : false,
+    });
+    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -856,54 +845,96 @@ ipcMain.handle("sync-get-status", async () => {
 ipcMain.handle("sync-set-auto", async (event, enabled) => {
   try {
     const settings = await loadSyncSettings();
-    if (settings) {
-      settings.autoSync = enabled;
-      await saveSyncSettings(settings);
+    if (!settings) return { success: false, error: "설정 없음" };
+
+    settings.autoSync = enabled;
+    await saveSyncSettings(settings);
+
+    if (enabled) {
+      // 자동 싱크 활성화 시 dataSync 초기화
+      if (!dataSync || !dataSync.isInitialized) {
+        await initDataSync();
+      } else {
+        dataSync.autoSync = true;
+      }
+    } else {
       if (dataSync) {
-        dataSync.autoSync = enabled;
+        dataSync.autoSync = false;
       }
     }
+
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
 });
 
-// 강제 업로드 (현재 데이터를 즉시 git에 push)
+// 강제 업로드 (설정 로드 → init → push 전부 자체 처리)
 ipcMain.handle("sync-force-upload", async () => {
   try {
-    if (!dataSync || !dataSync.isInitialized) {
-      return { success: false, error: "동기화가 설정되지 않았습니다." };
+    const settings = await loadSyncSettings();
+    if (!settings || !settings.token || !settings.repoUrl) {
+      return { success: false, error: "동기화 설정이 없습니다. 먼저 저장소 URL과 토큰을 저장하세요." };
     }
-    const result = await dataSync.syncNow(true); // force = true
+
+    const sync = new DataSync({
+      dataPath: getDataPath(),
+      repoUrl: settings.repoUrl,
+      token: settings.token,
+      syncDir: getSyncDir(),
+    });
+
+    const initOk = await sync.init();
+    if (!initOk) {
+      return { success: false, error: sync.lastError || "git 초기화 실패" };
+    }
+
+    const result = await sync.syncNow(true);
     if (result.error) {
       return { success: false, error: result.error };
     }
+
+    // 성공 시 글로벌 dataSync 업데이트
+    if (dataSync) dataSync.destroy();
+    dataSync = sync;
+    dataSync.autoSync = settings.autoSync === true;
+
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }
 });
 
-// 강제 다운로드 (git에서 데이터 가져와 덮어쓰기)
+// 강제 다운로드 (설정 로드 → clone → 복사 전부 자체 처리)
 ipcMain.handle("sync-force-download", async () => {
   try {
-    if (!dataSync) {
-      const settings = await loadSyncSettings();
-      if (!settings || !settings.token || !settings.repoUrl) {
-        return { success: false, error: "동기화 설정이 없습니다." };
-      }
-      const dataPath = getDataPath();
-      const syncDir = getSyncDir();
-      const tmpSync = new DataSync({
-        dataPath,
-        repoUrl: settings.repoUrl,
-        token: settings.token,
-        syncDir,
-      });
-      return await tmpSync.restoreFromRemote();
+    const settings = await loadSyncSettings();
+    if (!settings || !settings.token || !settings.repoUrl) {
+      return { success: false, error: "동기화 설정이 없습니다. 먼저 저장소 URL과 토큰을 저장하세요." };
     }
-    return await dataSync.restoreFromRemote();
+
+    const sync = new DataSync({
+      dataPath: getDataPath(),
+      repoUrl: settings.repoUrl,
+      token: settings.token,
+      syncDir: getSyncDir(),
+    });
+
+    const result = await sync.restoreFromRemote();
+
+    if (result.success) {
+      // 성공 시 글로벌 dataSync 업데이트
+      if (dataSync) dataSync.destroy();
+      dataSync = sync;
+      dataSync.autoSync = settings.autoSync === true;
+
+      // git config 설정
+      await sync.runGit(["config", "user.email", "auto-sync@baseball-app.local"], sync.syncDir).catch(() => {});
+      await sync.runGit(["config", "user.name", "Baseball Auto Sync"], sync.syncDir).catch(() => {});
+      sync.isInitialized = true;
+    }
+
+    return result;
   } catch (error) {
     return { success: false, error: error.message };
   }
