@@ -7,6 +7,10 @@ let mainWindow;
 let isDev = process.argv.includes("--dev");
 let hybridFileWatcher = null; // 하이브리드 파일 감시 시스템
 
+// Windows GPU 렌더링 깜빡임 방지
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-gpu-compositing");
+
 // 앱이 준비되면 실행
 app.whenReady().then(createWindow);
 
@@ -36,6 +40,7 @@ function createWindow() {
       enableRemoteModule: true,
     },
     icon: path.join(__dirname, "../../assets/icons/icon.png"),
+    backgroundColor: "#f5f5f5", // 깜빡임 방지 (CSS body 배경색과 동일)
     show: false, // 준비될 때까지 숨김
   });
 
@@ -173,7 +178,7 @@ ipcMain.handle("send-to-lada", async (event, filePath) => {
     const { exec } = require("child_process");
     // Lada GUI 설치 경로 (기본 경로)
     const ladaExePaths = [
-      path.join(process.env.LOCALAPPDATA || "", "Lada GUI", "Lada GUI.exe"),
+      path.join(process.env.LOCALAPPDATA || "", "Lada GUI", "lada-gui.exe"),
       path.join(process.env.PROGRAMFILES || "", "Lada GUI", "Lada GUI.exe"),
     ];
     let ladaExe = null;
