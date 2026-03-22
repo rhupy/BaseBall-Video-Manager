@@ -129,8 +129,8 @@ class App {
     // 정렬 버튼들
     document.querySelectorAll(".sort-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        const sortType = e.target.dataset.sort;
-        this.handleSort(sortType);
+        const sortType = e.currentTarget.dataset.sort;
+        if (sortType) this.handleSort(sortType);
       });
     });
 

@@ -1,6 +1,6 @@
 {
   "name": "baseball-video-manager-electron",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "High-performance video and file manager built with Electron",
   "main": "src/main/electron.js",
   "scripts": {

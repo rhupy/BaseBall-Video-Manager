@@ -787,8 +787,13 @@ class FileManager {
     return this.filteredFiles[this.currentTab] || [];
   }
 
-  // UI 업데이트
+  // UI 업데이트 (현재 정렬 유지)
   updateUI() {
+    // 현재 정렬 상태 재적용
+    if (window.app && window.app.currentSort) {
+      this.sortFilesQuiet(window.app.currentSort, window.app.isDescending);
+    }
+
     const files = this.getCurrentFiles();
     Utils.updateFileCount(files.length);
 
@@ -1028,10 +1033,15 @@ class FileManager {
     }
   }
 
-  // 파일 정렬 (방향 지원)
-  sortFiles(sortType, isDescending = true) {
+  // 정렬만 수행 (UI 갱신 없이 — updateUI에서 호출)
+  sortFilesQuiet(sortType, isDescending = true) {
     const currentFiles = this.filteredFiles[this.currentTab];
+    if (!currentFiles || currentFiles.length === 0) return;
+    this._doSort(currentFiles, sortType, isDescending);
+  }
 
+  // 실제 정렬 로직
+  _doSort(currentFiles, sortType, isDescending) {
     switch (sortType) {
       case "name":
         currentFiles.sort((a, b) => {
@@ -1067,7 +1077,6 @@ class FileManager {
         currentFiles.sort((a, b) => {
           const descA = a.Desc || "";
           const descB = b.Desc || "";
-          // 메모가 있는 항목을 우선, 그 다음 가나다순
           if (descA && !descB) return isDescending ? -1 : 1;
           if (!descA && descB) return isDescending ? 1 : -1;
           const result = descA.localeCompare(descB, "ko");
@@ -1075,7 +1084,6 @@ class FileManager {
         });
         break;
       default:
-        // 알 수 없는 정렬 타입인 경우 추가시간순으로 폴백
         currentFiles.sort((a, b) => {
           const timeA = a.Addtime ? new Date(a.Addtime).getTime() : 0;
           const timeB = b.Addtime ? new Date(b.Addtime).getTime() : 0;
@@ -1084,6 +1092,12 @@ class FileManager {
         });
         break;
     }
+  }
+
+  // 파일 정렬 (UI 업데이트 포함)
+  sortFiles(sortType, isDescending = true) {
+    const currentFiles = this.filteredFiles[this.currentTab];
+    this._doSort(currentFiles, sortType, isDescending);
 
     this.updateUI();
   }
