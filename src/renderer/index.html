@@ -21,8 +21,11 @@
             </label>
           </div>
           <h1 data-i18n="appTitle">Baseball Video Manager</h1>
+          <span id="app-version" class="app-version" title="클릭: 업데이트 확인"></span>
+          <span id="update-status" class="update-status"></span>
         </div>
         <div class="header-controls">
+          <button id="meta-settings-btn" class="btn btn-meta" data-i18n="metaSettings">영상 정보</button>
           <button id="backup-btn" class="btn btn-info" data-i18n="dataBackup">데이터 백업</button>
           <button id="extensions-btn" class="btn btn-success" data-i18n="extensionManagement">확장자 관리</button>
           <button id="refresh-btn" class="btn btn-primary" data-i18n="refresh">새로고침</button>
@@ -34,27 +37,28 @@
         </div>
       </header>
 
-      <!-- 검색 바 -->
+      <!-- 검색 바 (탭 전환 + 검색) -->
       <div class="search-container">
-        <div class="sort-controls">
-          <div class="sort-direction-toggle">
-            <label class="toggle-switch" title="정렬 방향 변경">
-              <input type="checkbox" id="sort-direction-toggle" checked>
-              <span class="toggle-slider">
-                <span class="toggle-label desc">↓</span>
-                <span class="toggle-label asc">↑</span>
-              </span>
-            </label>
-            <span class="sort-direction-label" data-i18n="descending">내림차순</span>
-          </div>
-          <div class="sort-buttons">
-            <button class="sort-btn active" data-sort="addtime" data-i18n="sortAddTime">추가시간순</button>
-            <button class="sort-btn" data-sort="lasttime" data-i18n="sortLastTime">실행시간순</button>
-            <button class="sort-btn" data-sort="rating" data-i18n="sortRating">평점순</button>
-            <button class="sort-btn" data-sort="name" data-i18n="sortName">이름순</button>
-            <button class="sort-btn" data-sort="memo" data-i18n="sortMemo">메모순</button>
-          </div>
+        <!-- 뒤로/앞으로 (탭, 중복 보기, 배우 보기 이동 기록) -->
+        <div class="nav-buttons">
+          <button id="nav-back" class="nav-btn" title="뒤로 (Alt+←)" disabled>←</button>
+          <button id="nav-forward" class="nav-btn" title="앞으로 (Alt+→)" disabled>→</button>
         </div>
+        <!-- 비디오/기타 전환 -->
+        <div class="tab-container">
+          <button class="tab-btn active" data-tab="video" data-i18n="videoFiles">비디오 파일</button>
+          <button class="tab-btn" data-tab="file" data-i18n="otherFiles">기타 파일</button>
+        </div>
+        <!-- 비디오 탭에서만 표시 -->
+        <button id="actress-toggle" class="dup-toggle actress-toggle" data-i18n="actressView">배우별</button>
+        <button
+          id="duplicate-toggle"
+          class="dup-toggle"
+          data-i18n="duplicatesOnly"
+          data-i18n-title="duplicatesOnlyTitle"
+        >중복 파일</button>
+        <!-- 중복 보기에서만 표시 -->
+        <button id="dedupe-open" class="dedupe-open hidden" data-i18n="dedupeOpen">중복 일괄정리</button>
         <input
           type="text"
           id="search-input"
@@ -62,13 +66,15 @@
           data-i18n="searchPlaceholder"
           class="search-input"
         />
-        <div class="file-stats"><span id="file-count">0</span> <span data-i18n="filesCount">개 파일</span></div>
-      </div>
-
-      <!-- 탭 메뉴 -->
-      <div class="tab-container">
-        <button class="tab-btn active" data-tab="video" data-i18n="videoFiles">비디오 파일</button>
-        <button class="tab-btn" data-tab="file" data-i18n="otherFiles">기타 파일</button>
+        <!-- 비디오 탭에서만 표시 -->
+        <input
+          type="text"
+          id="actress-search"
+          placeholder="배우명으로 검색..."
+          data-i18n="actressSearchPlaceholder"
+          class="search-input actress-search"
+        />
+        <div class="file-stats"><span id="file-count">0</span> <span id="file-count-label" data-i18n="filesCount">개 파일</span></div>
       </div>
 
       <!-- 진행률 표시 -->
@@ -81,8 +87,44 @@
 
       <!-- 파일 리스트 -->
       <div class="content">
-        <div class="virtual-scroll-container">
+        <!-- 선택한 배우 표시 (배우별 → 배우 선택 시) -->
+        <div id="actress-bar" class="actress-bar hidden"></div>
+        <!-- 배우 보기 (썸네일 격자) -->
+        <div id="actress-view" class="actress-view hidden"></div>
+        <!-- 배우 정보 (전체 작품 목록) -->
+        <div id="works-view" class="actress-view works-view hidden"></div>
+        <div id="file-area" class="virtual-scroll-container">
           <div id="file-list" class="file-list">
+            <!-- 컬럼 헤더 (클릭해서 정렬, 다시 클릭하면 방향 전환) -->
+            <div id="file-header" class="file-header">
+              <div class="file-col file-col-group">
+                <span data-i18n="colDuplicate">중복</span>
+              </div>
+              <div class="file-col file-col-thumb"></div>
+              <div class="file-col file-col-name sortable" data-sort="name">
+                <span data-i18n="colName">파일명</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-desc sortable" data-sort="memo">
+                <span id="memo-resizer" class="col-resizer" data-i18n-title="resizeColumns" title="드래그: 파일명/메모 폭 조절, 더블클릭: 기본값"></span>
+                <span data-i18n="colMemo">메모</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-size sortable" data-sort="size">
+                <span data-i18n="colSize">용량</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-release sortable" data-sort="release">
+                <span data-i18n="colRelease">출시일</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-addtime sortable" data-sort="addtime">
+                <span data-i18n="colAddTime">추가시간</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-lasttime sortable" data-sort="lasttime">
+                <span data-i18n="colLastTime">실행시간</span><span class="sort-indicator"></span>
+              </div>
+              <div class="file-col file-col-actions"></div>
+              <div class="file-col file-col-rating sortable" data-sort="rating">
+                <span data-i18n="colRating">평점</span><span class="sort-indicator"></span>
+              </div>
+            </div>
             <div id="virtual-scroller" class="virtual-scroller">
               <!-- 가상 스크롤링으로 동적 생성 -->
             </div>
@@ -93,6 +135,7 @@
       <!-- 상태 바 -->
       <footer class="status-bar">
         <span id="status-text" data-i18n="ready">준비됨</span>
+        <span id="meta-status" class="meta-status"></span>
         <span id="extension-list" data-i18n="extensions"
           >확장자: .avi, .mp4, .mov, .wmv, .mkv, .flv, .ts</span
         >
@@ -136,6 +179,66 @@
         <div class="modal-footer">
           <button id="save-extensions" class="btn btn-primary" data-i18n="save">저장</button>
           <button id="cancel-extensions" class="btn btn-secondary" data-i18n="cancel">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 커버 미리보기 (목록의 작은 썸네일에 마우스를 올리면 표시) -->
+    <img id="cover-preview" class="cover-preview hidden" alt="" />
+
+    <!-- 영상 정보 설정 모달 -->
+    <div id="meta-modal" class="modal hidden">
+      <div class="modal-content meta-content">
+        <div class="modal-header">
+          <h2 data-i18n="metaTitle">영상 정보 설정</h2>
+          <button id="meta-close" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="dedupe-rule" data-i18n="metaRule">
+            파일명의 품번으로 제목, 출시일, 배우, 커버를 가져옵니다. 출처를 여러 개 켜면 위에서부터 순서대로 조회하고, 앞 출처에서 비어 있는 항목만 다음 출처가 채웁니다.
+          </p>
+          <label class="dedupe-check">
+            <input type="checkbox" id="meta-auto-fetch" />
+            <span data-i18n="metaAutoFetch">영상 정보 자동 수집 (끄면 외부 조회를 하지 않음)</span>
+          </label>
+          <div id="meta-sources" class="meta-sources"></div>
+          <div id="meta-progress" class="dedupe-summary"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="meta-check" class="btn btn-info" data-i18n="metaCheck">상태 확인</button>
+          <button id="meta-save" class="btn btn-primary" data-i18n="save">저장</button>
+          <button id="meta-cancel" class="btn btn-secondary" data-i18n="cancel">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 중복 일괄정리 모달 -->
+    <div id="dedupe-modal" class="modal hidden">
+      <div class="modal-content dedupe-content">
+        <div class="modal-header">
+          <h2 data-i18n="dedupeTitle">중복 일괄정리</h2>
+          <button id="dedupe-close" class="btn-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="dedupe-rule" data-i18n="dedupeRule">
+            화면에 표시된 중복 묶음마다 하나만 남기고 나머지를 삭제합니다. 우선 단어가 들어간 파일이 있으면 용량과 관계없이 그 파일을, 없으면 용량이 가장 큰 파일을 남깁니다.
+          </p>
+          <div class="dedupe-options">
+            <label class="dedupe-field">
+              <span data-i18n="dedupeKeywords">우선 단어</span>
+              <input type="text" id="dedupe-keywords" placeholder="예: LTX (여러 개는 쉼표로 구분, 앞쪽이 우선)" data-i18n="dedupeKeywordsPlaceholder" />
+            </label>
+            <label class="dedupe-check">
+              <input type="checkbox" id="dedupe-trash" checked />
+              <span data-i18n="dedupeTrash">휴지통으로 보내기 (해제하면 완전 삭제)</span>
+            </label>
+          </div>
+          <div id="dedupe-summary" class="dedupe-summary"></div>
+          <div id="dedupe-preview" class="dedupe-preview"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="dedupe-run" class="btn btn-danger" data-i18n="dedupeRun">삭제 실행</button>
+          <button id="dedupe-cancel" class="btn btn-secondary" data-i18n="cancel">취소</button>
         </div>
       </div>
     </div>
@@ -220,7 +323,13 @@
     <script src="js/utils.js"></script>
     <script src="js/i18n.js"></script>
     <script src="js/extension-manager.js"></script>
+    <script src="js/duplicate-finder.js"></script>
     <script src="js/file-manager.js"></script>
+    <script src="js/duplicate-cleaner.js"></script>
+    <script src="js/metadata-manager.js"></script>
+    <script src="js/actress-view.js"></script>
+    <script src="js/works-view.js"></script>
+    <script src="js/meta-settings.js"></script>
     <script src="js/virtual-scroll.js"></script>
     <script src="js/search-engine.js"></script>
     <script src="js/library-manager.js"></script>

@@ -136,19 +136,55 @@ class VirtualScroll {
     }
 
     const fileName = Utils.escapeHtml(file.Filename);
-    const lastTime = Utils.formatDate(file.Lasttime);
-    const addTime = Utils.formatDate(file.Addtime);
+    const lastTime = Utils.formatDateCompact(file.Lasttime);
+    const addTime = Utils.formatDateCompact(file.Addtime);
     const rating = Utils.generateStarRating(file.Eval);
     const description = Utils.escapeHtml(file.Desc || "");
 
+    // 중복 보기: 같은 묶음끼리 왼쪽 칸을 이어 붙여 병합 셀처럼 표시
+    const group = window.fileManager ? window.fileManager.getGroupInfo(file) : null;
+    let groupCell = "";
+    if (group) {
+      item.classList.add(group.groupIndex % 2 === 0 ? "dup-even" : "dup-odd");
+      if (group.isFirst) item.classList.add("dup-first");
+      if (group.isLast) item.classList.add("dup-last");
+      const label = Utils.escapeHtml(group.label);
+      groupCell = group.isFirst
+        ? `<span class="dup-label" title="${label}">${label}</span><span class="dup-count" title="중복 파일 수">${group.count}</span>`
+        : "";
+    }
+
+    // 영상 정보 (있을 때만): 커버 썸네일, 배우/제목 줄, 출시일
+    const manager = window.metadataManager;
+    const meta = manager ? manager.metaOf(file) : null;
+    let metaLine = "";
+    if (meta) {
+      const actressLinks = (meta.actresses || [])
+        .map(
+          (actress) =>
+            `<span class="row-actress" data-key="${Utils.escapeHtml(MetadataManager.actressKey(actress))}">${Utils.escapeHtml(actress.name)}</span>`
+        )
+        .join(", ");
+      const title = Utils.escapeHtml(meta.title || "");
+      metaLine = `<div class="file-name-sub" title="${title}">${actressLinks}${actressLinks && title ? " · " : ""}${title}</div>`;
+    }
+    const releaseDate = meta ? Utils.escapeHtml(meta.releaseDate || "") : "";
+
     item.innerHTML = `
       <div class="file-item-content">
-        <div class="file-col file-col-name" title="${fileName}">${fileName}</div>
+        <div class="file-col file-col-group">${groupCell}</div>
+        <div class="file-col file-col-thumb">${meta && meta.cover ? '<img class="cover-thumb" alt="" />' : ""}</div>
+        <div class="file-col file-col-name">
+          <div class="file-name-main" title="${fileName}">${fileName}</div>
+          ${metaLine}
+        </div>
         <div class="file-col file-col-desc">
           <span class="file-desc-text" title="${description}">${description || ''}</span>
         </div>
-        <div class="file-col file-col-times">
-          <span class="add-time">${addTime}</span>
+        <div class="file-col file-col-size">${Utils.formatSizeGB(file.Size)}</div>
+        <div class="file-col file-col-release">${releaseDate}</div>
+        <div class="file-col file-col-addtime"><span class="add-time">${addTime}</span></div>
+        <div class="file-col file-col-lasttime">
           ${lastTime ? `<span class="last-time"><strong>${lastTime}</strong></span>` : '<span class="last-time">-</span>'}
         </div>
         <div class="file-col file-col-actions">
@@ -163,10 +199,41 @@ class VirtualScroll {
       </div>
     `;
 
+    // 커버 썸네일: 로컬 캐시에서 불러오고, 마우스를 올리면 크게 보여 줌
+    const thumb = item.querySelector(".cover-thumb");
+    if (thumb) {
+      manager.setImage(thumb, meta.cover);
+      thumb.addEventListener("mouseenter", () => this.showCoverPreview(thumb));
+      thumb.addEventListener("mouseleave", () => this.hideCoverPreview());
+    }
+
+    // 배우 이름 클릭 → 그 배우의 영상 목록으로 이동
+    item.querySelectorAll(".row-actress").forEach((link) => {
+      link.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (window.app) window.app.navigate({ view: "list", actress: link.dataset.key });
+      });
+    });
+
     // 이벤트 리스너 추가
     this.attachItemEventListeners(item, file);
 
     return item;
+  }
+
+  showCoverPreview(thumb) {
+    const preview = document.getElementById("cover-preview");
+    if (!preview || !thumb.src) return;
+    const rect = thumb.getBoundingClientRect();
+    preview.src = thumb.src;
+    preview.style.left = `${rect.right + 10}px`;
+    preview.style.top = `${Math.max(8, Math.min(window.innerHeight - 320, rect.top - 120))}px`;
+    preview.classList.remove("hidden");
+  }
+
+  hideCoverPreview() {
+    const preview = document.getElementById("cover-preview");
+    if (preview) preview.classList.add("hidden");
   }
 
   // 아이템 이벤트 리스너 추가
@@ -341,7 +408,14 @@ class VirtualScroll {
         return;
       }
 
-      Utils.updateStatus("파일이 삭제되었습니다.");
+      const emptied = (deleteResult.removedFolders || []).length;
+      const closedApps = deleteResult.closedApps || [];
+      const notes = [];
+      if (closedApps.length > 0) notes.push(`${closedApps.join(", ")} 닫음`);
+      if (emptied > 0) notes.push(`빈 폴더 ${emptied}개 함께 삭제`);
+      Utils.updateStatus(
+        "파일이 삭제되었습니다." + (notes.length > 0 ? ` (${notes.join(", ")})` : "")
+      );
 
       // JSON 데이터에서도 즉시 제거
       for (const type of ["video", "file"]) {
@@ -355,18 +429,8 @@ class VirtualScroll {
         }
       }
 
-      // 필터링된 데이터에서도 제거
-      for (const type of ["video", "file"]) {
-        const index = window.fileManager.filteredFiles[type].findIndex(
-          (f) => f.Fullpath === fullpath
-        );
-        if (index !== -1) {
-          window.fileManager.filteredFiles[type].splice(index, 1);
-          break;
-        }
-      }
-
-      // UI 업데이트
+      // 표시 목록 재계산 (중복 보기에서는 1개만 남은 묶음이 사라짐)
+      window.fileManager.applyFilter();
       window.fileManager.updateUI();
     } catch (error) {
       console.error("파일 삭제 실패:", error);
@@ -409,22 +473,10 @@ class VirtualScroll {
           const updatedFile = this.findFileInManager(filePath);
           if (updatedFile && updatedFile.Lasttime) {
             const lastTimeSpan = item.querySelector('.last-time');
-            const timesContainer = item.querySelector('.file-times');
-            
-            const formattedTime = Utils.formatDate(updatedFile.Lasttime);
-            
             if (lastTimeSpan) {
-              // 기존 실행시각 업데이트
-              lastTimeSpan.innerHTML = `<strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${formattedTime}</strong>`;
-            } else {
-              // 새로운 실행시각 추가
-              const newLastTimeSpan = document.createElement('span');
-              newLastTimeSpan.className = 'last-time';
-              newLastTimeSpan.title = '마지막 실행 시각';
-              newLastTimeSpan.innerHTML = `<strong>${window.i18n ? window.i18n.t('lastTime') : '실행시각:'} ${formattedTime}</strong>`;
-              timesContainer.appendChild(newLastTimeSpan);
+              lastTimeSpan.innerHTML = `<strong>${Utils.formatDateCompact(updatedFile.Lasttime)}</strong>`;
             }
-            
+
             // 업데이트 애니메이션 효과
             const timeElement = item.querySelector('.last-time');
             if (timeElement) {

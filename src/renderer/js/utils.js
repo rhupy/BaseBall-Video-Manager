@@ -46,6 +46,22 @@ class Utils {
     });
   }
 
+  // 그리드용 짧은 날짜 (YYYY-MM-DD HH:mm)
+  static formatDateCompact(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '';
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+      `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  // 그리드용 용량 표시: 항상 GB, 소수 둘째 자리 (예: 1.25GB). 크기를 모르면 빈 문자열
+  static formatSizeGB(bytes) {
+    if (typeof bytes !== 'number' || !Number.isFinite(bytes) || bytes < 0) return '';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
+  }
+
   // 파일 크기 포맷팅
   static formatFileSize(bytes) {
     if (bytes === 0) return '0 B';
@@ -147,7 +163,7 @@ class Utils {
     }
   }
 
-  // 상태 메시지 업데이트 (하이브리드 시스템 고려)
+  // 상태 메시지 업데이트
   static updateStatus(message) {
     const statusText = document.getElementById('status-text');
     if (statusText) {

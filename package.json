@@ -1,6 +1,6 @@
 {
   "name": "baseball-video-manager-electron",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "High-performance video and file manager built with Electron",
   "main": "src/main/electron.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "build:win": "electron-builder --win",
     "build:win-setup": "electron-builder --win nsis",
     "build:win-portable": "electron-builder --win portable",
+    "build:win-test": "bash scripts/build-win-test.sh",
     "dist": "electron-builder --publish=never",
     "pack": "electron-builder --dir"
   },
@@ -22,8 +23,8 @@
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "chokidar": "^3.5.3",
-    "archiver": "^7.0.1"
+    "archiver": "^7.0.1",
+    "electron-updater": "6.1.8"
   },
   "build": {
     "appId": "com.baseball-video-manager.app",
@@ -31,6 +32,13 @@
     "directories": {
       "output": "dist"
     },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "rhupy",
+        "repo": "BaseBall-Video-Manager"
+      }
+    ],
     "files": [
       "src/**/*",
       "data/**/*",
@@ -44,6 +52,7 @@
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
+      "artifactName": "Baseball-Video-Manager-Setup-${version}.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
@@ -53,6 +62,9 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Baseball Video Manager"
+    },
+    "portable": {
+      "artifactName": "Baseball-Video-Manager-Portable-${version}.${ext}"
     },
     "mac": {
       "target": "dmg",

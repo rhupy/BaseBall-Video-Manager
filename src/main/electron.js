@@ -1,13 +1,20 @@
-const { app, BrowserWindow, ipcMain, shell, dialog, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, dialog, Menu, net } = require("electron");
 const path = require("path");
 const fs = require("fs-extra");
-const HybridFileWatcher = require("./hybrid-file-watcher");
 const DataSync = require("./data-sync");
+const JsonStore = require("./json-store");
+const { localFileStamp } = require("./local-time");
+const { closeLockingApps } = require("./file-unlocker");
+const MetadataService = require("./metadata/metadata-service");
+const metadataAdapters = require("./metadata/sources");
+const { initAutoUpdate, checkForUpdates, getUpdateState } = require("./auto-update");
 
 let mainWindow;
 let isDev = process.argv.includes("--dev");
-let hybridFileWatcher = null; // 하이브리드 파일 감시 시스템
 let dataSync = null; // 데이터 자동 백업 싱크
+let isQuitting = false; // 종료 정리 진행 여부
+const jsonStore = new JsonStore(); // 원자적 쓰기 + .bak 복구
+let metadataService = null; // 영상 정보 수집 (처음 요청될 때 생성)
 
 // Windows GPU 렌더링 깜빡임 방지
 app.disableHardwareAcceleration();
@@ -91,6 +98,8 @@ app.whenReady().then(async () => {
     console.error("데이터 폴더 생성 실패:", error);
   }
   createWindow();
+  // 자동 업데이트 (설치판에서만 동작)
+  initAutoUpdate({ onState: (state) => sendToRenderer("update-state", state) });
   try {
     await initDataSync();
   } catch (error) {
@@ -165,25 +174,137 @@ function getSyncDir() {
 }
 
 // IPC 핸들러들
+
+// =================== 영상 정보(메타데이터) ===================
+
+// 렌더러로 이벤트 전달 (창이 없으면 무시)
+function sendToRenderer(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send(channel, payload);
+  }
+}
+
+async function getMetadataService() {
+  if (!metadataService) {
+    metadataService = new MetadataService({
+      dataPath: getDataPath(),
+      cacheDir: path.join(app.getPath("userData"), "meta-cache"),
+      jsonStore,
+      adapters: metadataAdapters,
+      // Electron의 네트워크 스택 사용 (일반 브라우저와 같은 방식으로 요청)
+      fetchImpl: (url, options) => net.fetch(url, options),
+    });
+    metadataService.on("updated", (records) => sendToRenderer("meta-updated", records));
+    metadataService.on("status", (status) => sendToRenderer("meta-status", status));
+  }
+  await metadataService.load();
+  return metadataService;
+}
+
+// 저장된 영상 정보 전체 (품번 → 기록)
+ipcMain.handle("meta-get-all", async () => (await getMetadataService()).getAll());
+
+// 정보가 없는 품번을 조회 대기열에 추가
+ipcMain.handle("meta-enqueue", async (event, codes) => (await getMetadataService()).enqueue(codes));
+
+// 이미지 주소 → 로컬 캐시 파일 URL (없으면 내려받음)
+ipcMain.handle("meta-get-image", async (event, url) => (await getMetadataService()).getImage(url));
+
+// 출처 설정 조회/변경, 상태 확인
+ipcMain.handle("meta-describe", async () => (await getMetadataService()).describe());
+ipcMain.handle("meta-update-settings", async (event, settings) => {
+  try {
+    return { success: true, data: await (await getMetadataService()).updateSettings(settings) };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+ipcMain.handle("meta-check-sources", async () => (await getMetadataService()).checkSources());
+
+// 배우의 전체 작품 목록 (저장본이 있으면 그것을, 없거나 오래됐으면 출처에서 조회)
+ipcMain.handle("meta-actress-works", async (event, actress, refresh) => {
+  try {
+    return await (await getMetadataService()).getActressWorks(actress, { refresh: !!refresh });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
+// 알림/확인 창: 렌더러의 기본 alert()/confirm()은 Windows에서 닫은 뒤 입력창에 글자가
+// 입력되지 않는 문제가 있어, 메인 프로세스의 메시지 박스로 대신 띄운다 (동기 호출)
+function showDialogSync(event, options) {
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  return owner ? dialog.showMessageBoxSync(owner, options) : dialog.showMessageBoxSync(options);
+}
+
+ipcMain.on("dialog-alert", (event, message) => {
+  try {
+    showDialogSync(event, {
+      type: "info",
+      title: "Baseball Video Manager",
+      message: String(message),
+      buttons: ["확인"],
+      noLink: true,
+    });
+  } catch (error) {
+    console.error("알림 창 표시 실패:", error);
+  }
+  event.returnValue = true;
+});
+
+ipcMain.on("dialog-confirm", (event, message) => {
+  let confirmed = false;
+  try {
+    const choice = showDialogSync(event, {
+      type: "question",
+      title: "Baseball Video Manager",
+      message: String(message),
+      buttons: ["확인", "취소"],
+      defaultId: 0,
+      cancelId: 1,
+      noLink: true,
+    });
+    confirmed = choice === 0;
+  } catch (error) {
+    console.error("확인 창 표시 실패:", error);
+  }
+  event.returnValue = confirmed;
+});
+// 자동 업데이트 상태 조회 / 수동 확인
+ipcMain.handle("update-get-state", () => getUpdateState());
+ipcMain.handle("update-check", () => {
+  checkForUpdates(true);
+  return getUpdateState();
+});
+
+// 앱 버전 (package.json 기준)
+ipcMain.handle("get-app-version", () => {
+  try {
+    return require("../../package.json").version;
+  } catch (error) {
+    return app.getVersion();
+  }
+});
+
 ipcMain.handle("get-data-path", () => {
   return getDataPath();
 });
 
 ipcMain.handle("load-json-file", async (event, filePath) => {
   try {
-    const data = await fs.readJson(filePath);
-    return { success: true, data };
+    // 실패 시 { success:false, code: "ENOENT" | "CORRUPT" | ..., error }
+    return await jsonStore.read(filePath);
   } catch (error) {
-    return { success: false, error: error.message };
+    return { success: false, code: error.code || "UNKNOWN", error: error.message };
   }
 });
 
 ipcMain.handle("save-json-file", async (event, filePath, data) => {
   try {
-    await fs.outputJson(filePath, data, { spaces: 2 });
-    // 자동 싱크가 활성화된 경우에만 트리거
-    if (dataSync && dataSync.autoSync) dataSync.requestSync();
-    return { success: true };
+    const result = await jsonStore.write(filePath, data);
+    // 실제로 내용이 바뀌었고 자동 싱크가 활성화된 경우에만 트리거
+    if (!result.unchanged && dataSync && dataSync.autoSync) dataSync.requestSync();
+    return result;
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -207,41 +328,87 @@ ipcMain.handle("open-folder", async (event, folderPath) => {
   }
 });
 
+// 디렉토리 스캔 (한 번의 순회로 모든 확장자 수집, 파일별 stat 없음)
+// 반환: { success, files: [{ filename, fullpath, ext }], skippedDirs: [읽지 못한 하위 폴더] }
+// 루트를 읽지 못하면 실패, 하위 폴더를 읽지 못하면 skippedDirs에 기록 (호출 측에서 기존 항목 보존)
 ipcMain.handle("scan-directory", async (event, dirPath, extensions) => {
   try {
+    const extSet = new Set((extensions || []).map((ext) => String(ext).toLowerCase()));
     const files = [];
+    const skippedDirs = [];
+    const stack = [dirPath];
+    let isRoot = true;
 
-    async function scanRecursively(dir) {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
+    while (stack.length > 0) {
+      const dir = stack.pop();
+      let entries;
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true });
+      } catch (error) {
+        if (isRoot) throw error;
+        skippedDirs.push(dir);
+        continue;
+      } finally {
+        isRoot = false;
+      }
 
       for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-
         if (entry.isDirectory()) {
-          await scanRecursively(fullPath);
+          stack.push(path.join(dir, entry.name));
         } else if (entry.isFile()) {
           const ext = path.extname(entry.name).toLowerCase();
-          if (extensions.includes(ext)) {
-            const stats = await fs.stat(fullPath);
+          if (extSet.has(ext)) {
             files.push({
               filename: entry.name,
-              fullpath: fullPath,
-              size: stats.size,
-              modified: stats.mtime.toISOString(),
+              fullpath: path.join(dir, entry.name),
+              ext,
             });
           }
         }
       }
     }
 
-    if (await fs.pathExists(dirPath)) {
-      await scanRecursively(dirPath);
-    }
-
-    return { success: true, files };
+    return { success: true, files, skippedDirs };
   } catch (error) {
     return { success: false, error: error.message };
   }
+});
+
+// 여러 파일의 크기를 한 번에 조회 (바이트, 조회 실패는 null)
+ipcMain.handle("get-file-sizes", async (event, filePaths) => {
+  const results = new Array(filePaths.length).fill(null);
+  let next = 0;
+  async function worker() {
+    while (next < filePaths.length) {
+      const i = next++;
+      try {
+        const stats = await fs.stat(filePaths[i]);
+        results[i] = stats.size;
+      } catch {
+        results[i] = null;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(4, filePaths.length) }, worker));
+  return results;
+});
+
+// 여러 경로의 존재 여부를 한 번에 확인 (정리 기능용)
+ipcMain.handle("paths-exist", async (event, filePaths) => {
+  const results = new Array(filePaths.length);
+  let next = 0;
+  async function worker() {
+    while (next < filePaths.length) {
+      const i = next++;
+      try {
+        results[i] = await fs.pathExists(filePaths[i]);
+      } catch {
+        results[i] = false;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(8, filePaths.length) }, worker));
+  return results;
 });
 
 ipcMain.handle("select-folder", async () => {
@@ -255,18 +422,112 @@ ipcMain.handle("select-folder", async () => {
   };
 });
 
-// 파일 삭제
+// 등록된 라이브러리 경로 목록
+async function getLibraryRoots() {
+  const result = await jsonStore.read(path.join(getDataPath(), "lib.json"));
+  if (!result.success || !Array.isArray(result.data)) return [];
+  return result.data.map((lib) => lib && lib.path).filter(Boolean);
+}
+
+// 파일을 지운 뒤, 그 파일이 있던 폴더가 비었으면 폴더도 삭제 (위로 올라가며 반복)
+// - 완전히 빈 폴더만 지움 (다른 파일이나 하위 폴더가 남아 있으면 그대로 둠)
+// - 라이브러리 폴더 자체는 지우지 않고, 라이브러리 밖의 폴더는 건드리지 않음
+async function removeEmptyParentFolders(filePath, libraryRoots) {
+  const removed = [];
+  const root = libraryRoots
+    .map((libraryPath) => path.resolve(libraryPath))
+    .filter((libraryPath) => {
+      const relative = path.relative(libraryPath, path.resolve(filePath));
+      return relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+    })
+    .sort((a, b) => b.length - a.length)[0];
+  if (!root) return removed;
+
+  let dir = path.dirname(path.resolve(filePath));
+  while (true) {
+    const relative = path.relative(root, dir);
+    if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) break;
+
+    try {
+      const entries = await fs.readdir(dir);
+      if (entries.length > 0) break;
+      await fs.rmdir(dir);
+      removed.push(dir);
+    } catch (error) {
+      break;
+    }
+    dir = path.dirname(dir);
+  }
+  return removed;
+}
+
+// 파일 하나 삭제 (useTrash면 휴지통으로)
+// 다른 프로그램(재생 중인 플레이어 등)이 파일을 잡고 있어 실패하면,
+// 그 프로그램에 창 닫기를 요청한 뒤 다시 시도한다. 반환: 닫은 프로그램 이름 목록
+async function deleteFileWithUnlock(filePath, useTrash) {
+  const remove = () => (useTrash ? shell.trashItem(filePath) : fs.unlink(filePath));
+
+  try {
+    await remove();
+    return [];
+  } catch (firstError) {
+    if (process.platform !== "win32" || !(await fs.pathExists(filePath))) throw firstError;
+
+    const lockers = await closeLockingApps(filePath);
+    const closedApps = lockers.filter((app) => app.closed).map((app) => app.name);
+    if (closedApps.length === 0) {
+      const holders = lockers.map((app) => app.name).filter(Boolean);
+      if (holders.length > 0) {
+        throw new Error(`다른 프로그램이 사용 중입니다 (${holders.join(", ")}): ${firstError.message}`);
+      }
+      throw firstError;
+    }
+
+    // 프로그램이 닫힌 직후에는 잠금이 풀리는 데 잠깐 걸릴 수 있어 몇 번 재시도
+    let lastError = firstError;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      try {
+        await remove();
+        return closedApps;
+      } catch (error) {
+        lastError = error;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+    }
+    throw lastError;
+  }
+}
+
+// 파일 삭제 (완전 삭제). 폴더가 비면 폴더도 삭제
 ipcMain.handle("delete-file", async (event, filePath) => {
   try {
     if (await fs.pathExists(filePath)) {
-      await fs.unlink(filePath);
-      return { success: true };
+      const closedApps = await deleteFileWithUnlock(filePath, false);
+      const removedFolders = await removeEmptyParentFolders(filePath, await getLibraryRoots());
+      return { success: true, removedFolders, closedApps };
     } else {
       return { success: false, error: "파일이 존재하지 않습니다." };
     }
   } catch (error) {
     return { success: false, error: error.message };
   }
+});
+
+// 여러 파일 삭제 (중복 일괄정리용). useTrash면 휴지통으로, 아니면 완전 삭제
+// 폴더가 비면 폴더도 삭제. 반환: [{ success, error?, removedFolders? }] (입력 순서대로)
+ipcMain.handle("delete-files", async (event, filePaths, useTrash) => {
+  const libraryRoots = await getLibraryRoots();
+  const results = [];
+  for (const filePath of filePaths) {
+    try {
+      const closedApps = await deleteFileWithUnlock(filePath, !!useTrash);
+      const removedFolders = await removeEmptyParentFolders(filePath, libraryRoots);
+      results.push({ success: true, removedFolders, closedApps });
+    } catch (error) {
+      results.push({ success: false, error: error.message });
+    }
+  }
+  return results;
 });
 
 // Lada GUI로 파일 보내기
@@ -334,36 +595,7 @@ ipcMain.handle("get-file-stats", async (event, filePath) => {
 // 빈 폴더 제거
 ipcMain.handle("remove-empty-folders", async (event, rootPath) => {
   try {
-    const removedFolders = [];
-
-    async function removeEmptyFoldersRecursive(dirPath) {
-      if (!(await fs.pathExists(dirPath))) {
-        return;
-      }
-
-      const entries = await fs.readdir(dirPath, { withFileTypes: true });
-      const subdirs = entries.filter((entry) => entry.isDirectory());
-
-      // 하위 디렉토리들 먼저 처리
-      for (const subdir of subdirs) {
-        const subdirPath = path.join(dirPath, subdir.name);
-        await removeEmptyFoldersRecursive(subdirPath);
-      }
-
-      // 현재 디렉토리가 비어있는지 확인
-      const currentEntries = await fs.readdir(dirPath);
-      if (currentEntries.length === 0) {
-        try {
-          await fs.rmdir(dirPath);
-          removedFolders.push(dirPath);
-        } catch (error) {
-          console.warn(`폴더 삭제 실패: ${dirPath}`, error.message);
-        }
-      }
-    }
-
-    await removeEmptyFoldersRecursive(rootPath);
-
+    const removedFolders = await removeEmptyFoldersRecursive(rootPath);
     return {
       success: true,
       removedFolders,
@@ -374,291 +606,7 @@ ipcMain.handle("remove-empty-folders", async (event, rootPath) => {
   }
 });
 
-// =================== 하이브리드 파일 시스템 IPC 핸들러 ===================
-
-// 하이브리드 시스템 초기화
-ipcMain.handle("hybrid-system-init", async (event, libraryPaths) => {
-  try {
-    console.log("하이브리드 시스템 초기화 시작:", libraryPaths);
-
-    if (hybridFileWatcher) {
-      // 기존 감시자 중지
-      hybridFileWatcher.stopWatching();
-    }
-
-    // 새 하이브리드 감시자 생성
-    hybridFileWatcher = new HybridFileWatcher({
-      libraryPaths: libraryPaths,
-      videoExtensions: [
-        ".avi",
-        ".mp4",
-        ".mov",
-        ".wmv",
-        ".avchd",
-        ".flv",
-        ".f4v",
-        ".swf",
-        ".mkv",
-        ".mpeg2",
-        ".ts",
-        ".tp",
-        ".webm",
-      ],
-      archiveExtensions: [
-        ".zip",
-        ".7z",
-        ".ezc",
-        ".alzip",
-        ".001",
-        ".zpaq",
-        ".rar",
-      ],
-    });
-
-    // 이벤트 리스너 설정 (렌더러에 전달)
-    hybridFileWatcher.on("file-added", (data) => {
-      if (mainWindow) {
-        mainWindow.webContents.send("hybrid-file-added", data);
-      }
-    });
-
-    hybridFileWatcher.on("file-deleted", (data) => {
-      if (mainWindow) {
-        mainWindow.webContents.send("hybrid-file-deleted", data);
-      }
-    });
-
-    hybridFileWatcher.on("file-changed", (data) => {
-      if (mainWindow) {
-        mainWindow.webContents.send("hybrid-file-changed", data);
-      }
-    });
-
-    hybridFileWatcher.on("metadata-updated", (data) => {
-      if (mainWindow) {
-        mainWindow.webContents.send("hybrid-metadata-updated", data);
-      }
-    });
-
-    // 초기화 실행
-    const result = await hybridFileWatcher.initialize();
-    const stats = hybridFileWatcher.getStats();
-
-    return {
-      success: true,
-      data: result,
-      stats: stats,
-    };
-  } catch (error) {
-    console.error("하이브리드 시스템 초기화 실패:", error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-});
-
-// 파일 실행 및 메타데이터 업데이트
-ipcMain.handle("hybrid-execute-file", async (event, filePath) => {
-  try {
-    if (!hybridFileWatcher) {
-      throw new Error("하이브리드 시스템이 초기화되지 않았습니다.");
-    }
-
-    const result = await hybridFileWatcher.executeFile(filePath);
-    return { success: result };
-  } catch (error) {
-    console.error("파일 실행 기록 실패:", error);
-    return { success: false, error: error.message };
-  }
-});
-
-// 평점 업데이트
-ipcMain.handle("hybrid-update-rating", async (event, filePath, rating) => {
-  try {
-    if (!hybridFileWatcher) {
-      throw new Error("하이브리드 시스템이 초기화되지 않았습니다.");
-    }
-
-    const result = await hybridFileWatcher.updateFileMetadata(filePath, {
-      rating,
-    });
-    return { success: result };
-  } catch (error) {
-    console.error("평점 업데이트 실패:", error);
-    return { success: false, error: error.message };
-  }
-});
-
-// 설명 업데이트
-ipcMain.handle(
-  "hybrid-update-description",
-  async (event, filePath, description) => {
-    try {
-      if (!hybridFileWatcher) {
-        throw new Error("하이브리드 시스템이 초기화되지 않았습니다.");
-      }
-
-      const result = await hybridFileWatcher.updateFileMetadata(filePath, {
-        description,
-      });
-      return { success: result };
-    } catch (error) {
-      console.error("설명 업데이트 실패:", error);
-      return { success: false, error: error.message };
-    }
-  }
-);
-
-// 증분 스캔 (변경된 파일만 확인)
-ipcMain.handle("hybrid-incremental-scan", async (event) => {
-  try {
-    if (!hybridFileWatcher) {
-      throw new Error("하이브리드 시스템이 초기화되지 않았습니다.");
-    }
-
-    // 하이브리드 시스템에서는 실시간 감시로 자동 업데이트되므로
-    // 캐시 상태만 반환
-    const stats = hybridFileWatcher.getStats();
-
-    return {
-      success: true,
-      addedCount: 0,
-      removedCount: 0,
-      changedCount: 0,
-      message: "실시간 감시 활성화됨",
-      stats: stats,
-    };
-  } catch (error) {
-    console.error("증분 스캔 실패:", error);
-    return { success: false, error: error.message };
-  }
-});
-
-// 하이브리드 시스템 통계 조회
-ipcMain.handle("hybrid-get-stats", async (event) => {
-  try {
-    if (!hybridFileWatcher) {
-      return {
-        success: false,
-        error: "하이브리드 시스템이 초기화되지 않았습니다.",
-      };
-    }
-
-    const stats = hybridFileWatcher.getStats();
-    return { success: true, stats };
-  } catch (error) {
-    console.error("통계 조회 실패:", error);
-    return { success: false, error: error.message };
-  }
-});
-
-// 하이브리드 시스템 고급 정리
-ipcMain.handle("hybrid-advanced-cleanup", async (event) => {
-  try {
-    if (!hybridFileWatcher) {
-      throw new Error("하이브리드 시스템이 초기화되지 않았습니다.");
-    }
-
-    console.log("하이브리드 고급 정리 시작...");
-    const startTime = Date.now();
-
-    let totalDuplicatesRemoved = 0;
-    let totalInvalidFilesRemoved = 0;
-    let totalEmptyFoldersRemoved = 0;
-
-    // 1. 캐시에서 무효한 파일 제거
-    const cache = hybridFileWatcher.cache;
-    const invalidFiles = [];
-
-    for (const [cacheKey, fileInfo] of cache.entries()) {
-      try {
-        const exists = await fs.pathExists(fileInfo.Fullpath);
-        if (!exists) {
-          invalidFiles.push({ key: cacheKey, info: fileInfo });
-        }
-      } catch (error) {
-        // 접근 불가능한 파일도 무효 파일로 처리
-        invalidFiles.push({ key: cacheKey, info: fileInfo });
-      }
-    }
-
-    // 무효 파일 제거
-    for (const invalid of invalidFiles) {
-      cache.delete(invalid.key);
-      totalInvalidFilesRemoved++;
-      console.log(`무효 파일 제거: ${invalid.info.Filename}`);
-    }
-
-    // 2. 중복 파일 제거 (Fullpath 기준)
-    const seenPaths = new Set();
-    const duplicateKeys = [];
-
-    for (const [cacheKey, fileInfo] of cache.entries()) {
-      if (seenPaths.has(fileInfo.Fullpath)) {
-        duplicateKeys.push(cacheKey);
-        totalDuplicatesRemoved++;
-        console.log(`중복 파일 제거: ${fileInfo.Filename}`);
-      } else {
-        seenPaths.add(fileInfo.Fullpath);
-      }
-    }
-
-    // 중복 파일 제거
-    for (const key of duplicateKeys) {
-      cache.delete(key);
-    }
-
-    // 3. 빈 폴더 제거
-    const libraries = hybridFileWatcher.libraryPaths;
-
-    for (const libraryPath of libraries) {
-      try {
-        const exists = await fs.pathExists(libraryPath);
-        if (exists) {
-          const result = await removeEmptyFoldersRecursive(libraryPath);
-          totalEmptyFoldersRemoved += result.length;
-          console.log(`${libraryPath}에서 ${result.length}개 빈 폴더 제거`);
-        }
-      } catch (error) {
-        console.warn(`빈 폴더 제거 실패 (${libraryPath}):`, error.message);
-      }
-    }
-
-    // 4. 결과 데이터 정리
-    const result = hybridFileWatcher.getFilesFromCache();
-    const duration = Date.now() - startTime;
-
-    // 통계 업데이트
-    hybridFileWatcher.stats.totalFiles = cache.size;
-    hybridFileWatcher.stats.lastScanTime = new Date();
-
-    console.log(`하이브리드 고급 정리 완료: ${duration}ms`);
-    console.log(`- 무효 파일 ${totalInvalidFilesRemoved}개 제거`);
-    console.log(`- 중복 파일 ${totalDuplicatesRemoved}개 제거`);
-    console.log(`- 빈 폴더 ${totalEmptyFoldersRemoved}개 제거`);
-
-    return {
-      success: true,
-      data: result,
-      stats: {
-        duration,
-        duplicatesRemoved: totalDuplicatesRemoved,
-        invalidFilesRemoved: totalInvalidFilesRemoved,
-        emptyFoldersRemoved: totalEmptyFoldersRemoved,
-        totalFiles: cache.size,
-      },
-    };
-  } catch (error) {
-    console.error("하이브리드 고급 정리 실패:", error);
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-});
-
-// 빈 폴더 재귀 제거 함수 (향상된 버전)
+// 빈 폴더 재귀 제거 함수 (접근 불가 폴더는 건너뜀)
 async function removeEmptyFoldersRecursive(rootPath) {
   const removedFolders = [];
 
@@ -709,12 +657,7 @@ ipcMain.handle("backup-data", async (event) => {
     }
 
     // 현재 시간으로 백업 파일명 생성
-    const now = new Date();
-    const timestamp = now
-      .toISOString()
-      .replace(/:/g, "-")
-      .replace(/\./g, "-")
-      .substring(0, 19);
+    const timestamp = localFileStamp();
     const backupFileName = `data_${timestamp}.zip`;
 
     // 백업 저장 위치 선택 다이얼로그
@@ -923,7 +866,9 @@ ipcMain.handle("sync-force-download", async () => {
       syncDir: getSyncDir(),
     });
 
+    await jsonStore.flush();
     const result = await sync.restoreFromRemote();
+    jsonStore.invalidate();
 
     if (result.success) {
       // 성공 시 글로벌 dataSync 업데이트
@@ -966,7 +911,9 @@ ipcMain.handle("sync-restore", async (event, { repoUrl, token }) => {
     const syncDir = getSyncDir();
 
     const sync = new DataSync({ dataPath, repoUrl, token, syncDir });
+    await jsonStore.flush();
     const result = await sync.restoreFromRemote();
+    jsonStore.invalidate();
 
     if (result.success) {
       // 설정 저장
@@ -986,18 +933,30 @@ ipcMain.handle("sync-restore", async (event, { repoUrl, token }) => {
   }
 });
 
-// 앱 종료 시 정리
-app.on("before-quit", async () => {
-  if (hybridFileWatcher) {
-    console.log("하이브리드 시스템 종료 중...");
-    hybridFileWatcher.stopWatching();
-    hybridFileWatcher = null;
-  }
+// 앱 종료 시 정리: 진행 중인 저장을 끝내고, 대기 중인 자동 싱크가 있으면 마무리한 뒤 종료
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, ms))]);
+}
+
+async function shutdown() {
+  if (metadataService) await withTimeout(metadataService.stop(), 5000);
+  await withTimeout(jsonStore.flush(), 10000);
+
   if (dataSync) {
-    console.log("데이터 싱크 종료 중...");
-    // 종료 전 마지막 싱크
-    await dataSync.syncNow();
+    if (dataSync.autoSync && dataSync.hasPendingSync()) {
+      console.log("데이터 싱크 종료 전 마지막 싱크...");
+      await withTimeout(dataSync.syncNow(), 20000);
+    }
     dataSync.destroy();
     dataSync = null;
   }
+}
+
+app.on("before-quit", (event) => {
+  if (isQuitting) return;
+  isQuitting = true;
+  event.preventDefault();
+  shutdown()
+    .catch((error) => console.error("종료 정리 실패:", error))
+    .finally(() => app.quit());
 });

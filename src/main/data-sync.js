@@ -2,6 +2,8 @@
 const path = require("path");
 const fs = require("fs-extra");
 const { execFile } = require("child_process");
+const JsonStore = require("./json-store");
+const { localTimestamp } = require("./local-time");
 
 class DataSync {
   constructor(options = {}) {
@@ -151,7 +153,7 @@ class DataSync {
       }
       await this.cloneRepo();
 
-      const exclude = [".git", ".gitkeep", "sync-settings.json"];
+      const exclude = [".git", ".gitkeep", "sync-settings.json", "local"];
       const entries = await fs.readdir(this.syncDir);
       let restoredCount = 0;
 
@@ -179,8 +181,14 @@ class DataSync {
     }
 
     this.debounceTimer = setTimeout(() => {
+      this.debounceTimer = null;
       this.syncNow();
     }, this.debounceMs);
+  }
+
+  // 디바운스 대기 중인 싱크가 있는지
+  hasPendingSync() {
+    return this.debounceTimer !== null;
   }
 
   // 빈 데이터 확인
@@ -237,7 +245,7 @@ class DataSync {
       }
 
       console.log("[DataSync] 변경사항 감지, 커밋 중...");
-      const timestamp = new Date().toISOString().replace("T", " ").substring(0, 19);
+      const timestamp = localTimestamp();
       await this.runGit(["add", "-A"], this.syncDir);
       await this.runGit(["commit", "-m", `auto-sync: ${timestamp}`], this.syncDir);
 
@@ -287,14 +295,19 @@ class DataSync {
   }
 
   async copyDataToSync() {
-    const exclude = ["sync-settings.json"];
+    // local: 이 PC 전용 데이터 (출처 설정, 배우 좋아요 등) → 원격에 올리지 않음
+    const exclude = ["sync-settings.json", "local"];
     const entries = await fs.readdir(this.dataPath);
 
     for (const entry of entries) {
       if (exclude.includes(entry)) continue;
       const src = path.join(this.dataPath, entry);
       const dest = path.join(this.syncDir, entry);
-      await fs.copy(src, dest, { overwrite: true });
+      // 저장소 보조 파일(.bak/.tmp/.corrupt-*)은 원격에 올리지 않음
+      await fs.copy(src, dest, {
+        overwrite: true,
+        filter: (srcPath) => !JsonStore.isAuxFile(path.basename(srcPath)),
+      });
     }
   }
 

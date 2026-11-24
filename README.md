@@ -9,7 +9,7 @@
 ![Electron](https://img.shields.io/badge/Electron_28-191970?style=flat-square&logo=Electron&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-%23323330.svg?style=flat-square&logo=javascript&logoColor=%23F7DF1E)
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=flat-square&logo=windows&logoColor=white)
-![Version](https://img.shields.io/badge/Version-1.6.0-green?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7.0-green?style=flat-square)
 
 ---
 
@@ -19,17 +19,28 @@
 - **6,500+ 파일 관리** — 가상 스크롤링으로 대용량 목록도 60fps 유지
 - **27개 비디오 확장자** 기본 지원, 사용자 추가/삭제 가능
 - **듀얼 탭** — 비디오 파일 / 기타 파일(압축 등) 분리 관리
+- **용량 표시** — 파일별 용량(GB) 컬럼, 백그라운드 수집 후 JSON에 저장
 - **다중 라이브러리** — 여러 드라이브의 폴더를 하나로 통합
 
 ### Metadata & Rating
-- **5단계 별점** — 클릭으로 즉시 평가, NTFS ADS에 저장
+- **5단계 별점** — 클릭으로 즉시 평가, JSON에 저장
 - **인라인 메모** — 메모 컬럼 클릭 → 바로 편집 (Enter 저장, Esc 취소)
-- **재생 이력** — 마지막 실행 시각, 재생 횟수 자동 기록
+- **재생 이력** — 마지막 실행 시각 자동 기록
 - **추가 시각** — 라이브러리에 등록된 시점 추적
+
+### Video Info & Actresses
+- **영상 정보 수집** — 파일명의 품번으로 제목 / 출시일 / 배우 / 커버를 백그라운드에서 수집 (품번당 한 번, JSON에 저장)
+- **출처 어댑터** — 출처를 설정에서 켜고 끄고 우선순위 지정, 여러 출처를 켜면 빈 항목을 다음 출처가 채움, 서비스 상태 확인
+- **배우별 보기** — 비디오 탭에서 배우 썸네일 격자 → 배우를 누르면 그 배우의 영상 목록
+- **배우 전체 작품** — 배우를 고른 뒤 "전체 작품"에서 출시일순(최신이 위) 커버 격자, 보유 작품에 체크 표시, 보유/미보유 필터
+- **배우 좋아요 / 배우명 검색** — 좋아요한 배우가 먼저 표시 (좋아요는 이 PC에만 저장)
+- **뒤로 / 앞으로** — 탭·중복 보기·배우 보기 이동 기록 (버튼, Alt+←/→, 마우스 뒤로/앞으로 버튼)
 
 ### Search & Sort
 - **실시간 검색** — 타이핑 즉시 필터링 + 검색어 하이라이트
-- **6가지 정렬** — 추가시간 / 실행시간 / 평점 / 이름 / 메모 + 오름차순/내림차순 토글
+- **컬럼 헤더 정렬** — 파일명 / 메모 / 추가시간 / 실행시간 / 평점 헤더 클릭, 다시 클릭하면 방향 전환 (재시작 후에도 유지)
+- **중복 파일 보기** — 품번(예: `SONE-974`) / 같은 이름 / 같은 용량으로 묶어서 표시, 묶음별 개수 확인 후 직접 삭제
+- **중복 일괄정리** — 묶음마다 하나만 남기고 삭제 (우선 단어 > 최대 용량), 실행 전 미리보기, 휴지통 이동 지원
 - **정렬 유지** — 검색, 탭 전환, 파일 추가/삭제 후에도 현재 정렬 상태 유지
 
 ### Git Sync (Cloud Backup)
@@ -38,10 +49,15 @@
 - **자동 동기화** — 체크박스 활성화 시 변경사항 30초 디바운스 후 자동 push
 - **빈 데이터 보호** — 빈 상태로 원격을 덮어쓰지 않음
 
+### Data Safety
+- **원자적 저장** — 임시 파일에 쓴 뒤 교체, 저장 도중 종료돼도 원본 유지
+- **자동 복구** — 데이터 파일이 손상되면 직전 버전(`.bak`)에서 복구
+- **덮어쓰기 차단** — 복구도 불가능하면 저장/새로고침을 중단해 평점·메모 유실 방지
+- **분리된 드라이브 보존** — 접근할 수 없는 라이브러리의 항목은 삭제하지 않음
+
 ### Performance
-- **Windows Search API** — 시스템 인덱스 활용으로 10,000개 파일 500ms 이내 스캔
-- **하이브리드 파일 감시** — chokidar 실시간 감시 + Windows Search 병렬 처리
-- **NTFS ADS 메타데이터** — 별점/메모를 파일 자체에 저장 (이동해도 유지)
+- **단일 패스 스캔** — 라이브러리당 한 번만 순회, 파일별 stat 없음 (HDD에서도 빠름)
+- **변경 시에만 저장** — 스캔 결과가 같으면 디스크에 쓰지 않고 Git 동기화도 깨우지 않음
 - **GPU 깜빡임 방지** — 하드웨어 가속 비활성화로 스크롤 시 전체 화면 깜빡임 해결
 
 ---
@@ -53,6 +69,7 @@
 
 - 기본 설치 경로: `%LOCALAPPDATA%\Baseball Video Manager\`
 - 데이터 저장 경로: `%APPDATA%\Baseball Video Manager\data\`
+- **자동 업데이트** — 시작할 때 GitHub 릴리스에서 새 버전을 확인해 내려받고, 다시 시작하거나 종료할 때 설치 (Setup 설치판만, 버전 표시를 누르면 수동 확인)
 - **업데이트 시 데이터 유지** — Setup 재실행해도 메타데이터, 설정 보존
 
 ### Portable
@@ -124,15 +141,17 @@ src/
 ├── main/                          # Electron 메인 프로세스
 │   ├── electron.js                # IPC 핸들러, 윈도우 관리
 │   ├── data-sync.js               # Git 동기화 모듈
-│   ├── hybrid-file-watcher.js     # 파일 감시 (chokidar + Windows Search)
-│   ├── windows-metadata-manager.js # NTFS ADS 메타데이터 R/W
-│   └── windows-search-scanner.js  # Windows Search API 쿼리
+│   ├── json-store.js              # JSON 원자적 저장, .bak 복구
+│   ├── file-unlocker.js           # 삭제 시 파일을 잡고 있는 프로그램 닫기 (Windows)
+│   └── metadata/
+│       ├── metadata-service.js    # 영상 정보 수집 대기열, 출처 병합, 이미지 캐시
+│       └── sources/               # 출처 어댑터 (r18dev.js, index.js에 등록)
 └── renderer/                      # UI (Vanilla JS)
     ├── index.html
     ├── styles/main.css
     └── js/
         ├── main.js                # App 클래스, 이벤트, 정렬
-        ├── file-manager.js        # 파일 CRUD, 검색, 하이브리드 시스템
+        ├── file-manager.js        # 파일 목록 로드/스캔/저장, 검색
         ├── virtual-scroll.js      # 가상 스크롤 + 인라인 메모 편집
         ├── search-engine.js       # 검색 디바운싱, 하이라이트
         ├── library-manager.js     # 라이브러리 경로 관리 모달
@@ -172,8 +191,7 @@ src/
 | Framework | Electron 28 |
 | Language | Vanilla JavaScript (프레임워크 없음) |
 | UI | HTML5 + CSS3 + SUIT 폰트 |
-| File Watch | chokidar + Windows Search API |
-| Metadata | NTFS Alternative Data Streams |
+| Metadata | JSON 파일 (원자적 쓰기 + `.bak` 자동 복구) |
 | Backup | archiver (ZIP), Git push |
 | Build | electron-builder (NSIS + Portable) |
 
